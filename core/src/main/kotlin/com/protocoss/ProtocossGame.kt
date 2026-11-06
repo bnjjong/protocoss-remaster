@@ -78,9 +78,9 @@ class ProtocossGame : ApplicationAdapter() {
         loadPlayerTexture()
         loadFieldMap()
 
-        // 시작 위치: 벨슨의 오두막 지형 (x=70, y=70 타일 영역)
-        val initialX = 70f * TileMap.DEFAULT_TILE_SIZE
-        val initialY = 70f * TileMap.DEFAULT_TILE_SIZE
+        // 시작 위치: 벨슨의 오두막 중앙 (40x25 맵의 중심인 x=20, y=12 타일 영역)
+        val initialX = 20f * TileMap.DEFAULT_TILE_SIZE
+        val initialY = 12f * TileMap.DEFAULT_TILE_SIZE
 
         player = Player(
             initialX = initialX,

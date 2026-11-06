@@ -103,30 +103,40 @@ class TileMap(
             val tw = root.getInt("tile_width", DEFAULT_TILE_SIZE)
             val th = root.getInt("tile_height", DEFAULT_TILE_SIZE)
 
-            val ground = IntArray(w * h)
-            val overlay = IntArray(w * h)
+            val rawGround = IntArray(w * h)
+            val rawOverlay = IntArray(w * h)
 
             val l1Node = root.get("layer1")
             val l2Node = root.get("layer2")
 
-            if (l2Node != null) {
-                var c = l2Node.child
+            if (l1Node != null) {
+                var c = l1Node.child
                 var idx = 0
-                while (c != null && idx < ground.size) {
-                    ground[idx] = c.asInt()
+                while (c != null && idx < rawGround.size) {
+                    rawGround[idx] = c.asInt()
                     c = c.next
                     idx++
                 }
             }
 
-            if (l1Node != null) {
-                var c = l1Node.child
+            if (l2Node != null) {
+                var c = l2Node.child
                 var idx = 0
-                while (c != null && idx < overlay.size) {
-                    overlay[idx] = c.asInt()
+                while (c != null && idx < rawOverlay.size) {
+                    rawOverlay[idx] = c.asInt()
                     c = c.next
                     idx++
                 }
+            }
+
+            // 도스 맵(Top-Down Y) 데이터를 LibGDX 표준 월드(Bottom-Up Y) 좌표계로 상하 반전 정렬
+            val ground = IntArray(w * h)
+            val overlay = IntArray(w * h)
+            for (ty in 0 until h) {
+                val srcRow = (h - 1 - ty) * w
+                val dstRow = ty * w
+                System.arraycopy(rawGround, srcRow, ground, dstRow, w)
+                System.arraycopy(rawOverlay, srcRow, overlay, dstRow, w)
             }
 
             return TileMap(w, h, tw, th, ground, overlay)
