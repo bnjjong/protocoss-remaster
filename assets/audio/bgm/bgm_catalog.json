@@ -1,0 +1,227 @@
+{
+  "total_count": 37,
+  "songs": [
+    {
+      "filename": "BS000.MFA",
+      "file_size": 12394,
+      "num_tracks": 22,
+      "data_size": 11666
+    },
+    {
+      "filename": "BS001.MFA",
+      "file_size": 15477,
+      "num_tracks": 15,
+      "data_size": 14973
+    },
+    {
+      "filename": "BS002.MFA",
+      "file_size": 10604,
+      "num_tracks": 16,
+      "data_size": 10068
+    },
+    {
+      "filename": "BS003.MFA",
+      "file_size": 6542,
+      "num_tracks": 13,
+      "data_size": 6102
+    },
+    {
+      "filename": "BS004.MFA",
+      "file_size": 22024,
+      "num_tracks": 16,
+      "data_size": 21488
+    },
+    {
+      "filename": "END.MFA",
+      "file_size": 9780,
+      "num_tracks": 22,
+      "data_size": 9052
+    },
+    {
+      "filename": "S0000.MFA",
+      "file_size": 9348,
+      "num_tracks": 11,
+      "data_size": 8972
+    },
+    {
+      "filename": "S0001.MFA",
+      "file_size": 2061,
+      "num_tracks": 6,
+      "data_size": 1845
+    },
+    {
+      "filename": "S0002.MFA",
+      "file_size": 13485,
+      "num_tracks": 15,
+      "data_size": 12981
+    },
+    {
+      "filename": "S0003.MFA",
+      "file_size": 16396,
+      "num_tracks": 12,
+      "data_size": 15988
+    },
+    {
+      "filename": "S0004.MFA",
+      "file_size": 6853,
+      "num_tracks": 11,
+      "data_size": 6477
+    },
+    {
+      "filename": "S0005.MFA",
+      "file_size": 7330,
+      "num_tracks": 18,
+      "data_size": 6730
+    },
+    {
+      "filename": "S0006.MFA",
+      "file_size": 3536,
+      "num_tracks": 11,
+      "data_size": 3160
+    },
+    {
+      "filename": "S0007.MFA",
+      "file_size": 12868,
+      "num_tracks": 18,
+      "data_size": 12268
+    },
+    {
+      "filename": "S0008.MFA",
+      "file_size": 10144,
+      "num_tracks": 15,
+      "data_size": 9640
+    },
+    {
+      "filename": "S0009.MFA",
+      "file_size": 7898,
+      "num_tracks": 12,
+      "data_size": 7490
+    },
+    {
+      "filename": "S0010.MFA",
+      "file_size": 4762,
+      "num_tracks": 10,
+      "data_size": 4418
+    },
+    {
+      "filename": "S0011.MFA",
+      "file_size": 4406,
+      "num_tracks": 10,
+      "data_size": 4062
+    },
+    {
+      "filename": "S0012.MFA",
+      "file_size": 6058,
+      "num_tracks": 14,
+      "data_size": 5586
+    },
+    {
+      "filename": "S0013.MFA",
+      "file_size": 2153,
+      "num_tracks": 10,
+      "data_size": 1809
+    },
+    {
+      "filename": "S0014.MFA",
+      "file_size": 5255,
+      "num_tracks": 10,
+      "data_size": 4911
+    },
+    {
+      "filename": "S0015.MFA",
+      "file_size": 8044,
+      "num_tracks": 15,
+      "data_size": 7540
+    },
+    {
+      "filename": "S0016.MFA",
+      "file_size": 6949,
+      "num_tracks": 16,
+      "data_size": 6413
+    },
+    {
+      "filename": "S0017.MFA",
+      "file_size": 7899,
+      "num_tracks": 14,
+      "data_size": 7427
+    },
+    {
+      "filename": "S0018.MFA",
+      "file_size": 2444,
+      "num_tracks": 4,
+      "data_size": 2292
+    },
+    {
+      "filename": "S0019.MFA",
+      "file_size": 19322,
+      "num_tracks": 16,
+      "data_size": 18786
+    },
+    {
+      "filename": "S0020.MFA",
+      "file_size": 15682,
+      "num_tracks": 16,
+      "data_size": 15146
+    },
+    {
+      "filename": "S0021.MFA",
+      "file_size": 5660,
+      "num_tracks": 10,
+      "data_size": 5316
+    },
+    {
+      "filename": "S0022.MFA",
+      "file_size": 1151,
+      "num_tracks": 5,
+      "data_size": 967
+    },
+    {
+      "filename": "S0023.MFA",
+      "file_size": 7276,
+      "num_tracks": 20,
+      "data_size": 6612
+    },
+    {
+      "filename": "S0024.MFA",
+      "file_size": 10720,
+      "num_tracks": 16,
+      "data_size": 10184
+    },
+    {
+      "filename": "S0025.MFA",
+      "file_size": 7774,
+      "num_tracks": 14,
+      "data_size": 7302
+    },
+    {
+      "filename": "S0026.MFA",
+      "file_size": 8128,
+      "num_tracks": 12,
+      "data_size": 7720
+    },
+    {
+      "filename": "S0027.MFA",
+      "file_size": 7085,
+      "num_tracks": 11,
+      "data_size": 6709
+    },
+    {
+      "filename": "S0028.MFA",
+      "file_size": 2894,
+      "num_tracks": 11,
+      "data_size": 2518
+    },
+    {
+      "filename": "S0030.MFA",
+      "file_size": 13603,
+      "num_tracks": 17,
+      "data_size": 13035
+    },
+    {
+      "filename": "SLEEP.MFA",
+      "file_size": 1398,
+      "num_tracks": 4,
+      "data_size": 1246
+    }
+  ]
+}
