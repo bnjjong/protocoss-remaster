@@ -1,22 +1,24 @@
 package com.protocoss.map
 
+import com.badlogic.gdx.utils.JsonReader
+
 /**
  * 16x16 픽셀 타일 그리드로 구성된 2D 필드 맵 데이터 모델입니다.
  *
- * 필드 타일 인덱스 저장, 월드 좌표와 타일 좌표 간의 변환 및 지형 이동 가능 여부 판정을 위해 사용됩니다.
+ * 바닥 레이어(Ground Layer)와 상위 오브젝트 레이어(Overlay Layer)의 2중 타일 구조를 지원합니다.
  *
- * [width] 가로 타일 개수
- * [height] 세로 타일 개수
- * [tileWidth] 단일 타일 가로 픽셀 크기 (기본 16)
- * [tileHeight] 단일 타일 세로 픽셀 크기 (기본 16)
- * [tiles] 1차원 배열로 펼쳐진 타일 ID 목록
+ * @property width 가로 타일 개수
+ * @property height 세로 타일 개수
+ * @property tileWidth 단일 타일 가로 픽셀 크기 (기본 16)
+ * @property tileHeight 단일 타일 세로 픽셀 크기 (기본 16)
  */
 class TileMap(
     val width: Int,
     val height: Int,
     val tileWidth: Int = DEFAULT_TILE_SIZE,
     val tileHeight: Int = DEFAULT_TILE_SIZE,
-    private val tiles: IntArray = IntArray(width * height)
+    private val groundTiles: IntArray = IntArray(width * height),
+    private val overlayTiles: IntArray = IntArray(width * height)
 ) {
     /** 필드 전체 가로 픽셀 크기 */
     val totalPixelWidth: Float
@@ -27,23 +29,46 @@ class TileMap(
         get() = (height * tileHeight).toFloat()
 
     /**
-     * 지정된 타일 그리드 좌표 ([tileX], [tileY])의 타일 ID를 반환합니다.
-     *
-     * 범위를 벗어날 경우 0을 반환합니다.
+     * 바닥 레이어의 지정 타일 그리드 좌표 ([tileX], [tileY])의 타일 ID를 반환합니다.
      */
-    fun getTile(tileX: Int, tileY: Int): Int {
-        if (tileX !in 0 until width || tileY !in 0 until height) {
-            return 0
-        }
-        return tiles[tileY * width + tileX]
+    fun getTile(tileX: Int, tileY: Int): Int = getGroundTile(tileX, tileY)
+
+    /**
+     * 바닥 레이어의 지정 타일 그리드 좌표에 타일 ID를 설정합니다.
+     */
+    fun setTile(tileX: Int, tileY: Int, tileId: Int) = setGroundTile(tileX, tileY, tileId)
+
+    /**
+     * 바닥 레이어의 지정 타일 ID를 반환합니다.
+     */
+    fun getGroundTile(tileX: Int, tileY: Int): Int {
+        if (tileX !in 0 until width || tileY !in 0 until height) return 0
+        return groundTiles[tileY * width + tileX]
     }
 
     /**
-     * 지정된 타일 그리드 좌표 ([tileX], [tileY])에 타일 ID를 설정합니다.
+     * 상위 오브젝트 레이어의 지정 타일 ID를 반환합니다.
      */
-    fun setTile(tileX: Int, tileY: Int, tileId: Int) {
+    fun getOverlayTile(tileX: Int, tileY: Int): Int {
+        if (tileX !in 0 until width || tileY !in 0 until height) return 0
+        return overlayTiles[tileY * width + tileX]
+    }
+
+    /**
+     * 바닥 레이어에 타일 ID를 설정합니다.
+     */
+    fun setGroundTile(tileX: Int, tileY: Int, tileId: Int) {
         if (tileX in 0 until width && tileY in 0 until height) {
-            tiles[tileY * width + tileX] = tileId
+            groundTiles[tileY * width + tileX] = tileId
+        }
+    }
+
+    /**
+     * 상위 오브젝트 레이어에 타일 ID를 설정합니다.
+     */
+    fun setOverlayTile(tileX: Int, tileY: Int, tileId: Int) {
+        if (tileX in 0 until width && tileY in 0 until height) {
+            overlayTiles[tileY * width + tileX] = tileId
         }
     }
 
@@ -67,5 +92,44 @@ class TileMap(
     companion object {
         /** 원작 기본 타일 단위 크기 (16x16 픽셀) */
         const val DEFAULT_TILE_SIZE: Int = 16
+
+        /**
+         * 추출된 맵 JSON 문자열로부터 [TileMap] 인스턴스를 역직렬화하여 생성합니다.
+         */
+        fun fromJson(jsonContent: String): TileMap {
+            val root = JsonReader().parse(jsonContent)
+            val w = root.getInt("width", 60)
+            val h = root.getInt("height", 40)
+            val tw = root.getInt("tile_width", DEFAULT_TILE_SIZE)
+            val th = root.getInt("tile_height", DEFAULT_TILE_SIZE)
+
+            val ground = IntArray(w * h)
+            val overlay = IntArray(w * h)
+
+            val l1Node = root.get("layer1")
+            val l2Node = root.get("layer2")
+
+            if (l2Node != null) {
+                var c = l2Node.child
+                var idx = 0
+                while (c != null && idx < ground.size) {
+                    ground[idx] = c.asInt()
+                    c = c.next
+                    idx++
+                }
+            }
+
+            if (l1Node != null) {
+                var c = l1Node.child
+                var idx = 0
+                while (c != null && idx < overlay.size) {
+                    overlay[idx] = c.asInt()
+                    c = c.next
+                    idx++
+                }
+            }
+
+            return TileMap(w, h, tw, th, ground, overlay)
+        }
     }
 }

@@ -10,10 +10,11 @@ import kotlin.math.min
 /**
  * [TileMap]의 타일 그리드를 카메라 영역에 맞춰 효율적으로 렌더링하는 컴포넌트입니다.
  *
- * 뷰포트 외부의 타일을 자동으로 제외하는 화면 컬링(Frustum Culling)을 적용하여 60fps 고정 성능을 유지합니다.
+ * 바닥 레이어와 상위 오브젝트 레이어를 순차 렌더링하며, 화면 가시 영역 컬링(Frustum Culling)을
+ * 적용하여 60fps 고정 성능을 보장합니다.
  *
- * [tileMap] 렌더링할 필드 맵 모델
- * [tilesetTexture] 16x16 타일들이 패킹된 타일셋 시트 텍스처
+ * @param tileMap 렌더링할 필드 맵 모델
+ * @param tilesetTexture 16x16 타일들이 패킹된 RGBA 타일셋 시트 텍스처
  */
 class TileMapRenderer(
     private val tileMap: TileMap,
@@ -40,10 +41,10 @@ class TileMapRenderer(
     }
 
     /**
-     * [camera]의 가시 영역을 계산하여 현재 화면에 보이는 타일만 [batch]로 렌더링합니다.
+     * [camera]의 가시 영역을 계산하여 현재 화면에 보이는 바닥 및 오브젝트 타일을 [batch]로 렌더링합니다.
      *
-     * [batch] 2D 스프라이트 렌더러
-     * [camera] 현재 뷰포트 직교 투영 카메라
+     * @param batch 2D 스프라이트 렌더러
+     * @param camera 현재 뷰포트 직교 투영 카메라
      */
     fun render(batch: SpriteBatch, camera: OrthographicCamera) {
         val halfW = camera.viewportWidth * 0.5f * camera.zoom
@@ -59,10 +60,16 @@ class TileMapRenderer(
 
         for (ty in startY..endY) {
             for (tx in startX..endX) {
-                val tileId = tileMap.getTile(tx, ty)
-                if (tileId in tileRegions.indices) {
-                    val region = tileRegions[tileId]
-                    batch.draw(region, tx * tw, ty * th, tw, th)
+                // 1단계: 바닥 레이어 렌더링 (0번 투명 타일 제외)
+                val gId = tileMap.getGroundTile(tx, ty)
+                if (gId > 0 && gId in tileRegions.indices) {
+                    batch.draw(tileRegions[gId], tx * tw, ty * th, tw, th)
+                }
+
+                // 2단계: 상위 오브젝트/건물 레이어 렌더링
+                val oId = tileMap.getOverlayTile(tx, ty)
+                if (oId > 0 && oId in tileRegions.indices) {
+                    batch.draw(tileRegions[oId], tx * tw, ty * th, tw, th)
                 }
             }
         }

@@ -78,9 +78,9 @@ class ProtocossGame : ApplicationAdapter() {
         loadPlayerTexture()
         loadFieldMap()
 
-        // 화면 중앙에 플레이어 초기 배치
-        val initialX = if (tileMap != null) tileMap!!.totalPixelWidth / 2f else Constants.ORIGINAL_WIDTH / 2f
-        val initialY = if (tileMap != null) tileMap!!.totalPixelHeight / 2f else Constants.ORIGINAL_HEIGHT / 2f
+        // 시작 위치: 벨슨의 오두막 지형 (x=70, y=70 타일 영역)
+        val initialX = 70f * TileMap.DEFAULT_TILE_SIZE
+        val initialY = 70f * TileMap.DEFAULT_TILE_SIZE
 
         player = Player(
             initialX = initialX,
@@ -174,19 +174,18 @@ class ProtocossGame : ApplicationAdapter() {
      */
     private fun loadFieldMap() {
         val tilesetFile = Gdx.files.internal("assets/sprites/maps/area00_tileset.png")
+        val mapFile = Gdx.files.internal("assets/data/maps/area00_map.json")
         if (tilesetFile.exists()) {
             tilesetTexture = Texture(tilesetFile).apply {
                 setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest)
             }
 
-            // 데모용 기본 50x50 필드 맵 생성 (추출된 5,252개 타일셋 활용)
-            val map = TileMap(width = 60, height = 40)
-            for (y in 0 until map.height) {
-                for (x in 0 until map.width) {
-                    val tileId = if (x == 0 || x == map.width - 1 || y == 0 || y == map.height - 1) 1 else 0
-                    map.setTile(x, y, tileId)
-                }
+            val map = if (mapFile.exists()) {
+                TileMap.fromJson(mapFile.readString("UTF-8"))
+            } else {
+                TileMap(width = 60, height = 40)
             }
+
             tileMap = map
             tileMapRenderer = TileMapRenderer(map, tilesetTexture!!)
             isTileMapMode = true
