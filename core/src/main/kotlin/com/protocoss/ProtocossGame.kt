@@ -12,12 +12,14 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.badlogic.gdx.utils.viewport.Viewport
+import com.protocoss.map.TileMap
+import com.protocoss.map.TileMapRenderer
 import com.protocoss.player.Player
 
 /**
  * 프로토코스 리마스터 엔진의 메인 게임 라이프사이클을 관리합니다.
  *
- * 320x200 고정 종횡비 픽셀 뷰포트 내에서 필드 배경 렌더링, 플레이어 8방향 이동 및
+ * 320x200 고정 종횡비 픽셀 뷰포트 내에서 16x16 필드 타일맵 렌더링, 플레이어 8방향 이동 및
  * 부드러운 카메라 추적(Lerp Camera Follow) 시스템을 구동합니다.
  */
 class ProtocossGame : ApplicationAdapter() {
@@ -32,6 +34,11 @@ class ProtocossGame : ApplicationAdapter() {
 
     private var playerTexture: Texture? = null
     private lateinit var player: Player
+
+    private var tilesetTexture: Texture? = null
+    private var tileMap: TileMap? = null
+    private var tileMapRenderer: TileMapRenderer? = null
+    private var isTileMapMode: Boolean = true
 
     override fun create() {
         batch = SpriteBatch()
@@ -48,11 +55,15 @@ class ProtocossGame : ApplicationAdapter() {
 
         loadExtractedBackgrounds()
         loadPlayerTexture()
+        loadFieldMap()
 
         // 화면 중앙에 플레이어 초기 배치
+        val initialX = if (tileMap != null) tileMap!!.totalPixelWidth / 2f else Constants.ORIGINAL_WIDTH / 2f
+        val initialY = if (tileMap != null) tileMap!!.totalPixelHeight / 2f else Constants.ORIGINAL_HEIGHT / 2f
+
         player = Player(
-            initialX = Constants.ORIGINAL_WIDTH / 2f,
-            initialY = Constants.ORIGINAL_HEIGHT / 2f,
+            initialX = initialX,
+            initialY = initialY,
             texture = playerTexture
         )
 
@@ -73,13 +84,16 @@ class ProtocossGame : ApplicationAdapter() {
 
         batch.begin()
 
-        // 1. 배경 렌더링
-        if (backgroundTextures.isNotEmpty()) {
+        if (isTileMapMode && tileMapRenderer != null) {
+            // 1-A. 필드 타일맵 렌더링
+            tileMapRenderer!!.render(batch, camera)
+        } else if (backgroundTextures.isNotEmpty()) {
+            // 1-B. 단일 배경 갤러리 렌더링
             val bg = backgroundTextures[currentBackgroundIndex]
             batch.draw(
                 bg,
-                0f,
-                0f,
+                camera.position.x - Constants.ORIGINAL_WIDTH / 2f,
+                camera.position.y - Constants.ORIGINAL_HEIGHT / 2f,
                 Constants.ORIGINAL_WIDTH.toFloat(),
                 Constants.ORIGINAL_HEIGHT.toFloat()
             )
@@ -99,8 +113,33 @@ class ProtocossGame : ApplicationAdapter() {
         batch.dispose()
         debugFont.dispose()
         playerTexture?.dispose()
+        tilesetTexture?.dispose()
         backgroundTextures.forEach { it.dispose() }
         backgroundTextures.clear()
+    }
+
+    /**
+     * 필드 맵 모델 및 타일셋 텍스처를 로드합니다.
+     */
+    private fun loadFieldMap() {
+        val tilesetFile = Gdx.files.internal("assets/sprites/maps/area00_tileset.png")
+        if (tilesetFile.exists()) {
+            tilesetTexture = Texture(tilesetFile).apply {
+                setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest)
+            }
+
+            // 데모용 기본 50x50 필드 맵 생성 (추출된 5,252개 타일셋 활용)
+            val map = TileMap(width = 60, height = 40)
+            for (y in 0 until map.height) {
+                for (x in 0 until map.width) {
+                    val tileId = if (x == 0 || x == map.width - 1 || y == 0 || y == map.height - 1) 1 else 0
+                    map.setTile(x, y, tileId)
+                }
+            }
+            tileMap = map
+            tileMapRenderer = TileMapRenderer(map, tilesetTexture!!)
+            isTileMapMode = true
+        }
     }
 
     /**
@@ -159,7 +198,12 @@ class ProtocossGame : ApplicationAdapter() {
 
         player.update(delta, up, down, left, right, isDash)
 
-        // Tab 또는 스페이스: 배경 순환 전환
+        // M 키: 필드 타일맵 모드 ↔ 정적 배경 갤러리 모드 전환
+        if (Gdx.input.isKeyJustPressed(Input.Keys.M)) {
+            isTileMapMode = !isTileMapMode
+        }
+
+        // Tab 또는 스페이스: 배경 순환 전환 (갤러리 모드일 때)
         if (Gdx.input.isKeyJustPressed(Input.Keys.TAB) || Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
             if (backgroundTextures.isNotEmpty()) {
                 currentBackgroundIndex = (currentBackgroundIndex + 1) % backgroundTextures.size
