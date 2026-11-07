@@ -1,0 +1,342 @@
+{
+  "compiled_queries": 120000,
+  "unaligned_checks": 1000,
+  "maps": [
+    {
+      "map": 0,
+      "unaligned_queries": 250,
+      "sha256": "6fa4f37230c1829d5e251b8d4cb64f16041a9d622341a11c78e5fe4148118516"
+    },
+    {
+      "map": 1,
+      "unaligned_queries": 250,
+      "sha256": "30512ec2b30d544fbf9a1c23850b5f898b864d98d54d964f35bf63acc997f9a3"
+    },
+    {
+      "map": 2,
+      "unaligned_queries": 250,
+      "sha256": "48eedb5adebb2a8bef5541570437ef4ce38ee4552fa3928153686fdfd0066f78"
+    },
+    {
+      "map": 3,
+      "unaligned_queries": 250,
+      "sha256": "13e7c022046d93773f4ba9f3e5ea2eae3fe77f5f1206713160a0f718b1e6869b"
+    }
+  ],
+  "door_changes": [
+    {
+      "index": 2122,
+      "tid": 140,
+      "attr": 0
+    },
+    {
+      "index": 2123,
+      "tid": 141,
+      "attr": 0
+    },
+    {
+      "index": 2124,
+      "tid": 142,
+      "attr": 0
+    },
+    {
+      "index": 2202,
+      "tid": 180,
+      "attr": 0
+    },
+    {
+      "index": 2203,
+      "tid": 181,
+      "attr": 0
+    },
+    {
+      "index": 2204,
+      "tid": 182,
+      "attr": 0
+    },
+    {
+      "index": 2282,
+      "tid": 220,
+      "attr": 0
+    },
+    {
+      "index": 2283,
+      "tid": 221,
+      "attr": 0
+    },
+    {
+      "index": 2284,
+      "tid": 222,
+      "attr": 0
+    }
+  ],
+  "native_doors": [
+    {
+      "group": 0,
+      "stage": 0,
+      "result": {
+        "events": [
+          {
+            "kind": "effect",
+            "id": 0
+          },
+          {
+            "kind": "warp",
+            "args": [
+              0,
+              24,
+              16,
+              160,
+              104,
+              8,
+              1,
+              25
+            ]
+          }
+        ],
+        "variables": {
+          "0": 1,
+          "1": 1,
+          "2": 0,
+          "6": 0,
+          "8": 0
+        }
+      }
+    },
+    {
+      "group": 0,
+      "stage": 1,
+      "result": {
+        "events": [
+          {
+            "kind": "effect",
+            "id": 0
+          },
+          {
+            "kind": "warp",
+            "args": [
+              0,
+              24,
+              16,
+              160,
+              104,
+              8,
+              1,
+              25
+            ]
+          }
+        ],
+        "variables": {
+          "0": 1,
+          "1": 1,
+          "2": 0,
+          "6": 0,
+          "8": 1
+        }
+      }
+    },
+    {
+      "group": 0,
+      "stage": 2,
+      "result": {
+        "events": [
+          {
+            "kind": "effect",
+            "id": 0
+          },
+          {
+            "kind": "warp",
+            "args": [
+              0,
+              24,
+              16,
+              160,
+              104,
+              8,
+              1,
+              25
+            ]
+          }
+        ],
+        "variables": {
+          "0": 1,
+          "1": 1,
+          "2": 0,
+          "6": 0,
+          "8": 2
+        }
+      }
+    },
+    {
+      "group": 0,
+      "stage": 3,
+      "result": {
+        "events": [
+          {
+            "kind": "effect",
+            "id": 0
+          },
+          {
+            "kind": "warp",
+            "args": [
+              0,
+              24,
+              16,
+              160,
+              104,
+              8,
+              1,
+              25
+            ]
+          }
+        ],
+        "variables": {
+          "0": 1,
+          "1": 1,
+          "2": 0,
+          "6": 0,
+          "8": 3
+        }
+      }
+    },
+    {
+      "group": 1,
+      "stage": 0,
+      "result": {
+        "events": [
+          {
+            "kind": "warp",
+            "args": [
+              2,
+              0,
+              0,
+              160,
+              184,
+              0,
+              0,
+              25
+            ]
+          }
+        ],
+        "variables": {
+          "0": 0,
+          "1": 1,
+          "2": 0,
+          "6": 0,
+          "8": 0
+        }
+      }
+    },
+    {
+      "group": 1,
+      "stage": 1,
+      "result": {
+        "events": [
+          {
+            "kind": "warp",
+            "args": [
+              2,
+              0,
+              0,
+              160,
+              184,
+              0,
+              0,
+              25
+            ]
+          }
+        ],
+        "variables": {
+          "0": 0,
+          "1": 1,
+          "2": 0,
+          "6": 0,
+          "8": 1
+        }
+      }
+    },
+    {
+      "group": 1,
+      "stage": 2,
+      "result": {
+        "events": [
+          {
+            "kind": "animation",
+            "id": 6
+          },
+          {
+            "kind": "warp",
+            "args": [
+              1,
+              0,
+              0,
+              200,
+              120,
+              8,
+              0,
+              25
+            ]
+          },
+          {
+            "kind": "party_remove",
+            "id": 1
+          }
+        ],
+        "variables": {
+          "0": 0,
+          "1": 1,
+          "2": 0,
+          "6": 0,
+          "8": 3
+        }
+      }
+    },
+    {
+      "group": 1,
+      "stage": 3,
+      "result": {
+        "events": [
+          {
+            "kind": "warp",
+            "args": [
+              1,
+              0,
+              0,
+              160,
+              184,
+              0,
+              0,
+              25
+            ]
+          }
+        ],
+        "variables": {
+          "0": 0,
+          "1": 1,
+          "2": 0,
+          "6": 0,
+          "8": 3
+        }
+      }
+    }
+  ],
+  "party_removal": {
+    "compared_bytes": 2942,
+    "before": {
+      "500": 1,
+      "540": 1,
+      "630": 163,
+      "631": 174,
+      "325": 9,
+      "336": 20
+    },
+    "after": {
+      "500": 0,
+      "540": 0,
+      "630": 255,
+      "631": 255,
+      "325": 10,
+      "336": 21
+    }
+  }
+}

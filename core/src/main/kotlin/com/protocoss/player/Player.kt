@@ -101,6 +101,11 @@ class Player(
         y = newY
     }
 
+    fun setMotion(direction: Direction?, moving: Boolean) {
+        if(direction!=null) this.direction=direction
+        state=if(moving) PlayerState.WALKING else PlayerState.IDLE
+    }
+
     companion object {
         /** PEOPLE.SPR 필드 인물의 가로 픽셀 크기 */
         const val WIDTH: Float = 24f

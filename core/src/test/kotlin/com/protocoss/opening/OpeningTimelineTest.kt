@@ -47,4 +47,32 @@ class OpeningTimelineTest {
         assertEquals("저...\n튜르전사 시험을 볼까 해요.",pages[2].getString("text"))
         assertEquals("벨슨그",pages[0].getString("speaker"))
     }
+    @Test fun `waking and return event actors match relocated native functions`() {
+        val data=opening().data
+        for(program in listOf(2,3)) {
+            val timeline=OpeningTimeline(data,program,program)
+            val expected=data.get("field_native_checkpoints").get(program.toString())
+            val seen=mutableSetOf<Int>()
+            fun actors(checkpoint:com.badlogic.gdx.utils.JsonValue) {
+                assertEquals(checkpoint.get("actors").size,timeline.actors.size)
+                timeline.actors.forEachIndexed { i,a ->
+                    val e=checkpoint.get("actors")[i]
+                    assertEquals(e.getFloat("x"),a.x);assertEquals(e.getFloat("y"),a.y)
+                    assertEquals(e.getInt("sprite"),a.sprite);assertEquals(e.getInt("frame"),a.frame)
+                }
+            }
+            repeat(20000) {
+                if(!timeline.finished) {
+                    timeline.update(1f/70f)
+                    timeline.dialogueId?.let { id ->
+                        if(seen.add(id)) actors(expected.first { c -> c.getString("op")=="C" && c.getInt("dialogue")==id })
+                        timeline.advance();timeline.advance()
+                    }
+                }
+            }
+            assertTrue(timeline.finished)
+            assertEquals(if(program==2) setOf(17) else setOf(104,105,106),seen)
+            actors(expected.last())
+        }
+    }
 }

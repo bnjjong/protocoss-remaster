@@ -24,6 +24,10 @@ import com.protocoss.save.SaveRepository
 import com.protocoss.map.FieldBounds
 import com.protocoss.map.TileMap
 import com.protocoss.map.TileMapRenderer
+import com.protocoss.field.FieldRules
+import com.protocoss.field.FieldMovement
+import com.protocoss.field.CabinDoors
+import com.protocoss.player.Direction
 import com.protocoss.player.Player
 import com.protocoss.prologue.ProloguePlayer
 import com.protocoss.opening.OpeningTimeline
@@ -54,6 +58,10 @@ class ProtocossGame(
     private var prologue: ProloguePlayer? = null
     private lateinit var opening: OpeningTimeline
     private lateinit var openingRenderer: OpeningRenderer
+    private lateinit var fieldRules: FieldRules
+    private var fieldMovement: FieldMovement? = null
+    private var fieldEvent: Int? = null
+    private var eventDestination: DosSave? = null
     private var walkingTime = 0f
     private var fieldFade = 0f
     private var openingMusic: com.badlogic.gdx.audio.Music? = null
@@ -108,6 +116,9 @@ class ProtocossGame(
         loadExtractedBackgrounds()
         opening = OpeningTimeline.parse(Gdx.files.internal("assets/opening/opening.json").readString("UTF-8"))
         openingRenderer = OpeningRenderer(opening)
+        fieldRules = FieldRules(Gdx.files.internal("assets/data/field/field.json").readString()) {
+            Gdx.files.internal("assets/data/field/$it").readBytes()
+        }
         loadFieldMap()
 
         // 원본 맵의 실제 타일 크기로 오두막 중앙 위치를 계산한다.
@@ -143,8 +154,11 @@ class ProtocossGame(
             openingRenderer.update(delta)
             if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) opening.advance()
             if (opening.finished) {
-                enterField(DosSave.afterOpening(Gdx.files.internal("assets/data/original/start.dat").readBytes()))
-                playOpeningMusic(25)
+                val wasEvent=fieldEvent!=null
+                val destination=eventDestination ?: DosSave.afterOpening(Gdx.files.internal("assets/data/original/start.dat").readBytes())
+                fieldEvent=null;eventDestination=null
+                enterField(destination)
+                if(!wasEvent || openingMusic==null) playOpeningMusic(25)
                 fieldFade=1f
             }
         } else if (scene == Scene.FIELD) {
@@ -187,7 +201,7 @@ class ProtocossGame(
 
         if (isTileMapMode && tileMapRenderer != null) {
             // 1-A. 필드 타일맵 렌더링
-            if(session?.area==0 && session?.map in 1..2) openingRenderer.renderMap(batch,session!!.map,0f,0f)
+            if(session?.area==0 && session?.map in 0..2) openingRenderer.renderMap(batch,session!!.map,0f,tileMap!!.totalPixelHeight-200f,true)
             else tileMapRenderer!!.render(batch, camera)
         } else if (backgroundTextures.isNotEmpty()) {
             // 1-B. 단일 배경 갤러리 렌더링
@@ -216,9 +230,9 @@ class ProtocossGame(
             com.protocoss.player.Direction.SOUTH -> 8
             else -> 12
         }
-        openingRenderer.renderActor(batch,0,base+(walkingTime*9).toInt()%4,player.x-12f,188f-player.y)
+        openingRenderer.renderActor(batch,0,(if(player.isMoving) base+(walkingTime*9).toInt()%4 else fieldMovement?.pose ?: base),player.x-12f,188f-player.y)
         if (session?.area == 0 && mapNumber in 0..2)
-            openingRenderer.coverActor(batch,mapNumber!!,player.x-12f,mapHeight-player.y-12f,0f,mapHeight-200f,0)
+            openingRenderer.coverActor(batch,mapNumber!!,player.x-12f,mapHeight-player.y-12f,0f,mapHeight-200f,fieldMovement?.layer ?: 0)
 
         batch.end()
 
@@ -355,7 +369,20 @@ class ProtocossGame(
         val right = Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D)
         val isDash = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT)
 
-        player.update(delta, up, down, left, right, isDash)
+        val movement = fieldMovement.takeIf { isTileMapMode }
+        if(movement == null) player.update(delta,up,down,left,right,isDash)
+        else {
+            val height=tileMap!!.totalPixelHeight
+            val px=player.x-12f;val py=height-player.y-12f
+            if(kotlin.math.abs(px-movement.x)>.01f || kotlin.math.abs(py-movement.y)>.01f) movement.place(px,py)
+            val input=(if(up && !down) 1 else if(down && !up) 4 else 0) or
+                (if(right && !left) 2 else if(left && !right) 8 else 0)
+            val travelled=movement.update(delta,input,isDash) { event -> handleFieldEvent(movement,event) }
+            if(travelled) return
+            player.setPosition(movement.x+12f,height-movement.y-12f)
+            player.setMotion(Direction.fromInput(FieldRules.dy(movement.direction)<0,FieldRules.dy(movement.direction)>0,
+                FieldRules.dx(movement.direction)<0,FieldRules.dx(movement.direction)>0),movement.moving)
+        }
 
         // M 키: 필드 타일맵 모드 ↔ 정적 배경 갤러리 모드 전환
         if (Gdx.input.isKeyJustPressed(Input.Keys.M)) {
@@ -368,6 +395,27 @@ class ProtocossGame(
                 currentBackgroundIndex = (currentBackgroundIndex + 1) % backgroundTextures.size
             }
         }
+    }
+
+    private fun handleFieldEvent(movement: FieldMovement, event: Int): Boolean {
+        val current=requireNotNull(session)
+        if(current.map==0 && event==0 && current.variable(0)==1 && !movement.doorOpen) {
+            movement.doorOpen=true
+            session=current.calledEvent(0)
+            openingRenderer.openCabinDoor(fieldRules.data.get("door_changes"))
+        }
+        if(current.map==2 && event==16 && current.variable(6)==0) {
+            startFieldEvent(2,current.travel(1,0,0,72,56,10,0,mapOf(1 to 17,4 to 25,6 to 1)))
+            return true
+        }
+        val destination=CabinDoors.travel(current,event) ?: return false
+        if(current.map==0 && current.variable(8)==2) startFieldEvent(3,destination)
+        else {
+            enterField(destination)
+            if(openingMusic==null) playOpeningMusic(25)
+            fieldFade=1f
+        }
+        return true
     }
 
     private fun toggleFullscreen() {
@@ -491,10 +539,21 @@ class ProtocossGame(
         }
     }
 
+    private fun startFieldEvent(program: Int, destination: DosSave) {
+        val data=opening.data
+        openingRenderer.dispose()
+        opening=OpeningTimeline(data,program,program)
+        openingRenderer=OpeningRenderer(opening)
+        if(openingMusic==null) playOpeningMusic(25)
+        fieldEvent=program;eventDestination=destination;scene=Scene.OPENING
+        player.setMotion(null,false)
+    }
+
     private fun finishPrologue() {
         prologue?.dispose()
         prologue = null
         openingRenderer.dispose()
+        fieldEvent=null;eventDestination=null
         opening = OpeningTimeline.parse(Gdx.files.internal("assets/opening/opening.json").readString("UTF-8"))
         openingRenderer = OpeningRenderer(opening)
         scene = Scene.OPENING
@@ -518,9 +577,12 @@ class ProtocossGame(
     private fun enterField(save: DosSave) {
         // 파일·맵·좌표를 모두 확인한 뒤에 현재 세션을 교체한다.
         val original = originalDirectory?.let { OriginalMapData.load(it, save.area, save.map) }
-        require(original != null || (save.area == 0 && save.map in 1..2)) { "이 저장 지점에는 원본 MAP 데이터가 필요합니다." }
+        require(original != null || (save.area == 0 && save.map in 0..2)) { "이 저장 지점에는 원본 MAP 데이터가 필요합니다." }
         val fallbackMap = if (save.map == 2) "new_game_map.json" else "area00_map.json"
-        val map = original?.map ?: TileMap.fromJson(Gdx.files.internal("assets/data/maps/$fallbackMap").readString())
+        val map = original?.map ?: if(save.map==0) {
+            val source=opening.data.get("maps").get("0")
+            TileMap(source.getInt("width"),source.getInt("height"),8,8)
+        } else TileMap.fromJson(Gdx.files.internal("assets/data/maps/$fallbackMap").readString())
         val x = save.worldX + 12f
         val y = save.worldY(map.totalPixelHeight) - 12f
         require(x in 0f..map.totalPixelWidth && y in 0f..map.totalPixelHeight) { "저장 위치가 맵 밖에 있습니다." }
@@ -540,13 +602,19 @@ class ProtocossGame(
         camera.position.set((save.scrollX * 8 + 160).toFloat(), map.totalPixelHeight - (save.scrollY * 8 + 100), 0f)
         FieldBounds.constrainCamera(camera, map)
         session = save
+        openingRenderer.resetFieldMaps()
+        fieldMovement = if(save.area==0 && save.map in 0..2) FieldMovement(fieldRules,save.map,save.layer.coerceIn(0,2),save.pose).apply {
+            place(save.worldX,map.totalPixelHeight-save.worldY(map.totalPixelHeight))
+        } else null
+        player.setMotion(when(save.pose/4) { 0 -> Direction.NORTH;1 -> Direction.EAST;2 -> Direction.SOUTH;else -> Direction.WEST },false)
         fieldFade=0f
         scene = Scene.FIELD
     }
 
     private fun saveSelected() {
         try {
-            val current = requireNotNull(session).atPosition(player.x - 12f, player.y + 12f, tileMap!!.totalPixelHeight, tileMap!!.totalPixelWidth)
+            val pose=when(player.direction) { Direction.NORTH -> 0;Direction.EAST,Direction.NORTH_EAST,Direction.SOUTH_EAST -> 4;Direction.SOUTH -> 8;else -> 12 }
+            val current = requireNotNull(session).withFieldState(fieldMovement?.layer ?: session!!.layer,fieldMovement?.pose ?: pose).atPosition(player.x - 12f, player.y + 12f, tileMap!!.totalPixelHeight, tileMap!!.totalPixelWidth)
             saves.write(pendingSlot, current, currentDemoSegmentId)
             session = current
             scene = Scene.PAUSE

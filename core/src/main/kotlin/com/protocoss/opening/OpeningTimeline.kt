@@ -4,11 +4,11 @@ import com.badlogic.gdx.utils.JsonReader
 import com.badlogic.gdx.utils.JsonValue
 
 /** AUTOANI의 이동·그리기·대화 대기를 순서대로 실행한다. 입력을 받을 때까지 다음 명령을 실행하지 않는다. */
-class OpeningTimeline(val data: JsonValue) {
+class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val lastProgram: Int = 1) {
     data class Actor(var sprite: Int, var x: Float, var y: Float, var frame: Int,
                      var direction: Int = 0, var animate: Boolean = false, var speed: Int = 0, var mask: Int = 0)
     val actors = mutableListOf<Actor>()
-    var program = 0; private set
+    var program = firstProgram; private set
     var map = 0; private set
     var scrollX = 0f; private set
     var scrollY = 0f; private set
@@ -65,7 +65,12 @@ class OpeningTimeline(val data: JsonValue) {
                     }
                     remainingTicks = 8 / step
                 }
-                "C" -> { dialogueId = value.asInt(); pageIndex = 0; visibleCharacters = 0; textAccumulator = 0f; check(page != null) }
+                "C" -> {
+                    val id=value.asInt()
+                    if(data.get("dialogues").get(id.toString()).size>0) {
+                        dialogueId=id;pageIndex=0;visibleCharacters=0;textAccumulator=0f;check(page!=null)
+                    }
+                }
                 "F" -> Unit // 원작 효과음 번호는 데이터에 보존한다. 이번 단계는 화면·대화 실행을 연결한다.
                 "E" -> { fadeTicks=64;fadingOut=true }
                 else -> error("지원하지 않는 시작 연출 명령")
@@ -88,7 +93,7 @@ class OpeningTimeline(val data: JsonValue) {
             if(fadeTicks>0) {
                 fadeTicks--
                 if(fadeTicks==0 && fadingOut) {
-                    if(program==0) { program++;loadProgram();fadingOut=false;execute();fadeTicks=64 }
+                    if(program<lastProgram) { program++;loadProgram();fadingOut=false;execute();fadeTicks=64 }
                     else finished=true
                 }
                 continue
