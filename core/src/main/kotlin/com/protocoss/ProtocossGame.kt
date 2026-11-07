@@ -6,6 +6,7 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
@@ -16,10 +17,16 @@ import com.protocoss.dialogue.DialogueBox
 import com.protocoss.dialogue.DialogueManager
 import com.protocoss.dialogue.DialogueRepository
 import com.protocoss.dialogue.FontManager
+import com.protocoss.map.OriginalMapData
+import com.protocoss.menu.GameMenu
+import com.protocoss.save.DosSave
+import com.protocoss.save.SaveRepository
 import com.protocoss.map.FieldBounds
 import com.protocoss.map.TileMap
 import com.protocoss.map.TileMapRenderer
 import com.protocoss.player.Player
+import java.nio.file.Files
+import java.nio.file.Path
 
 /**
  * 프로토코스 리마스터 엔진의 메인 게임 라이프사이클을 관리합니다.
@@ -27,7 +34,20 @@ import com.protocoss.player.Player
  * 320x200 고정 종횡비 픽셀 뷰포트 내에서 원본 크기의 필드 타일맵 렌더링, 플레이어 8방향 이동,
  * 부드러운 카메라 추적(Lerp Camera Follow) 및 한글 대화창 UI 인터프리터 시스템을 구동합니다.
  */
-class ProtocossGame : ApplicationAdapter() {
+class ProtocossGame(
+    private val originalDirectory: Path? = defaultOriginalDirectory(),
+    saveDirectory: Path = Path.of(System.getProperty("user.home"), "Library/Application Support/Protocoss/Saves")
+) : ApplicationAdapter() {
+    private enum class Scene { TITLE, FIELD, PAUSE, LOAD, SAVE, CONFIRM_SAVE, CONFIRM_TITLE }
+    private var scene = Scene.TITLE
+    private var selected = 0
+    private var loadReturn = Scene.TITLE
+    private var entries = emptyList<SaveRepository.Entry>()
+    private var message = "방향키 선택 · Enter 확인 · Esc 뒤로"
+    private val saves = SaveRepository(saveDirectory, originalDirectory)
+    private lateinit var menu: GameMenu
+    private var session: DosSave? = null
+    private var pendingSlot = 0
 
     private lateinit var batch: SpriteBatch
     private lateinit var camera: OrthographicCamera
@@ -70,6 +90,7 @@ class ProtocossGame : ApplicationAdapter() {
         debugFont.color = Color.YELLOW
 
         fontManager = FontManager()
+        menu = GameMenu(fontManager)
         dialogueRepository = DialogueRepository()
         loadDialogueScripts()
         dialogueManager = DialogueManager()
@@ -96,17 +117,34 @@ class ProtocossGame : ApplicationAdapter() {
 
     override fun render() {
         val delta = Gdx.graphics.deltaTime
-        handleInput(delta)
-        updateFieldView(delta)
-
-        dialogueManager.update(delta)
-        dialogueBox.update(delta)
+        val wasField = scene == Scene.FIELD
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F11)) toggleFullscreen()
+        if (scene == Scene.FIELD) {
+            if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+                scene = Scene.PAUSE
+                selected = 0
+                message = "방향키 선택 · Enter 확인 · Esc 계속"
+            } else {
+                handleInput(delta)
+                updateFieldView(delta)
+                dialogueManager.update(delta)
+                dialogueBox.update(delta)
+            }
+        } else handleMenuInput()
+        // 메뉴 확인에 쓴 Enter·Space가 필드의 대화·이동으로 전달되지 않는다.
+        if (!wasField && scene == Scene.FIELD) updateFieldView(0f)
 
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
 
         // 창 크기·전체화면 전환이 화면 영역을 바꿔도 매 프레임 원래 표시 영역을 복구한다.
         viewport.apply()
+        if (scene != Scene.FIELD) {
+            uiCamera.update()
+            batch.projectionMatrix = uiCamera.combined
+            renderMenu()
+            return
+        }
 
         // 1단계: 월드 좌표계 렌더링 (필드 맵 및 플레이어)
         batch.projectionMatrix = camera.combined
@@ -143,7 +181,7 @@ class ProtocossGame : ApplicationAdapter() {
             batch.begin()
             val retroFont = fontManager.getFont(11)
             retroFont.color = Color(1f, 1f, 0.4f, 0.85f)
-            retroFont.draw(batch, "[T / Space]: 대화 시작 | [WASD]: 이동 | [Shift]: 대시 | [M]: 타일맵 토글", 8f, 192f)
+            retroFont.draw(batch, "WASD 이동  Shift 대시  T 대화  Esc 메뉴", 8f, 192f)
             batch.end()
         }
     }
@@ -156,6 +194,7 @@ class ProtocossGame : ApplicationAdapter() {
 
     override fun dispose() {
         batch.dispose()
+        menu.dispose()
         debugFont.dispose()
         fontManager.dispose()
         dialogueBox.dispose()
@@ -292,18 +331,182 @@ class ProtocossGame : ApplicationAdapter() {
                 currentBackgroundIndex = (currentBackgroundIndex + 1) % backgroundTextures.size
             }
         }
+    }
 
-        // F11: 창 모드 ↔ 전체화면 토글
-        if (Gdx.input.isKeyJustPressed(Input.Keys.F11)) {
-            if (Gdx.graphics.isFullscreen) {
-                Gdx.graphics.setWindowedMode(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT)
-            } else {
-                Gdx.graphics.setFullscreenMode(Gdx.graphics.displayMode)
+    private fun toggleFullscreen() {
+        if (Gdx.graphics.isFullscreen) Gdx.graphics.setWindowedMode(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT)
+        else Gdx.graphics.setFullscreenMode(Gdx.graphics.displayMode)
+    }
+
+    private fun renderMenu() {
+        if (scene == Scene.TITLE) {
+            menu.title(batch, selected)
+            return
+        }
+        val rows = when (scene) {
+            Scene.PAUSE -> listOf("계속하기", "저장하기", "불러오기", "메인 화면")
+            Scene.LOAD, Scene.SAVE -> entries.map {
+                "${it.label}  ${it.error ?: it.save?.location?.take(17) ?: "빈 저장 공간"}"
             }
+            Scene.CONFIRM_SAVE, Scene.CONFIRM_TITLE -> listOf("아니요", "예")
+            else -> emptyList()
+        }
+        val title = when (scene) {
+            Scene.LOAD -> "저장 지점 불러오기"
+            Scene.SAVE -> "진행 저장하기"
+            Scene.CONFIRM_SAVE -> "기존 저장을 덮어쓸까요?"
+            Scene.CONFIRM_TITLE -> "저장하지 않은 진행을 끝낼까요?"
+            else -> "일시 정지"
+        }
+        menu.list(batch, uiCamera.combined, title, rows, selected, message)
+    }
+
+    private fun handleMenuInput() {
+        val count = when (scene) {
+            Scene.TITLE, Scene.CONFIRM_SAVE, Scene.CONFIRM_TITLE -> 2
+            Scene.PAUSE -> 4
+            else -> entries.size
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            when (scene) {
+                Scene.PAUSE -> scene = Scene.FIELD
+                Scene.LOAD -> scene = loadReturn
+                Scene.SAVE -> scene = Scene.PAUSE
+                Scene.CONFIRM_SAVE -> scene = Scene.SAVE
+                Scene.CONFIRM_TITLE -> scene = Scene.PAUSE
+                else -> Unit
+            }
+            selected = 0
+            message = "방향키 선택 · Enter 확인 · Esc 뒤로"
+            return
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.UP) || Gdx.input.isKeyJustPressed(Input.Keys.W)) selected = (selected + count - 1) % count
+        if (Gdx.input.isKeyJustPressed(Input.Keys.DOWN) || Gdx.input.isKeyJustPressed(Input.Keys.S)) selected = (selected + 1) % count
+        var clicked = false
+        if (Gdx.input.justTouched() && Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
+            val x = (Gdx.input.x - viewport.screenX) * 320f / viewport.screenWidth
+            val y = (Gdx.graphics.height - Gdx.input.y - viewport.screenY) * 200f / viewport.screenHeight
+            val row = if (scene == Scene.TITLE) {
+                when { x in 70f..220f && y in 37f..52f -> 0; x in 70f..220f && y in 15f..30f -> 1; else -> -1 }
+            } else if (x in 8f..312f) ((170f - y) / 16f).toInt().takeIf { y <= 170f && y > 170f - count * 16f } ?: -1 else -1
+            if (row in 0 until count) { selected = row; clicked = true }
+        }
+        if (!clicked && !Gdx.input.isKeyJustPressed(Input.Keys.ENTER) && !Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) return
+        when (scene) {
+            Scene.TITLE -> if (selected == 0) startNewGame() else openLoad(Scene.TITLE)
+            Scene.PAUSE -> when (selected) {
+                0 -> scene = Scene.FIELD
+                1 -> {
+                    if (dialogueManager.isActive || !isTileMapMode) message = "대화를 마치고 필드에서 저장해주세요."
+                    else { entries = saves.localEntries(); scene = Scene.SAVE; selected = 0 }
+                }
+                2 -> openLoad(Scene.PAUSE)
+                3 -> { scene = Scene.CONFIRM_TITLE; selected = 0 }
+            }
+            Scene.LOAD -> loadSelected()
+            Scene.SAVE -> {
+                pendingSlot = selected
+                if (Files.exists(entries[selected].file)) { scene = Scene.CONFIRM_SAVE; selected = 0 }
+                else saveSelected()
+            }
+            Scene.CONFIRM_SAVE -> if (selected == 1) saveSelected() else { scene = Scene.SAVE; selected = pendingSlot }
+            Scene.CONFIRM_TITLE -> {
+                if (selected == 1) { dialogueManager.closeDialogue(); scene = Scene.TITLE; session = null }
+                else scene = Scene.PAUSE
+                selected = 0
+            }
+            else -> Unit
         }
     }
 
+    private fun openLoad(returnTo: Scene) {
+        entries = saves.loadEntries()
+        loadReturn = returnTo
+        scene = Scene.LOAD
+        selected = 0
+        message = "방향키 선택 · Enter 불러오기 · Esc 뒤로"
+    }
+
+    private fun startNewGame() {
+        try {
+            val save = DosSave.newGame(Gdx.files.internal("assets/data/original/start.dat").readBytes())
+            enterField(save)
+            currentDemoSegmentId = 0
+        } catch (e: Exception) {
+            showMenuError("새 게임을 시작할 수 없습니다", e)
+        }
+    }
+
+    private fun loadSelected() {
+        val entry = entries[selected]
+        if (entry.save == null) { message = entry.error ?: "저장된 게임이 없습니다."; return }
+        try {
+            val loaded = saves.load(entry)
+            enterField(loaded.save)
+            currentDemoSegmentId = loaded.nextDialogue
+        } catch (e: Exception) {
+            message = "불러오지 못했습니다. 원본 게임 경로와 파일을 확인해주세요."
+            Gdx.app.error("Save", "불러오기 실패: ${entry.file}", e)
+        }
+    }
+
+    private fun enterField(save: DosSave) {
+        // 파일·맵·좌표를 모두 확인한 뒤에 현재 세션을 교체한다.
+        val original = originalDirectory?.let { OriginalMapData.load(it, save.area, save.map) }
+        require(original != null || (save.area == 0 && save.map in 1..2)) { "이 저장 지점에는 원본 MAP 데이터가 필요합니다." }
+        val fallbackMap = if (save.map == 2) "new_game_map.json" else "area00_map.json"
+        val map = original?.map ?: TileMap.fromJson(Gdx.files.internal("assets/data/maps/$fallbackMap").readString())
+        val x = save.worldX
+        val y = save.worldY(map.totalPixelHeight)
+        require(x in 0f..map.totalPixelWidth && y in 0f..map.totalPixelHeight) { "저장 위치가 맵 밖에 있습니다." }
+        val texture = if (original != null) {
+            val pixmap = Pixmap(original.atlasWidth, original.atlasHeight, Pixmap.Format.RGBA8888)
+            try { pixmap.pixels.put(original.rgba).flip(); Texture(pixmap) } finally { pixmap.dispose() }
+        } else Texture(Gdx.files.internal("assets/sprites/maps/area00_tileset.png"))
+        texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest)
+        tilesetTexture?.dispose()
+        tilesetTexture = texture
+        tileMap = map
+        tileMapRenderer = TileMapRenderer(map, texture)
+        isTileMapMode = true
+        dialogueManager.closeDialogue()
+        player.setPosition(x, y)
+        player.update(0f, false, false, false, false)
+        camera.position.set((save.scrollX * 8 + 160).toFloat(), map.totalPixelHeight - (save.scrollY * 8 + 100), 0f)
+        FieldBounds.constrainCamera(camera, map)
+        session = save
+        scene = Scene.FIELD
+    }
+
+    private fun saveSelected() {
+        try {
+            val current = requireNotNull(session).atPosition(player.x, player.y, tileMap!!.totalPixelHeight, tileMap!!.totalPixelWidth)
+            saves.write(pendingSlot, current, currentDemoSegmentId)
+            session = current
+            scene = Scene.PAUSE
+            selected = 0
+            message = "저장 ${pendingSlot + 1}에 기록했습니다."
+        } catch (e: Exception) {
+            scene = Scene.SAVE
+            selected = pendingSlot
+            showMenuError("저장하지 못했습니다. 저장 공간을 확인해주세요.", e)
+        }
+    }
+
+    private fun showMenuError(text: String, cause: Exception) {
+        message = text
+        if (scene == Scene.TITLE) { entries = saves.loadEntries(); scene = Scene.LOAD; loadReturn = Scene.TITLE; selected = 0 }
+        Gdx.app.error("Save", text, cause)
+    }
+
     companion object {
+        fun defaultOriginalDirectory(): Path? {
+            val explicit = System.getProperty("protocoss.gameDir") ?: System.getenv("PROTOCOSS_GAME_DIR")
+            if (explicit != null) return Path.of(explicit)
+            return Path.of(System.getProperty("user.home"), "Downloads/Protocoss/Protocoss_Game")
+                .takeIf { Files.isDirectory(it.resolve("MAP")) }
+        }
+
         /** 카메라 추적 선형 보간 속도 계수 */
         private const val CAMERA_LERP_SPEED: Float = 8f
     }

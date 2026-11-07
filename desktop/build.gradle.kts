@@ -41,3 +41,12 @@ tasks.register<JavaExec>("verifyFieldBounds") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 사용자 저장을 건드리지 않는 시작·저장·불러오기 실행 검사.
+tasks.register<JavaExec>("verifyTitleSave") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.TitleSaveCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}
