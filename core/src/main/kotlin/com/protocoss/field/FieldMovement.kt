@@ -6,7 +6,6 @@ class FieldMovement(private val rules: FieldRules, val map: Int, var layer: Int,
     var x = 0f; private set
     var y = 0f; private set
     var doorOpen = false
-    private val ruleMap get() = if(map==0 && doorOpen) 3 else map
     var direction = 0; private set
     var moving = false; private set
     private var accumulator = 0f
@@ -24,7 +23,10 @@ class FieldMovement(private val rules: FieldRules, val map: Int, var layer: Int,
                 moving = false
                 if (input == 0) continue
                 direction = input
-                val trigger = rules.event(ruleMap,x,y,input)
+                val trigger = rules.event(map,x,y,input,doorOpen)
+                    ?: if(input !in listOf(1,2,4,8)) {
+                        rules.event(map,x,y,input and 5,doorOpen) ?: rules.event(map,x,y,input and 10,doorOpen)
+                    } else null
                 if (trigger != null && event(trigger)) return true
                 val step = allowed(input)
                 val base=when(input) { 1 -> 0;2,3,6 -> 4;4 -> 8;else -> 12 }
@@ -40,14 +42,14 @@ class FieldMovement(private val rules: FieldRules, val map: Int, var layer: Int,
     }
 
     private fun allowed(input: Int): FieldRules.Step {
-        if(input in listOf(1,2,4,8)) return rules.step(ruleMap,x,y,input,layer)
+        if(input in listOf(1,2,4,8)) return rules.step(map,x,y,input,layer,doorOpen)
         // 원작의 대각선 번호는 경사로 이동에도 쓰인다. 동시 키 입력은 두 축 모두 검사한다.
         val horizontal = if(FieldRules.dx(input)>0) 2 else 8
         val vertical = if(FieldRules.dy(input)>0) 4 else 1
         fun path(first: Int, second: Int): FieldRules.Step? {
-            val a=rules.step(ruleMap,x,y,first,layer)
+            val a=rules.step(map,x,y,first,layer,doorOpen)
             if(a.direction!=first) return null
-            val b=rules.step(ruleMap,x+FieldRules.dx(first)*8,y+FieldRules.dy(first)*8,second,a.layer)
+            val b=rules.step(map,x+FieldRules.dx(first)*8,y+FieldRules.dy(first)*8,second,a.layer,doorOpen)
             return b.takeIf { it.direction==second }
         }
         val a=path(horizontal,vertical);val b=path(vertical,horizontal)

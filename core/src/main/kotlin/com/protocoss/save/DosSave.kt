@@ -52,6 +52,12 @@ class DosSave private constructor(private val data: ByteArray) {
         }
         return parse(result)
     }
+    fun withLocation(name: String): DosSave {
+        val encoded=name.toByteArray(JOHAB)
+        require(encoded.size<80)
+        val result=data.copyOf();encoded.copyInto(result);result[encoded.size]=0
+        return parse(result)
+    }
     fun calledEvent(argument: Int): DosSave {
         require(argument in 0..65535)
         val result=data.copyOf()

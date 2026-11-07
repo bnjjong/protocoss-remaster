@@ -14,8 +14,8 @@ class FieldRules(json: String, read: (String) -> ByteArray) {
     val data = JsonReader().parse(json)
     private val maps = data.get("maps").associate { it.name to MapData(it, read(it.getString("file"))) }
     data class Step(val direction: Int, val layer: Int)
-    fun step(map: Int, x: Float, y: Float, direction: Int, layer: Int): Step {
-        val m = maps.getValue(map.toString())
+    fun step(map: Int, x: Float, y: Float, direction: Int, layer: Int, doorOpen: Boolean = false): Step {
+        val m = maps.getValue(if(map==0 && doorOpen) "0-open" else map.toString())
         val column = floor(x / 8f).toInt(); val row = floor(y / 8f).toInt()
         val index = listOf(1, 2, 4, 8).indexOf(direction)
         require(index >= 0 && layer in 0..2)
@@ -28,8 +28,8 @@ class FieldRules(json: String, read: (String) -> ByteArray) {
     }
 
     /** 충돌보다 먼저 검사하는 원작 0x20C10의 발 앞쪽 이벤트 타일. */
-    fun event(map: Int, x: Float, y: Float, direction: Int): Int? {
-        val m = maps.getValue(map.toString())
+    fun event(map: Int, x: Float, y: Float, direction: Int, doorOpen: Boolean = false): Int? {
+        val m = maps.getValue(if(map==0 && doorOpen) "0-open" else map.toString())
         var column = floor(x / 8f).toInt() + 1
         var row = floor(y / 8f).toInt() + 2
         when (direction) { 1 -> row--; 2 -> column += 2; 4 -> row++; 8 -> column -= 2 }

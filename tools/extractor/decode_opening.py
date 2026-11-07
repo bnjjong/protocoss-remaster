@@ -105,14 +105,16 @@ def extract(game_dir, output_root, executable=None):
     sources = {}
     def read(name):
         raw = (game_dir/name).read_bytes(); sources[name]=hashlib.sha256(raw).hexdigest(); return raw
-    programs = [animation(read(f'DATA/AUTOANI.{i:03}')) for i in (0,1,3,6)]
+    programs = [animation(read(f'DATA/AUTOANI.{i:03}')) for i in (0,1,3,6,4)]
     for command in programs[3]['commands']:
         if command['op']=='C':command['value']+=100
+    for command in programs[4]['commands']:
+        if command['op']=='C':command['value']+=200
     script = read('DATA/AREA00.G&M'); count=struct.unpack_from('<H',script,4)[0]
     script = bytes(v^127 for v in script[6+count*2:])
     dialogues = {}
     group_offsets=struct.unpack_from(f'<{count}H',read('DATA/AREA00.G&M'),6)
-    for group,numbers in [(0,(2,3,14,17)),(1,(4,5,6,7))]:
+    for group,numbers in [(0,(2,3,14,17)),(1,(4,5,6,7)),(2,(3,))]:
         p=group_offsets[group];entries={}
         while script[p]==0xf0:
             argument,destination=struct.unpack_from('<HH',script,p+3)
@@ -127,7 +129,12 @@ def extract(game_dir, output_root, executable=None):
             dialogues[str(group*100+number)]=dialogue(script[start+1:end])
     people = read('GRP/PEOPLE.SPR'); sda = read('GRP/PEOPLE.SDA')
     sprite_blocks={}
-    sprite_ids = sorted({0,12,*[i for program in programs for i in program['sprites']]})
+    mo=read_offsets(game_dir/'MAP/AREA00.MDA');maps=read('MAP/AREA00.MAP')
+    npc_sprites=set()
+    for number in (0,1,2,3,4,12):
+        sub=maps[mo[number]:mo[number+1]];start=48+sub[2]*40*sub[3]*25*4+sub[33]*8
+        npc_sprites.update(struct.unpack_from('<I',sub,start+i*54)[0] for i in range(sub[34]))
+    sprite_ids = sorted({0,12,*npc_sprites,*[i for program in programs for i in program['sprites']]})
     atlas = Image.new('RGBA',(12*24,len(sprite_ids)*24)); verified_pixels=0
     for row,number in enumerate(sprite_ids):
         start,length=struct.unpack_from('<II',sda,4+number*8); block=people[start:start+length]
@@ -150,7 +157,7 @@ def extract(game_dir, output_root, executable=None):
         im.save(directory/f'portrait-{number}.png')
     mo=read_offsets(game_dir/'MAP/AREA00.MDA');so=read_offsets(game_dir/'MAP/AREA00.SDA')
     maps=read('MAP/AREA00.MAP');soc=read('MAP/AREA00.SOC');map_info={}
-    for number in (0,1,2):
+    for number in (0,1,2,3,4,12):
         sub=maps[mo[number]:mo[number+1]];w,h=sub[2]*40,sub[3]*25; block=soc[so[sub[32]]:so[sub[32]]+70818]
         pal=block[2:770]; cells=list(struct.iter_unpack('<HH',sub[48:48+w*h*4])); frames=[]
         for i in range(1000):
@@ -205,11 +212,11 @@ def extract(game_dir, output_root, executable=None):
             npcs.append(dict(sprite=values[0],x=values[1],y=values[2],frame=values[13],mask=values[17]))
         map_info[str(number)]=dict(width=w,height=h,cells=[list(c) for c in cells],animations=animations,
                                   next_tiles=list(struct.unpack_from('<1000H',block,66770)),npcs=npcs)
-    chars=sorted(set(''.join(p['speaker']+p['text'] for pages in dialogues.values() for p in pages)) - {'\n'})
+    chars=sorted((set(''.join(p['speaker']+p['text'] for pages in dialogues.values() for p in pages)) | set('엘가임 마을벨슨그의 오두막')) - {'\n'})
     font=read('HANGUL.FNT');english=read('ENGLISH.FNT');tables=code[0x4040:0x4108]
     reference=OpeningReference(code,data,font)
     checkpoints=reference.motions(programs[1])
-    field_checkpoints={str(i):OriginalFieldMachine(executable).animation_checkpoints(programs[i]) for i in (2,3)}
+    field_checkpoints={str(i):OriginalFieldMachine(executable).animation_checkpoints(programs[i]) for i in (2,3,4)}
     glyphs=Image.new('RGBA',(256,((len(chars)+15)//16)*16)); widths={}
     for i,c in enumerate(chars):
         im=glyph(c,font,english,tables)
@@ -221,8 +228,10 @@ def extract(game_dir, output_root, executable=None):
     glyphs.save(directory/'font.png')
     sub=maps[mo[1]:mo[2]]; block=soc[so[1]:so[1]+70818];pal=block[2:770]
     refs=[]
-    jobs=[(1,c) for c in checkpoints]+[(i,c) for i in (2,3) for c in field_checkpoints[str(i)] if c['op']=='C' and dialogues[str(c['dialogue'])]]
+    jobs=[(1,c) for c in checkpoints]+[(i,c) for i in (2,3,4) for c in field_checkpoints[str(i)] if c['op']=='C' and dialogues.get(str(c['dialogue']))]
     for program_index,checkpoint in jobs:
+        number=programs[program_index]['map'];sub=maps[mo[number]:mo[number+1]]
+        start=so[sub[32]];block=soc[start:start+70818];pal=block[2:770]
         im,indices=scene_reference(renderer,sub,block,checkpoint,
             [sprite_blocks[i] for i in programs[program_index]['sprites']],list(data[0x1588:0x1598]),pal)
         remap=block[68770+4*256:68770+5*256]
@@ -242,6 +251,16 @@ def extract(game_dir, output_root, executable=None):
                     shadow=g.copy();shadow.putdata([(0,0,0,p[3]) for p in g.get_flattened_data()]);im.alpha_composite(shadow,(x+1,y+1))
                 im.alpha_composite(g,(x,y));x+=g.width
         name=f"reference-{checkpoint['dialogue']}.png";im.save(directory/name);refs.append(name)
+    for number in (4,12):
+        sub=maps[mo[number]:mo[number+1]];width=sub[2]*40
+        cropped=bytearray(sub[:48]);cropped[2]=1;cropped[3]=1
+        for row in range(25):cropped.extend(sub[48+row*width*4:48+(row*width+40)*4])
+        start=so[sub[32]];block=soc[start:start+70818]
+        checkpoint=dict(actors=[dict(sprite=0,x=72,y=8,frame=8,mask=0)])
+        image,_=scene_reference(renderer,bytes(cropped),block,checkpoint,[sprite_blocks[0]],list(data[0x1588:0x1598]),block[2:770])
+        image.save(directory/f'reference-town-{number}.png')
+    for command in programs[4]['commands']:
+        if command['op']=='C' and command['value']==204:command['op']='V';command['value']='encounter'
     result=dict(programs=programs,dialogues=dialogues,maps=map_info,sprites=sprite_ids,
                 frame_map=list(data[0x1588:0x1598]),motion_frame_bases=[{0x13ca:0,0x13e7:4,0x140e:8,0x1435:12,0x145a:-1}[v] for v in struct.unpack_from('<12I',code,0x1368)],font=dict(characters=''.join(chars),widths=widths),
                 sources=sources,native_sprite_pixels=verified_pixels,native_checkpoints=checkpoints,field_native_checkpoints=field_checkpoints,references=refs)

@@ -25,7 +25,7 @@ class FieldMovementTest {
         assertEquals(FieldRules.Step(1,1),rules.step(0,416f,264f,1,0))
         assertEquals(FieldRules.Step(4,0),rules.step(0,416f,256f,4,1))
         assertEquals(FieldRules.Step(0,1),rules.step(0,336f,216f,1,1))
-        assertEquals(FieldRules.Step(1,1),rules.step(3,336f,216f,1,1))
+        assertEquals(FieldRules.Step(1,1),rules.step(0,336f,216f,1,1,true))
     }
     @Test fun `stage two reentry keeps party removal and item returns`() {
         val bytes=start().bytes()
@@ -65,5 +65,11 @@ class FieldMovementTest {
         val inside=assertNotNull(CabinDoors.travel(progressed,1))
         assertEquals(1,inside.map);assertEquals(3,inside.variable(8));assertEquals(1,inside.variable(6));assertEquals(123,inside.variable(99))
         assertEquals(0,inside.pose);assertEquals(0,inside.layer)
+    }
+    @Test fun `diagonal input cannot bypass first encounter gate`() {
+        val mover=FieldMovement(rules(),3,0);mover.place(104f,0f)
+        var argument:Int?=null
+        assertTrue(mover.update(1f/70f,6,false) { argument=it;true })
+        assertEquals(2,argument);assertEquals(0f,mover.y)
     }
 }

@@ -8,19 +8,23 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.utils.Disposable
 
 /** 영상은 두 프레임 버퍼만 유지하고, 음악은 스트리밍으로 재생한다. */
-class ProloguePlayer : Disposable {
-    val timeline = PrologueTimeline(PrologueStream(Gdx.files.internal("assets/prologue/prologue.pvid").read()))
+class ProloguePlayer(
+    videoPath: String = "assets/prologue/prologue.pvid",
+    musicPath: String? = "assets/prologue/prologue.ogg"
+) : Disposable {
+    val timeline = PrologueTimeline(PrologueStream(Gdx.files.internal(videoPath).read()))
     private val pixmap = Pixmap(320, 200, Pixmap.Format.RGBA8888)
     private val texture: Texture
     private val music: Music?
     private var paused = false
     private var disposed = false
+    private var resumeMusic = false
 
     init {
         timeline.stream.writeRgba(pixmap.pixels)
         texture = Texture(pixmap).apply { setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest) }
         music = try {
-            Gdx.audio.newMusic(Gdx.files.internal("assets/prologue/prologue.ogg"))
+            musicPath?.let { Gdx.audio.newMusic(Gdx.files.internal(it)) }
         } catch (e: Exception) {
             Gdx.app.error("Prologue", "프롤로그 음악을 열지 못했습니다. 영상은 계속 재생합니다.", e)
             null
@@ -45,8 +49,8 @@ class ProloguePlayer : Disposable {
         batch.end()
     }
 
-    fun pause() { paused = true; music?.pause() }
-    fun resume() { if (paused) { paused = false; music?.play() } }
+    fun pause() { resumeMusic=music?.isPlaying==true;paused = true; music?.pause() }
+    fun resume() { if (paused) { paused = false;if(resumeMusic) music?.play() } }
     override fun dispose() {
         if (disposed) return
         disposed = true
