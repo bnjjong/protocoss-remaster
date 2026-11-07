@@ -10,7 +10,7 @@ import unittest
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from decode_user_sprite import decode_frame, extract_kaman, parse_user_spr
+from decode_user_sprite import decode_frame, extract_characters, extract_kaman, parse_user_spr
 
 
 def fixture_frame():
@@ -159,6 +159,84 @@ class UserSpriteTest(unittest.TestCase):
                 extract_kaman(root / 'game', root / 'output')
             self.assertEqual(b'keep-existing-file', target.read_bytes())
             self.assertFalse((target.parent / 'user').exists())
+
+
+    def test_index_alpha_keeps_color_numbers_when_palette_colors_match(self):
+        frame = decode_frame(fixture_frame())
+        rgba = frame.to_image(bytes(768))
+        self.assertEqual(rgba.getpixel((0, 0)), rgba.getpixel((0, 3)))
+        indices = frame.to_index_alpha_image()
+        self.assertEqual('LA', indices.mode)
+        self.assertEqual((0, 255), indices.getpixel((0, 0)))
+        self.assertEqual((255, 255), indices.getpixel((0, 3)))
+        self.assertEqual((0, 0), indices.getpixel((0, 1)))
+
+    def test_selecting_other_character_keeps_kaman_and_uses_its_own_offsets(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / 'game/GRP').mkdir(parents=True)
+            (root / 'game/DATA').mkdir()
+            other = bytearray(fixture_frame())
+            other[8] = 63
+            source = fixture_container([[fixture_frame(), fixture_frame()], [bytes(other)]])
+            (root / 'game/GRP/USER.SPR').write_bytes(source)
+            (root / 'game/DATA/PROTOCOS.PAL').write_bytes(bytes(768))
+            demo = root / 'output/assets/sprites/kaman_test.png'
+            demo.parent.mkdir(parents=True)
+            demo.write_bytes(b'keep-kaman')
+            result = extract_characters(root / 'game', root / 'output', [1])
+            self.assertEqual([1], [row['character_index'] for row in result])
+            self.assertEqual(1, result[0]['frame_count'])
+            self.assertEqual(parse_user_spr(source)[1][0].source_offset,
+                             result[0]['frames'][0]['source_offset'])
+            directory = demo.parent / 'user/character_01'
+            with Image.open(directory / 'indices/frame_000.png') as image:
+                self.assertEqual((63, 255), image.getpixel((0, 0)))
+            self.assertFalse((demo.parent / 'user/character_00').exists())
+            self.assertEqual(b'keep-kaman', demo.read_bytes())
+
+    def test_export_all_characters_creates_separate_manifests_and_index_images(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / 'game/GRP').mkdir(parents=True)
+            (root / 'game/DATA').mkdir()
+            (root / 'game/GRP/USER.SPR').write_bytes(
+                fixture_container([[fixture_frame(), fixture_frame()], [fixture_frame()]]))
+            (root / 'game/DATA/PROTOCOS.PAL').write_bytes(bytes(768))
+            result = extract_characters(root / 'game', root / 'output',
+                                        preview_path=root / 'overview.png', preview_dir=root / 'previews')
+            self.assertEqual([2, 1], [row['frame_count'] for row in result])
+            for manifest in result:
+                directory = root / f"output/assets/sprites/user/character_{manifest['character_index']:02d}"
+                self.assertEqual(manifest, json.loads((directory / 'manifest.json').read_text()))
+                for frame in manifest['frames']:
+                    with Image.open(directory / frame['index_alpha_file']) as image:
+                        self.assertEqual('LA', image.mode)
+                        self.assertEqual((255, 255), image.getpixel((0, 3)))
+            self.assertTrue((root / 'overview.png').is_file())
+            self.assertEqual(2, len(list((root / 'previews').glob('*.png'))))
+
+    def test_invalid_selection_and_broken_other_character_do_not_write_output(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / 'game/GRP').mkdir(parents=True)
+            (root / 'game/DATA').mkdir()
+            source = root / 'game/GRP/USER.SPR'
+            source.write_bytes(fixture_container([[fixture_frame()], [fixture_frame()]]))
+            (root / 'game/DATA/PROTOCOS.PAL').write_bytes(bytes(768))
+            for selection in ([], [-1], [2], [0, 0]):
+                with self.subTest(selection=selection):
+                    with self.assertRaises(ValueError):
+                        extract_characters(root / 'game', root / 'output', selection)
+            self.assertFalse((root / 'output').exists())
+            target = root / 'output/assets/sprites/user/character_00/frame_000.png'
+            target.parent.mkdir(parents=True)
+            target.write_bytes(b'keep-first-character')
+            source.write_bytes(fixture_container([[fixture_frame()], [fixture_frame()[:-1]]]))
+            with self.assertRaises(ValueError):
+                extract_characters(root / 'game', root / 'output')
+            self.assertEqual(b'keep-first-character', target.read_bytes())
+            self.assertFalse((target.parent.parent / 'character_01').exists())
 
 
 if __name__ == '__main__':

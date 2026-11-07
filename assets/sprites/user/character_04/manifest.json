@@ -1,0 +1,533 @@
+{
+  "source": "GRP/USER.SPR",
+  "source_sha256": "f0043a84d3e308a3ecd4104a7ae179044b05ea9e4dff03afd46df1019660b5f7",
+  "palette": "DATA/PROTOCOS.PAL",
+  "palette_sha256": "4b71a6627fc6f9f77dc12cd43d3dc0e9728378d4a2ab1ba041aa455da8c071ca",
+  "character_index": 4,
+  "character_count": 11,
+  "frame_count": 58,
+  "frames": [
+    {
+      "index": 0,
+      "file": "frame_000.png",
+      "width": 29,
+      "height": 42,
+      "source_offset": 213435,
+      "source_size": 752,
+      "index_alpha_file": "indices/frame_000.png"
+    },
+    {
+      "index": 1,
+      "file": "frame_001.png",
+      "width": 30,
+      "height": 42,
+      "source_offset": 214187,
+      "source_size": 774,
+      "index_alpha_file": "indices/frame_001.png"
+    },
+    {
+      "index": 2,
+      "file": "frame_002.png",
+      "width": 30,
+      "height": 42,
+      "source_offset": 214961,
+      "source_size": 785,
+      "index_alpha_file": "indices/frame_002.png"
+    },
+    {
+      "index": 3,
+      "file": "frame_003.png",
+      "width": 27,
+      "height": 42,
+      "source_offset": 215746,
+      "source_size": 726,
+      "index_alpha_file": "indices/frame_003.png"
+    },
+    {
+      "index": 4,
+      "file": "frame_004.png",
+      "width": 27,
+      "height": 42,
+      "source_offset": 216472,
+      "source_size": 727,
+      "index_alpha_file": "indices/frame_004.png"
+    },
+    {
+      "index": 5,
+      "file": "frame_005.png",
+      "width": 27,
+      "height": 42,
+      "source_offset": 217199,
+      "source_size": 728,
+      "index_alpha_file": "indices/frame_005.png"
+    },
+    {
+      "index": 6,
+      "file": "frame_006.png",
+      "width": 27,
+      "height": 42,
+      "source_offset": 217927,
+      "source_size": 727,
+      "index_alpha_file": "indices/frame_006.png"
+    },
+    {
+      "index": 7,
+      "file": "frame_007.png",
+      "width": 25,
+      "height": 42,
+      "source_offset": 218654,
+      "source_size": 785,
+      "index_alpha_file": "indices/frame_007.png"
+    },
+    {
+      "index": 8,
+      "file": "frame_008.png",
+      "width": 30,
+      "height": 42,
+      "source_offset": 219439,
+      "source_size": 969,
+      "index_alpha_file": "indices/frame_008.png"
+    },
+    {
+      "index": 9,
+      "file": "frame_009.png",
+      "width": 22,
+      "height": 42,
+      "source_offset": 220408,
+      "source_size": 645,
+      "index_alpha_file": "indices/frame_009.png"
+    },
+    {
+      "index": 10,
+      "file": "frame_010.png",
+      "width": 26,
+      "height": 39,
+      "source_offset": 221053,
+      "source_size": 721,
+      "index_alpha_file": "indices/frame_010.png"
+    },
+    {
+      "index": 11,
+      "file": "frame_011.png",
+      "width": 34,
+      "height": 35,
+      "source_offset": 221774,
+      "source_size": 790,
+      "index_alpha_file": "indices/frame_011.png"
+    },
+    {
+      "index": 12,
+      "file": "frame_012.png",
+      "width": 47,
+      "height": 16,
+      "source_offset": 222564,
+      "source_size": 743,
+      "index_alpha_file": "indices/frame_012.png"
+    },
+    {
+      "index": 13,
+      "file": "frame_013.png",
+      "width": 49,
+      "height": 15,
+      "source_offset": 223307,
+      "source_size": 701,
+      "index_alpha_file": "indices/frame_013.png"
+    },
+    {
+      "index": 14,
+      "file": "frame_014.png",
+      "width": 22,
+      "height": 42,
+      "source_offset": 224008,
+      "source_size": 657,
+      "index_alpha_file": "indices/frame_014.png"
+    },
+    {
+      "index": 15,
+      "file": "frame_015.png",
+      "width": 22,
+      "height": 42,
+      "source_offset": 224665,
+      "source_size": 670,
+      "index_alpha_file": "indices/frame_015.png"
+    },
+    {
+      "index": 16,
+      "file": "frame_016.png",
+      "width": 22,
+      "height": 42,
+      "source_offset": 225335,
+      "source_size": 690,
+      "index_alpha_file": "indices/frame_016.png"
+    },
+    {
+      "index": 17,
+      "file": "frame_017.png",
+      "width": 25,
+      "height": 42,
+      "source_offset": 226025,
+      "source_size": 760,
+      "index_alpha_file": "indices/frame_017.png"
+    },
+    {
+      "index": 18,
+      "file": "frame_018.png",
+      "width": 22,
+      "height": 42,
+      "source_offset": 226785,
+      "source_size": 646,
+      "index_alpha_file": "indices/frame_018.png"
+    },
+    {
+      "index": 19,
+      "file": "frame_019.png",
+      "width": 22,
+      "height": 42,
+      "source_offset": 227431,
+      "source_size": 653,
+      "index_alpha_file": "indices/frame_019.png"
+    },
+    {
+      "index": 20,
+      "file": "frame_020.png",
+      "width": 22,
+      "height": 42,
+      "source_offset": 228084,
+      "source_size": 667,
+      "index_alpha_file": "indices/frame_020.png"
+    },
+    {
+      "index": 21,
+      "file": "frame_021.png",
+      "width": 37,
+      "height": 42,
+      "source_offset": 228751,
+      "source_size": 827,
+      "index_alpha_file": "indices/frame_021.png"
+    },
+    {
+      "index": 22,
+      "file": "frame_022.png",
+      "width": 33,
+      "height": 43,
+      "source_offset": 229578,
+      "source_size": 840,
+      "index_alpha_file": "indices/frame_022.png"
+    },
+    {
+      "index": 23,
+      "file": "frame_023.png",
+      "width": 27,
+      "height": 42,
+      "source_offset": 230418,
+      "source_size": 815,
+      "index_alpha_file": "indices/frame_023.png"
+    },
+    {
+      "index": 24,
+      "file": "frame_024.png",
+      "width": 32,
+      "height": 42,
+      "source_offset": 231233,
+      "source_size": 875,
+      "index_alpha_file": "indices/frame_024.png"
+    },
+    {
+      "index": 25,
+      "file": "frame_025.png",
+      "width": 26,
+      "height": 42,
+      "source_offset": 232108,
+      "source_size": 808,
+      "index_alpha_file": "indices/frame_025.png"
+    },
+    {
+      "index": 26,
+      "file": "frame_026.png",
+      "width": 29,
+      "height": 43,
+      "source_offset": 232916,
+      "source_size": 921,
+      "index_alpha_file": "indices/frame_026.png"
+    },
+    {
+      "index": 27,
+      "file": "frame_027.png",
+      "width": 37,
+      "height": 44,
+      "source_offset": 233837,
+      "source_size": 1125,
+      "index_alpha_file": "indices/frame_027.png"
+    },
+    {
+      "index": 28,
+      "file": "frame_028.png",
+      "width": 38,
+      "height": 44,
+      "source_offset": 234962,
+      "source_size": 1088,
+      "index_alpha_file": "indices/frame_028.png"
+    },
+    {
+      "index": 29,
+      "file": "frame_029.png",
+      "width": 30,
+      "height": 42,
+      "source_offset": 236050,
+      "source_size": 1025,
+      "index_alpha_file": "indices/frame_029.png"
+    },
+    {
+      "index": 30,
+      "file": "frame_030.png",
+      "width": 54,
+      "height": 47,
+      "source_offset": 237075,
+      "source_size": 1777,
+      "index_alpha_file": "indices/frame_030.png"
+    },
+    {
+      "index": 31,
+      "file": "frame_031.png",
+      "width": 54,
+      "height": 47,
+      "source_offset": 238852,
+      "source_size": 1751,
+      "index_alpha_file": "indices/frame_031.png"
+    },
+    {
+      "index": 32,
+      "file": "frame_032.png",
+      "width": 40,
+      "height": 43,
+      "source_offset": 240603,
+      "source_size": 1037,
+      "index_alpha_file": "indices/frame_032.png"
+    },
+    {
+      "index": 33,
+      "file": "frame_033.png",
+      "width": 59,
+      "height": 51,
+      "source_offset": 241640,
+      "source_size": 1772,
+      "index_alpha_file": "indices/frame_033.png"
+    },
+    {
+      "index": 34,
+      "file": "frame_034.png",
+      "width": 57,
+      "height": 47,
+      "source_offset": 243412,
+      "source_size": 1631,
+      "index_alpha_file": "indices/frame_034.png"
+    },
+    {
+      "index": 35,
+      "file": "frame_035.png",
+      "width": 59,
+      "height": 48,
+      "source_offset": 245043,
+      "source_size": 1659,
+      "index_alpha_file": "indices/frame_035.png"
+    },
+    {
+      "index": 36,
+      "file": "frame_036.png",
+      "width": 22,
+      "height": 42,
+      "source_offset": 246702,
+      "source_size": 645,
+      "index_alpha_file": "indices/frame_036.png"
+    },
+    {
+      "index": 37,
+      "file": "frame_037.png",
+      "width": 22,
+      "height": 42,
+      "source_offset": 247347,
+      "source_size": 645,
+      "index_alpha_file": "indices/frame_037.png"
+    },
+    {
+      "index": 38,
+      "file": "frame_038.png",
+      "width": 22,
+      "height": 42,
+      "source_offset": 247992,
+      "source_size": 645,
+      "index_alpha_file": "indices/frame_038.png"
+    },
+    {
+      "index": 39,
+      "file": "frame_039.png",
+      "width": 33,
+      "height": 43,
+      "source_offset": 248637,
+      "source_size": 966,
+      "index_alpha_file": "indices/frame_039.png"
+    },
+    {
+      "index": 40,
+      "file": "frame_040.png",
+      "width": 52,
+      "height": 42,
+      "source_offset": 249603,
+      "source_size": 1278,
+      "index_alpha_file": "indices/frame_040.png"
+    },
+    {
+      "index": 41,
+      "file": "frame_041.png",
+      "width": 52,
+      "height": 42,
+      "source_offset": 250881,
+      "source_size": 1230,
+      "index_alpha_file": "indices/frame_041.png"
+    },
+    {
+      "index": 42,
+      "file": "frame_042.png",
+      "width": 46,
+      "height": 42,
+      "source_offset": 252111,
+      "source_size": 1064,
+      "index_alpha_file": "indices/frame_042.png"
+    },
+    {
+      "index": 43,
+      "file": "frame_043.png",
+      "width": 22,
+      "height": 42,
+      "source_offset": 253175,
+      "source_size": 646,
+      "index_alpha_file": "indices/frame_043.png"
+    },
+    {
+      "index": 44,
+      "file": "frame_044.png",
+      "width": 22,
+      "height": 42,
+      "source_offset": 253821,
+      "source_size": 670,
+      "index_alpha_file": "indices/frame_044.png"
+    },
+    {
+      "index": 45,
+      "file": "frame_045.png",
+      "width": 23,
+      "height": 42,
+      "source_offset": 254491,
+      "source_size": 714,
+      "index_alpha_file": "indices/frame_045.png"
+    },
+    {
+      "index": 46,
+      "file": "frame_046.png",
+      "width": 32,
+      "height": 44,
+      "source_offset": 255205,
+      "source_size": 969,
+      "index_alpha_file": "indices/frame_046.png"
+    },
+    {
+      "index": 47,
+      "file": "frame_047.png",
+      "width": 35,
+      "height": 48,
+      "source_offset": 256174,
+      "source_size": 1011,
+      "index_alpha_file": "indices/frame_047.png"
+    },
+    {
+      "index": 48,
+      "file": "frame_048.png",
+      "width": 44,
+      "height": 50,
+      "source_offset": 257185,
+      "source_size": 1042,
+      "index_alpha_file": "indices/frame_048.png"
+    },
+    {
+      "index": 49,
+      "file": "frame_049.png",
+      "width": 33,
+      "height": 51,
+      "source_offset": 258227,
+      "source_size": 974,
+      "index_alpha_file": "indices/frame_049.png"
+    },
+    {
+      "index": 50,
+      "file": "frame_050.png",
+      "width": 33,
+      "height": 52,
+      "source_offset": 259201,
+      "source_size": 941,
+      "index_alpha_file": "indices/frame_050.png"
+    },
+    {
+      "index": 51,
+      "file": "frame_051.png",
+      "width": 44,
+      "height": 53,
+      "source_offset": 260142,
+      "source_size": 1062,
+      "index_alpha_file": "indices/frame_051.png"
+    },
+    {
+      "index": 52,
+      "file": "frame_052.png",
+      "width": 33,
+      "height": 52,
+      "source_offset": 261204,
+      "source_size": 965,
+      "index_alpha_file": "indices/frame_052.png"
+    },
+    {
+      "index": 53,
+      "file": "frame_053.png",
+      "width": 33,
+      "height": 51,
+      "source_offset": 262169,
+      "source_size": 952,
+      "index_alpha_file": "indices/frame_053.png"
+    },
+    {
+      "index": 54,
+      "file": "frame_054.png",
+      "width": 44,
+      "height": 50,
+      "source_offset": 263121,
+      "source_size": 1042,
+      "index_alpha_file": "indices/frame_054.png"
+    },
+    {
+      "index": 55,
+      "file": "frame_055.png",
+      "width": 29,
+      "height": 49,
+      "source_offset": 264163,
+      "source_size": 910,
+      "index_alpha_file": "indices/frame_055.png"
+    },
+    {
+      "index": 56,
+      "file": "frame_056.png",
+      "width": 28,
+      "height": 46,
+      "source_offset": 265073,
+      "source_size": 795,
+      "index_alpha_file": "indices/frame_056.png"
+    },
+    {
+      "index": 57,
+      "file": "frame_057.png",
+      "width": 23,
+      "height": 42,
+      "source_offset": 265868,
+      "source_size": 716,
+      "index_alpha_file": "indices/frame_057.png"
+    }
+  ]
+}

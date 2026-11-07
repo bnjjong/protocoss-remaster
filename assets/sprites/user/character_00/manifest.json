@@ -13,7 +13,8 @@
       "width": 34,
       "height": 44,
       "source_offset": 272,
-      "source_size": 897
+      "source_size": 897,
+      "index_alpha_file": "indices/frame_000.png"
     },
     {
       "index": 1,
@@ -21,7 +22,8 @@
       "width": 35,
       "height": 43,
       "source_offset": 1169,
-      "source_size": 902
+      "source_size": 902,
+      "index_alpha_file": "indices/frame_001.png"
     },
     {
       "index": 2,
@@ -29,7 +31,8 @@
       "width": 36,
       "height": 42,
       "source_offset": 2071,
-      "source_size": 908
+      "source_size": 908,
+      "index_alpha_file": "indices/frame_002.png"
     },
     {
       "index": 3,
@@ -37,7 +40,8 @@
       "width": 34,
       "height": 44,
       "source_offset": 2979,
-      "source_size": 897
+      "source_size": 897,
+      "index_alpha_file": "indices/frame_003.png"
     },
     {
       "index": 4,
@@ -45,7 +49,8 @@
       "width": 35,
       "height": 43,
       "source_offset": 3876,
-      "source_size": 902
+      "source_size": 902,
+      "index_alpha_file": "indices/frame_004.png"
     },
     {
       "index": 5,
@@ -53,7 +58,8 @@
       "width": 36,
       "height": 42,
       "source_offset": 4778,
-      "source_size": 908
+      "source_size": 908,
+      "index_alpha_file": "indices/frame_005.png"
     },
     {
       "index": 6,
@@ -61,7 +67,8 @@
       "width": 34,
       "height": 44,
       "source_offset": 5686,
-      "source_size": 897
+      "source_size": 897,
+      "index_alpha_file": "indices/frame_006.png"
     },
     {
       "index": 7,
@@ -69,7 +76,8 @@
       "width": 41,
       "height": 44,
       "source_offset": 6583,
-      "source_size": 1095
+      "source_size": 1095,
+      "index_alpha_file": "indices/frame_007.png"
     },
     {
       "index": 8,
@@ -77,7 +85,8 @@
       "width": 38,
       "height": 44,
       "source_offset": 7678,
-      "source_size": 1052
+      "source_size": 1052,
+      "index_alpha_file": "indices/frame_008.png"
     },
     {
       "index": 9,
@@ -85,7 +94,8 @@
       "width": 35,
       "height": 39,
       "source_offset": 8730,
-      "source_size": 896
+      "source_size": 896,
+      "index_alpha_file": "indices/frame_009.png"
     },
     {
       "index": 10,
@@ -93,7 +103,8 @@
       "width": 32,
       "height": 38,
       "source_offset": 9626,
-      "source_size": 872
+      "source_size": 872,
+      "index_alpha_file": "indices/frame_010.png"
     },
     {
       "index": 11,
@@ -101,7 +112,8 @@
       "width": 32,
       "height": 34,
       "source_offset": 10498,
-      "source_size": 817
+      "source_size": 817,
+      "index_alpha_file": "indices/frame_011.png"
     },
     {
       "index": 12,
@@ -109,7 +121,8 @@
       "width": 32,
       "height": 34,
       "source_offset": 11315,
-      "source_size": 791
+      "source_size": 791,
+      "index_alpha_file": "indices/frame_012.png"
     },
     {
       "index": 13,
@@ -117,7 +130,8 @@
       "width": 39,
       "height": 33,
       "source_offset": 12106,
-      "source_size": 784
+      "source_size": 784,
+      "index_alpha_file": "indices/frame_013.png"
     },
     {
       "index": 14,
@@ -125,7 +139,8 @@
       "width": 60,
       "height": 15,
       "source_offset": 12890,
-      "source_size": 843
+      "source_size": 843,
+      "index_alpha_file": "indices/frame_014.png"
     },
     {
       "index": 15,
@@ -133,7 +148,8 @@
       "width": 59,
       "height": 16,
       "source_offset": 13733,
-      "source_size": 852
+      "source_size": 852,
+      "index_alpha_file": "indices/frame_015.png"
     },
     {
       "index": 16,
@@ -141,7 +157,8 @@
       "width": 44,
       "height": 37,
       "source_offset": 14585,
-      "source_size": 893
+      "source_size": 893,
+      "index_alpha_file": "indices/frame_016.png"
     },
     {
       "index": 17,
@@ -149,7 +166,8 @@
       "width": 34,
       "height": 37,
       "source_offset": 15478,
-      "source_size": 849
+      "source_size": 849,
+      "index_alpha_file": "indices/frame_017.png"
     },
     {
       "index": 18,
@@ -157,7 +175,8 @@
       "width": 33,
       "height": 37,
       "source_offset": 16327,
-      "source_size": 835
+      "source_size": 835,
+      "index_alpha_file": "indices/frame_018.png"
     },
     {
       "index": 19,
@@ -165,7 +184,8 @@
       "width": 44,
       "height": 37,
       "source_offset": 17162,
-      "source_size": 917
+      "source_size": 917,
+      "index_alpha_file": "indices/frame_019.png"
     },
     {
       "index": 20,
@@ -173,7 +193,8 @@
       "width": 33,
       "height": 37,
       "source_offset": 18079,
-      "source_size": 838
+      "source_size": 838,
+      "index_alpha_file": "indices/frame_020.png"
     },
     {
       "index": 21,
@@ -181,7 +202,8 @@
       "width": 32,
       "height": 37,
       "source_offset": 18917,
-      "source_size": 853
+      "source_size": 853,
+      "index_alpha_file": "indices/frame_021.png"
     },
     {
       "index": 22,
@@ -189,7 +211,8 @@
       "width": 63,
       "height": 40,
       "source_offset": 19770,
-      "source_size": 1697
+      "source_size": 1697,
+      "index_alpha_file": "indices/frame_022.png"
     },
     {
       "index": 23,
@@ -197,7 +220,8 @@
       "width": 63,
       "height": 40,
       "source_offset": 21467,
-      "source_size": 1690
+      "source_size": 1690,
+      "index_alpha_file": "indices/frame_023.png"
     },
     {
       "index": 24,
@@ -205,7 +229,8 @@
       "width": 41,
       "height": 35,
       "source_offset": 23157,
-      "source_size": 838
+      "source_size": 838,
+      "index_alpha_file": "indices/frame_024.png"
     },
     {
       "index": 25,
@@ -213,7 +238,8 @@
       "width": 34,
       "height": 46,
       "source_offset": 23995,
-      "source_size": 890
+      "source_size": 890,
+      "index_alpha_file": "indices/frame_025.png"
     },
     {
       "index": 26,
@@ -221,7 +247,8 @@
       "width": 34,
       "height": 46,
       "source_offset": 24885,
-      "source_size": 890
+      "source_size": 890,
+      "index_alpha_file": "indices/frame_026.png"
     },
     {
       "index": 27,
@@ -229,7 +256,8 @@
       "width": 34,
       "height": 46,
       "source_offset": 25775,
-      "source_size": 890
+      "source_size": 890,
+      "index_alpha_file": "indices/frame_027.png"
     },
     {
       "index": 28,
@@ -237,7 +265,8 @@
       "width": 37,
       "height": 40,
       "source_offset": 26665,
-      "source_size": 953
+      "source_size": 953,
+      "index_alpha_file": "indices/frame_028.png"
     },
     {
       "index": 29,
@@ -245,7 +274,8 @@
       "width": 62,
       "height": 39,
       "source_offset": 27618,
-      "source_size": 1426
+      "source_size": 1426,
+      "index_alpha_file": "indices/frame_029.png"
     },
     {
       "index": 30,
@@ -253,7 +283,8 @@
       "width": 56,
       "height": 35,
       "source_offset": 29044,
-      "source_size": 1093
+      "source_size": 1093,
+      "index_alpha_file": "indices/frame_030.png"
     },
     {
       "index": 31,
@@ -261,7 +292,8 @@
       "width": 36,
       "height": 35,
       "source_offset": 30137,
-      "source_size": 791
+      "source_size": 791,
+      "index_alpha_file": "indices/frame_031.png"
     },
     {
       "index": 32,
@@ -269,7 +301,8 @@
       "width": 42,
       "height": 36,
       "source_offset": 30928,
-      "source_size": 924
+      "source_size": 924,
+      "index_alpha_file": "indices/frame_032.png"
     },
     {
       "index": 33,
@@ -277,7 +310,8 @@
       "width": 81,
       "height": 38,
       "source_offset": 31852,
-      "source_size": 1502
+      "source_size": 1502,
+      "index_alpha_file": "indices/frame_033.png"
     },
     {
       "index": 34,
@@ -285,7 +319,8 @@
       "width": 48,
       "height": 38,
       "source_offset": 33354,
-      "source_size": 1093
+      "source_size": 1093,
+      "index_alpha_file": "indices/frame_034.png"
     },
     {
       "index": 35,
@@ -293,7 +328,8 @@
       "width": 48,
       "height": 38,
       "source_offset": 34447,
-      "source_size": 985
+      "source_size": 985,
+      "index_alpha_file": "indices/frame_035.png"
     },
     {
       "index": 36,
@@ -301,7 +337,8 @@
       "width": 34,
       "height": 39,
       "source_offset": 35432,
-      "source_size": 881
+      "source_size": 881,
+      "index_alpha_file": "indices/frame_036.png"
     },
     {
       "index": 37,
@@ -309,7 +346,8 @@
       "width": 74,
       "height": 35,
       "source_offset": 36313,
-      "source_size": 1292
+      "source_size": 1292,
+      "index_alpha_file": "indices/frame_037.png"
     },
     {
       "index": 38,
@@ -317,7 +355,8 @@
       "width": 76,
       "height": 35,
       "source_offset": 37605,
-      "source_size": 1223
+      "source_size": 1223,
+      "index_alpha_file": "indices/frame_038.png"
     },
     {
       "index": 39,
@@ -325,7 +364,8 @@
       "width": 74,
       "height": 35,
       "source_offset": 38828,
-      "source_size": 1163
+      "source_size": 1163,
+      "index_alpha_file": "indices/frame_039.png"
     },
     {
       "index": 40,
@@ -333,7 +373,8 @@
       "width": 50,
       "height": 43,
       "source_offset": 39991,
-      "source_size": 1068
+      "source_size": 1068,
+      "index_alpha_file": "indices/frame_040.png"
     },
     {
       "index": 41,
@@ -341,7 +382,8 @@
       "width": 58,
       "height": 43,
       "source_offset": 41059,
-      "source_size": 1151
+      "source_size": 1151,
+      "index_alpha_file": "indices/frame_041.png"
     },
     {
       "index": 42,
@@ -349,7 +391,8 @@
       "width": 60,
       "height": 43,
       "source_offset": 42210,
-      "source_size": 1166
+      "source_size": 1166,
+      "index_alpha_file": "indices/frame_042.png"
     },
     {
       "index": 43,
@@ -357,7 +400,8 @@
       "width": 39,
       "height": 42,
       "source_offset": 43376,
-      "source_size": 897
+      "source_size": 897,
+      "index_alpha_file": "indices/frame_043.png"
     },
     {
       "index": 44,
@@ -365,7 +409,8 @@
       "width": 40,
       "height": 42,
       "source_offset": 44273,
-      "source_size": 899
+      "source_size": 899,
+      "index_alpha_file": "indices/frame_044.png"
     },
     {
       "index": 45,
@@ -373,7 +418,8 @@
       "width": 43,
       "height": 47,
       "source_offset": 45172,
-      "source_size": 1171
+      "source_size": 1171,
+      "index_alpha_file": "indices/frame_045.png"
     },
     {
       "index": 46,
@@ -381,7 +427,8 @@
       "width": 59,
       "height": 60,
       "source_offset": 46343,
-      "source_size": 1274
+      "source_size": 1274,
+      "index_alpha_file": "indices/frame_046.png"
     },
     {
       "index": 47,
@@ -389,7 +436,8 @@
       "width": 48,
       "height": 54,
       "source_offset": 47617,
-      "source_size": 1326
+      "source_size": 1326,
+      "index_alpha_file": "indices/frame_047.png"
     },
     {
       "index": 48,
@@ -397,7 +445,8 @@
       "width": 59,
       "height": 65,
       "source_offset": 48943,
-      "source_size": 1322
+      "source_size": 1322,
+      "index_alpha_file": "indices/frame_048.png"
     },
     {
       "index": 49,
@@ -405,7 +454,8 @@
       "width": 52,
       "height": 61,
       "source_offset": 50265,
-      "source_size": 1358
+      "source_size": 1358,
+      "index_alpha_file": "indices/frame_049.png"
     },
     {
       "index": 50,
@@ -413,7 +463,8 @@
       "width": 59,
       "height": 73,
       "source_offset": 51623,
-      "source_size": 1324
+      "source_size": 1324,
+      "index_alpha_file": "indices/frame_050.png"
     },
     {
       "index": 51,
@@ -421,7 +472,8 @@
       "width": 27,
       "height": 68,
       "source_offset": 52947,
-      "source_size": 933
+      "source_size": 933,
+      "index_alpha_file": "indices/frame_051.png"
     },
     {
       "index": 52,
@@ -429,7 +481,8 @@
       "width": 30,
       "height": 56,
       "source_offset": 53880,
-      "source_size": 943
+      "source_size": 943,
+      "index_alpha_file": "indices/frame_052.png"
     },
     {
       "index": 53,
@@ -437,7 +490,8 @@
       "width": 36,
       "height": 41,
       "source_offset": 54823,
-      "source_size": 880
+      "source_size": 880,
+      "index_alpha_file": "indices/frame_053.png"
     },
     {
       "index": 54,
@@ -445,7 +499,8 @@
       "width": 37,
       "height": 43,
       "source_offset": 55703,
-      "source_size": 914
+      "source_size": 914,
+      "index_alpha_file": "indices/frame_054.png"
     }
   ]
 }
