@@ -74,6 +74,11 @@ private class BoundsApplication : ApplicationAdapter() {
         .apply { isAccessible = true }.get(game) as T
 
     override fun create() {
+        // 자동 검사는 시스템 음량과 다른 앱을 건드리지 않고 이 앱의 음악만 음소거한다.
+        val nativeAudio = Gdx.audio
+        Gdx.audio = object : com.badlogic.gdx.Audio by nativeAudio {
+            override fun newMusic(file: com.badlogic.gdx.files.FileHandle) = nativeAudio.newMusic(file).apply { volume = 0f }
+        }
         val nativeInput = Gdx.input
         nativeGraphics = Gdx.graphics
         fixedInput = object : Input by nativeInput {
@@ -86,6 +91,13 @@ private class BoundsApplication : ApplicationAdapter() {
         Gdx.input = fixedInput
         Gdx.graphics = fixedGraphics
         game.create()
+        // 경계 검사는 원작 시작 흐름을 거쳐 프롤로그를 건너뛴 필드에서 시작한다.
+        justPressed.add(Input.Keys.ENTER)
+        game.render()
+        justPressed.clear()
+        justPressed.add(Input.Keys.ESCAPE)
+        game.render()
+        justPressed.clear()
         background = Pixmap(Gdx.files.internal("docs/images/new-game-field.png"))
         sprite = Pixmap(Gdx.files.internal("assets/sprites/kaman_test.png"))
     }
@@ -100,7 +112,6 @@ private class BoundsApplication : ApplicationAdapter() {
         held.addAll(scenario.keys)
         justPressed.clear()
         if (tick == 0) {
-            if (scenario.name == "initial") justPressed.add(Input.Keys.ENTER)
             when (scenario.name) {
                 "gallery" -> {
                     justPressed.add(Input.Keys.M)

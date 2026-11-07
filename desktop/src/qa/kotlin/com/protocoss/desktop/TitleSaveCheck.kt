@@ -67,6 +67,11 @@ private class MenuCheck(private val directory: Path) : ApplicationAdapter() {
     private fun checkScene(expected: String) = check(scene() == expected) { "단계 $step: $expected 대신 ${scene()}" }
 
     override fun create() {
+        // 자동 검사는 시스템 음량과 다른 앱을 건드리지 않고 이 앱의 음악만 음소거한다.
+        val nativeAudio = Gdx.audio
+        Gdx.audio = object : com.badlogic.gdx.Audio by nativeAudio {
+            override fun newMusic(file: com.badlogic.gdx.files.FileHandle) = nativeAudio.newMusic(file).apply { volume = 0f }
+        }
         val nativeInput = Gdx.input
         val nativeGraphics = Gdx.graphics
         input = object : Input by nativeInput {
@@ -163,6 +168,12 @@ private class MenuCheck(private val directory: Path) : ApplicationAdapter() {
             }
         }
         game.render()
+        if (scene() == "PROLOGUE") {
+            check(step in listOf(5, 32, 61)) { "불러오기가 프롤로그로 들어갔습니다." }
+            pressed.clear()
+            pressed.add(Input.Keys.ESCAPE)
+            game.render()
+        }
         when (step) {
             0 -> { checkScene("TITLE"); compareTitle(0); capture("title") }
             1 -> { checkScene("TITLE"); compareTitle(1) }

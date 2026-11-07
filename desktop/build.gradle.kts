@@ -50,3 +50,22 @@ tasks.register<JavaExec>("verifyTitleSave") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 원작 프롤로그의 실제 화면·음악 상태·종료·스킵 검사.
+tasks.register<JavaExec>("verifyPrologue") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.PrologueCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}
+
+// 전체 재생 시간을 그대로 실행해 영상·음악의 동기와 자연 종료를 확인한다.
+tasks.register<JavaExec>("verifyPrologueRealtime") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.PrologueCheck")
+    args("--realtime")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}
