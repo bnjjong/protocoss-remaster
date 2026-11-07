@@ -25,6 +25,7 @@ import com.protocoss.map.FieldBounds
 import com.protocoss.map.TileMap
 import com.protocoss.map.TileMapRenderer
 import com.protocoss.player.Player
+import com.protocoss.prologue.ProloguePlayer
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -38,7 +39,7 @@ class ProtocossGame(
     private val originalDirectory: Path? = defaultOriginalDirectory(),
     saveDirectory: Path = Path.of(System.getProperty("user.home"), "Library/Application Support/Protocoss/Saves")
 ) : ApplicationAdapter() {
-    private enum class Scene { TITLE, FIELD, PAUSE, LOAD, SAVE, CONFIRM_SAVE, CONFIRM_TITLE }
+    private enum class Scene { TITLE, PROLOGUE, FIELD, PAUSE, LOAD, SAVE, CONFIRM_SAVE, CONFIRM_TITLE }
     private var scene = Scene.TITLE
     private var selected = 0
     private var loadReturn = Scene.TITLE
@@ -48,6 +49,7 @@ class ProtocossGame(
     private lateinit var menu: GameMenu
     private var session: DosSave? = null
     private var pendingSlot = 0
+    private var prologue: ProloguePlayer? = null
 
     private lateinit var batch: SpriteBatch
     private lateinit var camera: OrthographicCamera
@@ -119,7 +121,16 @@ class ProtocossGame(
         val delta = Gdx.graphics.deltaTime
         val wasField = scene == Scene.FIELD
         if (Gdx.input.isKeyJustPressed(Input.Keys.F11)) toggleFullscreen()
-        if (scene == Scene.FIELD) {
+        if (scene == Scene.PROLOGUE) {
+            val movie = requireNotNull(prologue)
+            if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) ||
+                Gdx.input.isKeyJustPressed(Input.Keys.SPACE) ||
+                Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) finishPrologue()
+            else {
+                movie.update(delta)
+                if (movie.finished) finishPrologue()
+            }
+        } else if (scene == Scene.FIELD) {
             if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
                 scene = Scene.PAUSE
                 selected = 0
@@ -142,7 +153,7 @@ class ProtocossGame(
         if (scene != Scene.FIELD) {
             uiCamera.update()
             batch.projectionMatrix = uiCamera.combined
-            renderMenu()
+            if (scene == Scene.PROLOGUE) prologue!!.render(batch) else renderMenu()
             return
         }
 
@@ -192,7 +203,11 @@ class ProtocossGame(
         camera.update()
     }
 
+    override fun pause() { prologue?.pause() }
+    override fun resume() { prologue?.resume() }
+
     override fun dispose() {
+        prologue?.dispose()
         batch.dispose()
         menu.dispose()
         debugFont.dispose()
@@ -428,13 +443,27 @@ class ProtocossGame(
     }
 
     private fun startNewGame() {
+        var movie: ProloguePlayer? = null
         try {
             val save = DosSave.newGame(Gdx.files.internal("assets/data/original/start.dat").readBytes())
+            movie = ProloguePlayer()
             enterField(save)
             currentDemoSegmentId = 0
+            prologue = movie
+            scene = Scene.PROLOGUE
+            movie.play()
         } catch (e: Exception) {
+            movie?.dispose()
+            prologue = null
+            scene = Scene.TITLE
             showMenuError("새 게임을 시작할 수 없습니다", e)
         }
+    }
+
+    private fun finishPrologue() {
+        prologue?.dispose()
+        prologue = null
+        scene = Scene.FIELD
     }
 
     private fun loadSelected() {
