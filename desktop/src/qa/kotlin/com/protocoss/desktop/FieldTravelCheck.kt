@@ -150,7 +150,11 @@ private class TravelApplication(val saves:Path):ApplicationAdapter() {
             val outside=field<DosSave>("session")
             check(outside.map==0 && outside.variable(0)==1 && outside.layer==1)
             capture("yard-stage-$stage")
-            val back=route();back.forEach { walk(it);steps++ }
+            val back=route();back.forEach {
+                walk(it);steps++
+                if(field<com.protocoss.field.FieldMovement>("fieldMovement").doorOpen)
+                    check(field<DosSave>("session").variable(1)==0)
+            }
             if(stage==2) completeEvent(3)
             idle()
             val inside=field<DosSave>("session")

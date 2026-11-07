@@ -52,6 +52,12 @@ class DosSave private constructor(private val data: ByteArray) {
         }
         return parse(result)
     }
+    fun calledEvent(argument: Int): DosSave {
+        require(argument in 0..65535)
+        val result=data.copyOf()
+        ByteBuffer.wrap(result).order(ByteOrder.LITTLE_ENDIAN).putShort(2344,argument.toShort())
+        return parse(result)
+    }
     fun bytes(): ByteArray = data.copyOf()
 
     /** 좌표 외의 인벤토리·파티·이벤트 600바이트 등을 다시 쓰거나 초기화하지 않는다. */

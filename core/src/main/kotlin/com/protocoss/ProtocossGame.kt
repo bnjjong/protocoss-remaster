@@ -401,6 +401,7 @@ class ProtocossGame(
         val current=requireNotNull(session)
         if(current.map==0 && event==0 && current.variable(0)==1 && !movement.doorOpen) {
             movement.doorOpen=true
+            session=current.calledEvent(0)
             openingRenderer.openCabinDoor(fieldRules.data.get("door_changes"))
         }
         if(current.map==2 && event==16 && current.variable(6)==0) {
