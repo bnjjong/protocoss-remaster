@@ -17,8 +17,12 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
         it.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest); textures += it
     }
     private val people = texture("people.png")
+    private val darkPeople = (0..2).associateWith { texture("people-dialogue-$it.png") }
+    private val darkFronts = (0..2).associateWith { texture("fronts-dialogue-$it.png") }
+    private val darkOverlays = (0..2).associateWith { texture("overlays-dialogue-$it.png") }
+    private var dialoguePass = false
     private val font = texture("font.png")
-    private val portraits = mapOf(0 to texture("portrait-0.png"), 17 to texture("portrait-17.png"))
+    private val portraits = mapOf(0 to texture("portrait-0.png"), 1 to texture("portrait-1.png"), 17 to texture("portrait-17.png"))
     private val tiles = (0..2).associateWith { texture("tiles-$it.png") }
     private val dialogueBackgrounds = (0..2).associateWith { texture("dialogue-background-$it.png") }
     private val fronts = (0..2).associateWith { texture("fronts-$it.png") }
@@ -51,7 +55,10 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
 
     private fun map(number: Int): JsonValue = data.get("maps").get(number.toString())
     private fun tile(batch: SpriteBatch, texture: Texture, id: Int, x: Float, y: Float, size: Float = 8f) {
-        batch.draw(texture,x,y,size,size,id%40*8,id/40*8,8,8,false,false)
+        val bottom=if(dialoguePass) maxOf(y,26f) else y
+        val top=if(dialoguePass) minOf(y+size,66f) else y+size
+        if(top<=bottom) return
+        batch.draw(texture,x,bottom,size,top-bottom,id%40*8,id/40*8+(y+size-top).toInt(),8,(top-bottom).toInt(),false,false)
     }
 
     fun render(batch: SpriteBatch) {
@@ -66,6 +73,12 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
             // 원작은 화면 (0,134)..(320,174)에 배경을 어둡게 비친다.
             batch.draw(dialogueBackgrounds.getValue(timeline.map),0f,26f,320f,40f,
                 timeline.scrollX.toInt(),timeline.scrollY.toInt()+134,320,40,false,false)
+            dialoguePass=true
+            timeline.actors.forEach { actor ->
+                renderActor(batch,sprites[actor.sprite].asInt(),actor.frame,actor.x-timeline.scrollX,actor.y-timeline.scrollY)
+                coverActor(batch,timeline.map,actor.x,actor.y,timeline.scrollX,timeline.scrollY,actor.mask)
+            }
+            dialoguePass=false
             val portrait = portraits[page.getInt("portrait")]
             if (portrait != null) batch.draw(portrait,14f,200f-62f-portrait.height,portrait.width.toFloat(),portrait.height.toFloat())
             text(batch,page.getString("speaker"),if(portrait == null)14f else 94f,118f,Color(252f/255f,252f/255f,0f,1f))
@@ -74,7 +87,14 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
         fade(batch,timeline.fadeAlpha)
     }
 
-    fun renderMap(batch: SpriteBatch, number: Int, sx: Float, sy: Float) {
+    fun resetFieldMaps() {
+        cells.forEach { (number,values) -> map(number).get("cells").forEachIndexed { index,value -> values[index]=value[0].asInt() } }
+        cells.keys.forEach { mapTicks[it]=animationTick }
+    }
+    fun openCabinDoor(changes: JsonValue) {
+        changes.forEach { cells.getValue(0)[it.getInt("index")]=it.getInt("tid") }
+    }
+    fun renderMap(batch: SpriteBatch, number: Int, sx: Float, sy: Float, fullMap: Boolean = false) {
         val m = map(number); val width = m.getInt("width"); val height = m.getInt("height")
         val current = cells.getValue(number)
         if (mapTicks[number] != animationTick) {
@@ -89,15 +109,20 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
             }
             mapTicks[number] = animationTick
         }
-        for (y in floor(sy/8).toInt().coerceAtLeast(0)..((sy+199)/8).toInt().coerceAtMost(height-1))
-            for(x in floor(sx/8).toInt().coerceAtLeast(0)..((sx+319)/8).toInt().coerceAtMost(width-1))
+        for (y in (if(fullMap) 0 else floor(sy/8).toInt().coerceAtLeast(0))..(if(fullMap) height-1 else ((sy+199)/8).toInt().coerceAtMost(height-1)))
+            for(x in (if(fullMap) 0 else floor(sx/8).toInt().coerceAtLeast(0))..(if(fullMap) width-1 else ((sx+319)/8).toInt().coerceAtMost(width-1)))
                 tile(batch,tiles.getValue(number),current[y*width+x] and 4095,x*8f-sx,192f-y*8f+sy)
     }
 
     fun renderActor(batch: SpriteBatch, sprite: Int, frame: Int, x: Float, topY: Float) {
         val row = spriteRows[sprite] ?: return
         val source = data.get("frame_map")[frame.mod(16)].asInt()
-        batch.draw(people,x,176f-topY,24f,24f,source*24,row*24,24,24,false,false)
+        val y=176f-topY
+        val bottom=if(dialoguePass) maxOf(y,26f) else y
+        val top=if(dialoguePass) minOf(y+24,66f) else y+24
+        if(top<=bottom) return
+        batch.draw(if(dialoguePass) darkPeople.getValue(timeline.map) else people,x,bottom,24f,top-bottom,
+            source*24,row*24+(y+24-top).toInt(),24,(top-bottom).toInt(),false,false)
     }
 
     fun coverActor(batch: SpriteBatch, number: Int, x: Float, y: Float, sx: Float, sy: Float, mask: Int) {
@@ -117,7 +142,7 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
                 2 -> cell[1].asInt() and (if(bottom) 1024 else 512) != 0
                 else -> false
             }
-            if(flag) tile(batch,(if(bottom) overlays else fronts).getValue(number),current[ty*width+tx] and 4095,tx*8f-sx,192f-ty*8f+sy)
+            if(flag) tile(batch,(if(dialoguePass) { if(bottom) darkOverlays else darkFronts } else { if(bottom) overlays else fronts }).getValue(number),current[ty*width+tx] and 4095,tx*8f-sx,192f-ty*8f+sy)
         }
     }
 

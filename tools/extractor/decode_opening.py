@@ -95,25 +95,36 @@ def glyph(char, font, english, tables):
     return image
 
 
-def extract(game_dir, output_root):
+def extract(game_dir, output_root, executable=None):
     directory = output_root/'assets/opening'; directory.mkdir(parents=True,exist_ok=True)
-    executable = unpack_game(game_dir)
+    executable = executable if executable is not None else unpack_game(game_dir)
+    from original_field import OriginalFieldMachine
     (_,code),(_,data) = objects(executable)
     renderer = OriginalSpriteRenderer(executable)
     palette = (game_dir/'DATA/PROTOCOS.PAL').read_bytes()
     sources = {}
     def read(name):
         raw = (game_dir/name).read_bytes(); sources[name]=hashlib.sha256(raw).hexdigest(); return raw
-    programs = [animation(read(f'DATA/AUTOANI.{i:03}')) for i in range(2)]
+    programs = [animation(read(f'DATA/AUTOANI.{i:03}')) for i in (0,1,3,6)]
+    for command in programs[3]['commands']:
+        if command['op']=='C':command['value']+=100
     script = read('DATA/AREA00.G&M'); count=struct.unpack_from('<H',script,4)[0]
     script = bytes(v^127 for v in script[6+count*2:])
-    entries = {struct.unpack_from('<H',script,p+3)[0]:struct.unpack_from('<H',script,p+5)[0] for p in range(0,105,7)}
     dialogues = {}
-    for number in (2,3,14):
-        start = entries[number]
-        if script[start]!=3: raise ValueError('시작 대화 명령이 다릅니다.')
-        end=script.index(b'\x00',start)
-        dialogues[str(number)] = dialogue(script[start+1:end])
+    group_offsets=struct.unpack_from(f'<{count}H',read('DATA/AREA00.G&M'),6)
+    for group,numbers in [(0,(2,3,14,17)),(1,(4,5,6,7))]:
+        p=group_offsets[group];entries={}
+        while script[p]==0xf0:
+            argument,destination=struct.unpack_from('<HH',script,p+3)
+            entries[argument]=destination;p+=7
+        for number in numbers:
+            if number not in entries:
+                dialogues[str(group*100+number)]=[]
+                continue
+            start=entries[number]
+            if script[start]!=3:raise ValueError('대화 명령이 다릅니다.')
+            end=script.index(b'\x00',start)
+            dialogues[str(group*100+number)]=dialogue(script[start+1:end])
     people = read('GRP/PEOPLE.SPR'); sda = read('GRP/PEOPLE.SDA')
     sprite_blocks={}
     sprite_ids = sorted({0,12,*[i for program in programs for i in program['sprites']]})
@@ -133,7 +144,7 @@ def extract(game_dir, output_root):
             atlas.paste(image,(frame*24,row*24));verified_pixels+=576
     atlas.save(directory/'people.png')
     common=parse_img(read('GRP/COMMON.IMG'))
-    for number in (0,17):
+    for number in (0,1,17):
         f=decode_img_frame(common[number]); im=f.to_image(palette)
         if im.tobytes()!=renderer.render(struct.pack('<HH',f.width,f.height)+common[number],palette).tobytes():raise ValueError('초상화 픽셀 불일치')
         im.save(directory/f'portrait-{number}.png')
@@ -158,6 +169,26 @@ def extract(game_dir, output_root):
             front=frames[chosen].copy();front.putalpha(Image.frombytes('L',(8,8),bytes(0 if c==255 else 255 for c in ids)))
             fronts.paste(front,(i%40*8,i//40*8))
         tiles.save(directory/f'tiles-{number}.png');overlays.save(directory/f'overlays-{number}.png');fronts.save(directory/f'fronts-{number}.png')
+        remap=block[68770+4*256:68770+5*256]
+        def remapped(indices,alpha=None,size=(8,8)):
+            image=Image.frombytes('P',size,bytes(remap[c] for c in indices));image.putpalette([v*4 for v in pal])
+            image=image.convert('RGBA')
+            if alpha is not None:image.putalpha(Image.frombytes('L',size,alpha))
+            return image
+        dark_people=Image.new('RGBA',atlas.size)
+        for row,sprite in enumerate(sprite_ids):
+            for frame,raw in enumerate(sprite_blocks[sprite]):
+                decoded=decode_img_frame(raw)
+                dark_people.paste(remapped(decoded.indices,decoded.alpha,(24,24)),(frame*24,row*24))
+        dark_people.save(directory/f'people-dialogue-{number}.png')
+        for name,use_original in [('overlays',False),('fronts',True)]:
+            image=Image.new('RGBA',(320,200))
+            for tile in range(1000):
+                chosen=(lut[tile]&4095) or (tile if use_original else 0)
+                ids=decode_tile_pixels(block[770+chosen*64:834+chosen*64])
+                image.paste(remapped(ids,bytes(0 if c==255 else 255 for c in ids)),(tile%40*8,tile//40*8))
+            image.save(directory/f'{name}-dialogue-{number}.png')
+
         dark=Image.new('RGBA',(w*8,h*8))
         remap=block[68770+4*256:68770+5*256]
         for i,(tid,_) in enumerate(cells):
@@ -178,6 +209,7 @@ def extract(game_dir, output_root):
     font=read('HANGUL.FNT');english=read('ENGLISH.FNT');tables=code[0x4040:0x4108]
     reference=OpeningReference(code,data,font)
     checkpoints=reference.motions(programs[1])
+    field_checkpoints={str(i):OriginalFieldMachine(executable).animation_checkpoints(programs[i]) for i in (2,3)}
     glyphs=Image.new('RGBA',(256,((len(chars)+15)//16)*16)); widths={}
     for i,c in enumerate(chars):
         im=glyph(c,font,english,tables)
@@ -189,17 +221,19 @@ def extract(game_dir, output_root):
     glyphs.save(directory/'font.png')
     sub=maps[mo[1]:mo[2]]; block=soc[so[1]:so[1]+70818];pal=block[2:770]
     refs=[]
-    for checkpoint in checkpoints:
+    jobs=[(1,c) for c in checkpoints]+[(i,c) for i in (2,3) for c in field_checkpoints[str(i)] if c['op']=='C' and dialogues[str(c['dialogue'])]]
+    for program_index,checkpoint in jobs:
         im,indices=scene_reference(renderer,sub,block,checkpoint,
-            [sprite_blocks[i] for i in programs[1]['sprites']],list(data[0x1588:0x1598]),pal)
+            [sprite_blocks[i] for i in programs[program_index]['sprites']],list(data[0x1588:0x1598]),pal)
         remap=block[68770+4*256:68770+5*256]
         for y in range(134,174):
             for x in range(320):
                 index=remap[indices[y*320+x]];im.putpixel((x,y),tuple(v*4 for v in pal[index*3:index*3+3])+(255,))
         page=dialogues[str(checkpoint['dialogue'])][0]
-        portrait=decode_img_frame(common[page['portrait']]).to_image(palette)
-        im.alpha_composite(portrait,(14,62))
-        for value,x,y,color in [(page['speaker'],94,118,(252,252,0,255)),(page['text'],14,139,(252,252,252,255))]:
+        if page['portrait']>=0:
+            portrait=decode_img_frame(common[page['portrait']]).to_image(palette)
+            im.alpha_composite(portrait,(14,62))
+        for value,x,y,color in [(page['speaker'],94 if page['portrait']>=0 else 14,118,(252,252,0,255)),(page['text'],14,139,(252,252,252,255))]:
             left=x
             for ch in value:
                 if ch=='\n':x=left;y+=16;continue
@@ -210,7 +244,7 @@ def extract(game_dir, output_root):
         name=f"reference-{checkpoint['dialogue']}.png";im.save(directory/name);refs.append(name)
     result=dict(programs=programs,dialogues=dialogues,maps=map_info,sprites=sprite_ids,
                 frame_map=list(data[0x1588:0x1598]),motion_frame_bases=[{0x13ca:0,0x13e7:4,0x140e:8,0x1435:12,0x145a:-1}[v] for v in struct.unpack_from('<12I',code,0x1368)],font=dict(characters=''.join(chars),widths=widths),
-                sources=sources,native_sprite_pixels=verified_pixels,native_checkpoints=checkpoints,references=refs)
+                sources=sources,native_sprite_pixels=verified_pixels,native_checkpoints=checkpoints,field_native_checkpoints=field_checkpoints,references=refs)
     (directory/'opening.json').write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n')
     print('시작 연출 추출:',len(chars),'글자,',verified_pixels,'필드 인물 픽셀 검증')
     return result

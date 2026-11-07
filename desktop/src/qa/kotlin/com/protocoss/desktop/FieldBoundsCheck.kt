@@ -126,7 +126,8 @@ private class BoundsApplication : ApplicationAdapter() {
                 "return-to-field" -> justPressed.add(Input.Keys.M)
                 "resize" -> check(nativeGraphics.setWindowedMode(1000, 700)) { "창 크기 변경 실패" }
                 else -> {
-                    player.setPosition(160f, 100f)
+                    // 문 왕복은 verifyFieldTravel에서 검사한다. 여기서는 출구 열을 피해 실내 경계를 검사한다.
+                    player.setPosition(128f, 100f)
                     camera.position.set(160f, 100f, 0f)
                 }
             }

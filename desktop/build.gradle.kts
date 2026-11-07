@@ -78,3 +78,12 @@ tasks.register<JavaExec>("verifyOpening") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 패키지 자산만으로 충돌·문 왕복·저장 복귀를 실행한다.
+tasks.register<JavaExec>("verifyFieldTravel") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.FieldTravelCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}
