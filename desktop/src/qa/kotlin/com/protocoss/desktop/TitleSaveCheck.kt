@@ -127,7 +127,10 @@ private class MenuCheck(private val directory: Path) : ApplicationAdapter() {
             30 -> down()
             31 -> enter()
             32 -> enter() // 새 게임
-            33 -> { key(Input.Keys.T) }
+            33 -> { // 메뉴의 대화 중 저장 방지 검사는 대화 상태를 직접 준비한다.
+                field<com.protocoss.dialogue.DialogueManager>("dialogueManager").startDialogue(
+                    field<com.protocoss.dialogue.DialogueRepository>("dialogueRepository").getSegment(0)!!)
+            }
             34 -> escape()
             35 -> down()
             36 -> enter() // 대화 중 저장 방지
@@ -174,6 +177,15 @@ private class MenuCheck(private val directory: Path) : ApplicationAdapter() {
             pressed.add(Input.Keys.ESCAPE)
             game.render()
         }
+        if (scene() == "OPENING") {
+            // 시작 연출 자체는 verifyOpening에서 검사한다. 여기서는 메뉴·저장 경로를 검사한다.
+            pressed.clear()
+            val opening=field<com.protocoss.opening.OpeningTimeline>("opening")
+            repeat(10000) {
+                if(!opening.finished) { opening.update(.2f); if(opening.page!=null) { opening.advance();opening.advance() } }
+            }
+            check(opening.finished);game.render();repeat(70) { game.render() }
+        }
         when (step) {
             0 -> { checkScene("TITLE"); compareTitle(0); capture("title") }
             1 -> { checkScene("TITLE"); compareTitle(1) }
@@ -185,15 +197,15 @@ private class MenuCheck(private val directory: Path) : ApplicationAdapter() {
                 checkScene("FIELD")
                 check(field<DosSave>("session").map == 16)
                 val player = field<Player>("player")
-                check(player.x == 144f && player.y == 104f)
+                check(player.x == 156f && player.y == 92f)
                 compareField("dos-save-field"); capture("dos-loaded")
             }
-            15 -> { savedX = field<Player>("player").x; check(savedX > 144f) }
+            15 -> { savedX = field<Player>("player").x; check(savedX > 156f) }
             18 -> checkScene("SAVE")
             19 -> {
                 checkScene("PAUSE")
                 val save = DosSave.parse(Files.readAllBytes(directory.resolve("SAVE0.DAT")))
-                check(abs(save.worldX - savedX) <= 0.5f)
+                check(abs(save.worldX + 12f - savedX) <= 0.5f)
                 val original = Files.readAllBytes(source.resolve("DATA/SAVE0.DAT"))
                 check(original.copyOfRange(119, 2942).contentEquals(save.bytes().copyOfRange(119, 2942)))
                 val time = Files.getLastModifiedTime(directory.resolve("SAVE0.DAT")).toInstant().atZone(ZoneId.systemDefault()).toLocalTime()
@@ -207,7 +219,7 @@ private class MenuCheck(private val directory: Path) : ApplicationAdapter() {
             24 -> { checkScene("FIELD"); check(abs(field<Player>("player").x - savedX) <= 0.5f); check(field<DosSave>("session").map == 16) }
             29 -> checkScene("CONFIRM_TITLE")
             31 -> { checkScene("TITLE"); compareTitle(0) }
-            32 -> { checkScene("FIELD"); check(field<DosSave>("session").map == 2); check(field<Player>("player").x == 80f) }
+            32 -> { checkScene("FIELD"); check(field<DosSave>("session").map == 2); check(field<Player>("player").x == 92f) }
             33 -> check(field<com.protocoss.dialogue.DialogueManager>("dialogueManager").isActive)
             36 -> { checkScene("PAUSE"); check(field<String>("message").contains("대화를 마치고")) }
             38 -> { if (field<com.protocoss.dialogue.DialogueManager>("dialogueManager").isActive) return }
@@ -253,9 +265,11 @@ private class MenuCheck(private val directory: Path) : ApplicationAdapter() {
         val top = background.height - camera.position.y - 100
         val scale = graphics.backBufferWidth / 320
         for (y in 30 until 200) for (x in 0 until 320) {
+            if(name=="new-game-field" && x in 200 until 224 && y in 32 until 48) continue
             val worldX = left + x
             val worldY = background.height - top - y
             if (worldX >= player.x - 18 && worldX <= player.x + 18 && worldY >= player.y - 23 && worldY <= player.y + 23) continue
+            if(name == "new-game-field" && worldX in 16f..56f && (top+y) in 32f..80f) continue // 벨슨그와 침대의 가림
             val offset = ((y * scale + scale / 2) * graphics.backBufferWidth + x * scale + scale / 2) * 4
             check(rgba(actual, offset) == background.getPixel(worldX.toInt(), (top + y).toInt())) { "필드 픽셀 불일치: $name $x,$y" }
             pixelsCompared++

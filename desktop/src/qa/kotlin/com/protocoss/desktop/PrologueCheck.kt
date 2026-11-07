@@ -84,7 +84,7 @@ private class PrologueApplication(private val directory: Path, private val realt
         if (realtime && step == 2) {
             delta = nativeGraphics.deltaTime
             game.render()
-            if (scene() == "FIELD") {
+            if (scene() == "OPENING") {
                 check(movie!!.finished && !music!!.isPlaying)
                 completed = true
                 Files.createDirectories(Path.of("desktop/build/reports/prologue"))
@@ -149,7 +149,7 @@ private class PrologueApplication(private val directory: Path, private val realt
                 movie = currentMovie(); music = currentMusic(movie!!)
                 check(movie!!.timeline.stream.frameIndex == 0)
                 check(music!!.isPlaying) { "프롤로그 음악이 재생되지 않습니다." }
-                check(field<Player>("player").x == 80f)
+                check(field<Player>("player").x == 92f)
             }
             2 -> { compare(0); capture("opening") }
             3 -> {
@@ -163,11 +163,11 @@ private class PrologueApplication(private val directory: Path, private val realt
             }
             in 6..15 -> { compare(step - 5); if (step == 15) capture("final-scene") }
             16, 19, 22, 25 -> {
-                check(scene() == "FIELD") { "프롤로그 종료 뒤 필드로 전환되지 않았습니다." }
+                check(scene() == "OPENING") { "프롤로그 종료 뒤 오두막 시작 연출로 전환되지 않았습니다." }
                 check(field<Any?>("prologue") == null)
                 check(!music!!.isPlaying)
                 val player = field<Player>("player")
-                check(player.x == 80f && player.y == 160f) { "프롤로그 입력이 필드 이동으로 전달되었습니다." }
+                check(player.x == 92f && player.y == 148f) { "프롤로그 입력이 필드 이동으로 전달되었습니다." }
                 check(!field<com.protocoss.dialogue.DialogueManager>("dialogueManager").isActive)
                 if (step == 16) capture("completed-field")
             }
@@ -199,7 +199,7 @@ private class PrologueApplication(private val directory: Path, private val realt
             compared++
         }
         image.dispose()
-        check(field<Player>("player").x == 80f && field<Player>("player").y == 160f)
+        check(field<Player>("player").x == 92f && field<Player>("player").y == 148f)
     }
 
     private fun capture(name: String) {
