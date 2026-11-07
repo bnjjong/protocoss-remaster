@@ -11,6 +11,27 @@ import kotlin.test.assertTrue
 class TileMapTest {
 
     @Test
+    fun `native eight pixel map converts both layers to world rows once`() {
+        val map = TileMap.fromJson("""
+            {
+                "width": 3, "height": 2, "tile_width": 8, "tile_height": 8,
+                "layer1": [1, 40, 41, 999, 1000, 2],
+                "layer2": [3, 4, 5, 6, 7, 8]
+            }
+        """.trimIndent())
+
+        assertEquals(24f, map.totalPixelWidth)
+        assertEquals(16f, map.totalPixelHeight)
+        assertEquals(999, map.getGroundTile(0, 0))
+        assertEquals(1000, map.getGroundTile(1, 0))
+        assertEquals(41, map.getGroundTile(2, 1))
+        assertEquals(6, map.getOverlayTile(0, 0))
+        assertEquals(5, map.getOverlayTile(2, 1))
+        assertEquals(1, map.worldToTileX(8f))
+        assertEquals(1, map.worldToTileY(8f))
+    }
+
+    @Test
     fun `tile coordinates and world pixel conversions work properly`() {
         val map = TileMap(width = 20, height = 15, tileWidth = 16, tileHeight = 16)
 
