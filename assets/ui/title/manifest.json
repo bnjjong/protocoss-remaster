@@ -1,0 +1,9 @@
+{
+  "source": "GRP/STATMENU.IMG",
+  "sha256": "841897ad75f0483976c0781e33cc23342d524370a809d476c303c0df29b92342",
+  "palette": "DATA/PROTOCOS.PAL",
+  "palette_sha256": "4b71a6627fc6f9f77dc12cd43d3dc0e9728378d4a2ab1ba041aa455da8c071ca",
+  "frame_count": 18,
+  "selection_function": "0x1D330",
+  "menu_function": "0x1D674"
+}

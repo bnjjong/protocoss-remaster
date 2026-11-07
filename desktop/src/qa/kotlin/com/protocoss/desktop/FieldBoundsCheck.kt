@@ -86,7 +86,7 @@ private class BoundsApplication : ApplicationAdapter() {
         Gdx.input = fixedInput
         Gdx.graphics = fixedGraphics
         game.create()
-        background = Pixmap(Gdx.files.internal("docs/images/belson-cabin.png"))
+        background = Pixmap(Gdx.files.internal("docs/images/new-game-field.png"))
         sprite = Pixmap(Gdx.files.internal("assets/sprites/kaman_test.png"))
     }
 
@@ -100,6 +100,7 @@ private class BoundsApplication : ApplicationAdapter() {
         held.addAll(scenario.keys)
         justPressed.clear()
         if (tick == 0) {
+            if (scenario.name == "initial") justPressed.add(Input.Keys.ENTER)
             when (scenario.name) {
                 "gallery" -> {
                     justPressed.add(Input.Keys.M)

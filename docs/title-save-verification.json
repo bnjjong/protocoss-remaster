@@ -1,0 +1,92 @@
+{
+  "title_frames": 18,
+  "title_pixels": 77850,
+  "save_files": {
+    "START.DAT": {
+      "bytes": 2944,
+      "read_operations": 407,
+      "area_map_scroll_screen": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "SAVE0.DAT": {
+      "bytes": 2944,
+      "read_operations": 407,
+      "area_map_scroll_screen": [
+        0,
+        16,
+        0,
+        25,
+        160,
+        112
+      ]
+    },
+    "SAVE1.DAT": {
+      "bytes": 2944,
+      "read_operations": 407,
+      "area_map_scroll_screen": [
+        0,
+        16,
+        0,
+        25,
+        160,
+        112
+      ]
+    },
+    "SAVE2.DAT": {
+      "bytes": 2944,
+      "read_operations": 407,
+      "area_map_scroll_screen": [
+        0,
+        16,
+        0,
+        25,
+        160,
+        112
+      ]
+    },
+    "SAVE3.DAT": {
+      "bytes": 2944,
+      "read_operations": 407,
+      "area_map_scroll_screen": [
+        0,
+        16,
+        0,
+        25,
+        160,
+        112
+      ]
+    }
+  },
+  "field_pixels": {
+    "new-game-field": 64000,
+    "dos-save-field": 128000
+  },
+  "initial_warp": [
+    2,
+    0,
+    0,
+    96,
+    56,
+    8,
+    0,
+    25
+  ],
+  "written_save": {
+    "bytes": 2944,
+    "read_operations": 407,
+    "area_map_scroll_screen": [
+      0,
+      16,
+      0,
+      25,
+      177,
+      112
+    ]
+  }
+}
