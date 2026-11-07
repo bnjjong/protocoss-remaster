@@ -16,23 +16,27 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
     private fun texture(name: String) = Texture(Gdx.files.internal("assets/opening/$name")).also {
         it.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest); textures += it
     }
+    private val mapNumbers = data.get("maps").map { it.name.toInt() }
     private val people = texture("people.png")
-    private val darkPeople = (0..2).associateWith { texture("people-dialogue-$it.png") }
-    private val darkFronts = (0..2).associateWith { texture("fronts-dialogue-$it.png") }
-    private val darkOverlays = (0..2).associateWith { texture("overlays-dialogue-$it.png") }
+    private val darkPeople = mapNumbers.associateWith { texture("people-dialogue-$it.png") }
+    private val darkFronts = mapNumbers.associateWith { texture("fronts-dialogue-$it.png") }
+    private val darkOverlays = mapNumbers.associateWith { texture("overlays-dialogue-$it.png") }
     private var dialoguePass = false
+    private var clipBottom=26f
+    private var clipTop=66f
+    private var passMap=0
     private val font = texture("font.png")
     private val portraits = mapOf(0 to texture("portrait-0.png"), 1 to texture("portrait-1.png"), 17 to texture("portrait-17.png"))
-    private val tiles = (0..2).associateWith { texture("tiles-$it.png") }
-    private val dialogueBackgrounds = (0..2).associateWith { texture("dialogue-background-$it.png") }
-    private val fronts = (0..2).associateWith { texture("fronts-$it.png") }
-    private val overlays = (0..2).associateWith { texture("overlays-$it.png") }
+    private val tiles = mapNumbers.associateWith { texture("tiles-$it.png") }
+    private val dialogueBackgrounds = mapNumbers.associateWith { texture("dialogue-background-$it.png") }
+    private val fronts = mapNumbers.associateWith { texture("fronts-$it.png") }
+    private val overlays = mapNumbers.associateWith { texture("overlays-$it.png") }
     private val spriteRows = data.get("sprites").mapIndexed { index, value -> value.asInt() to index }.toMap()
     private val characters = data.get("font").getString("characters")
     private val glyphs = characters.mapIndexed { index, c -> c to TextureRegion(font,index%16*16,index/16*16,
         data.get("font").get("widths").getInt(c.toString()),16) }.toMap()
     private val mapTicks = mutableMapOf<Int, Int>()
-    private val cells = (0..2).associateWith { number ->
+    private val cells = mapNumbers.associateWith { number ->
         data.get("maps").get(number.toString()).get("cells").map { it[0].asInt() }.toIntArray()
     }
     private var animationAccumulator = 0f
@@ -55,8 +59,8 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
 
     private fun map(number: Int): JsonValue = data.get("maps").get(number.toString())
     private fun tile(batch: SpriteBatch, texture: Texture, id: Int, x: Float, y: Float, size: Float = 8f) {
-        val bottom=if(dialoguePass) maxOf(y,26f) else y
-        val top=if(dialoguePass) minOf(y+size,66f) else y+size
+        val bottom=if(dialoguePass) maxOf(y,clipBottom) else y
+        val top=if(dialoguePass) minOf(y+size,clipTop) else y+size
         if(top<=bottom) return
         batch.draw(texture,x,bottom,size,top-bottom,id%40*8,id/40*8+(y+size-top).toInt(),8,(top-bottom).toInt(),false,false)
     }
@@ -73,7 +77,7 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
             // 원작은 화면 (0,134)..(320,174)에 배경을 어둡게 비친다.
             batch.draw(dialogueBackgrounds.getValue(timeline.map),0f,26f,320f,40f,
                 timeline.scrollX.toInt(),timeline.scrollY.toInt()+134,320,40,false,false)
-            dialoguePass=true
+            dialoguePass=true;passMap=timeline.map
             timeline.actors.forEach { actor ->
                 renderActor(batch,sprites[actor.sprite].asInt(),actor.frame,actor.x-timeline.scrollX,actor.y-timeline.scrollY)
                 coverActor(batch,timeline.map,actor.x,actor.y,timeline.scrollX,timeline.scrollY,actor.mask)
@@ -85,6 +89,20 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
             text(batch,page.getString("text").take(timeline.visibleCharacters),14f,139f,Color(252f/255f,252f/255f,252f/255f,1f))
         }
         fade(batch,timeline.fadeAlpha)
+    }
+
+    fun renderPlaceBanner(batch:SpriteBatch,number:Int,sx:Float,sy:Float,x:Float,name:String,
+                          heroX:Float,heroY:Float,pose:Int,layer:Int) {
+        batch.draw(dialogueBackgrounds.getValue(number),0f,176f,320f,20f,sx.toInt(),sy.toInt()+4,320,20,false,false)
+        dialoguePass=true;passMap=number;clipBottom=176f;clipTop=196f
+        map(number).get("npcs").forEach { npc ->
+            renderActor(batch,npc.getInt("sprite"),npc.getInt("frame"),npc.getFloat("x")-sx,npc.getFloat("y")-sy)
+            coverActor(batch,number,npc.getFloat("x"),npc.getFloat("y"),sx,sy,npc.getInt("mask"))
+        }
+        renderActor(batch,0,pose,heroX-sx,heroY-sy)
+        coverActor(batch,number,heroX,heroY,sx,sy,layer)
+        dialoguePass=false;clipBottom=26f;clipTop=66f
+        text(batch,name,x,7f,Color(252f/255f,252f/255f,252f/255f,1f))
     }
 
     fun resetFieldMaps() {
@@ -118,10 +136,10 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
         val row = spriteRows[sprite] ?: return
         val source = data.get("frame_map")[frame.mod(16)].asInt()
         val y=176f-topY
-        val bottom=if(dialoguePass) maxOf(y,26f) else y
-        val top=if(dialoguePass) minOf(y+24,66f) else y+24
+        val bottom=if(dialoguePass) maxOf(y,clipBottom) else y
+        val top=if(dialoguePass) minOf(y+24,clipTop) else y+24
         if(top<=bottom) return
-        batch.draw(if(dialoguePass) darkPeople.getValue(timeline.map) else people,x,bottom,24f,top-bottom,
+        batch.draw(if(dialoguePass) darkPeople.getValue(passMap) else people,x,bottom,24f,top-bottom,
             source*24,row*24+(y+24-top).toInt(),24,(top-bottom).toInt(),false,false)
     }
 

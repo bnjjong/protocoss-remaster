@@ -75,4 +75,25 @@ class OpeningTimelineTest {
             actors(expected.last())
         }
     }
+    @Test fun `forest movie freezes timeline and resumes before dialogue`() {
+        val data=opening().data
+        val timeline=OpeningTimeline(data,4,4)
+        repeat(10000) { if(timeline.videoId==null) timeline.update(1f/70f) }
+        assertEquals("encounter",timeline.videoId)
+        val checkpoint=data.get("field_native_checkpoints").get("4")[0]
+        timeline.actors.forEachIndexed { i,a ->
+            assertEquals(checkpoint.get("actors")[i].getFloat("x"),a.x)
+            assertEquals(checkpoint.get("actors")[i].getFloat("y"),a.y)
+        }
+        val positions=timeline.actors.map { it.x to it.y }
+        timeline.update(120f);timeline.advance()
+        assertEquals(positions,timeline.actors.map { it.x to it.y });assertFalse(timeline.finished)
+        timeline.resumeVideo()
+        repeat(10000) { if(timeline.page==null) timeline.update(1f/70f) }
+        assertEquals(203,timeline.dialogueId)
+        assertEquals(-16f,timeline.actors[1].y)
+        timeline.advance();timeline.advance()
+        repeat(10000) { if(!timeline.finished) timeline.update(1f/70f) }
+        assertTrue(timeline.finished);assertEquals(216f,timeline.actors[0].x);assertEquals(104f,timeline.actors[0].y)
+    }
 }

@@ -97,7 +97,7 @@ class OriginalFieldMachine:
         def sync():
             self.dword(0x76f4,len(actors))
             for i,a in enumerate(actors):
-                value=struct.pack('<B6I5B',a['sprite'],0,0,a['x'],a['y'],0,0,a['direction'],a['animate'],a['frame'],a['speed'],a['mask'])
+                value=struct.pack('<B6I5B',a['sprite'],0,0,a['x']&0xffffffff,a['y']&0xffffffff,0,0,a['direction'],a['animate'],a['frame'],a['speed'],a['mask'])
                 self.cpu.mem_write(self.DATA+0x76f8+i*30,value)
         for command in program['commands']:
             op,value=command['op'],command['value']
@@ -110,7 +110,7 @@ class OriginalFieldMachine:
                 for _ in range(8//step):self.call(0x10810)
                 for i,actor in enumerate(actors):
                     base=self.DATA+0x76f8+i*30
-                    actor['x'],actor['y']=struct.unpack('<II',self.cpu.mem_read(base+9,8))
+                    actor['x'],actor['y']=struct.unpack('<ii',self.cpu.mem_read(base+9,8))
                     actor['frame']=self.cpu.mem_read(base+27,1)[0]
             elif op in ('C','E'):
                 checkpoints.append(dict(op=op,dialogue=value,actors=[dict(a) for a in actors]))
@@ -142,7 +142,14 @@ class OriginalFieldMachine:
         for index,value in variables.items():self.word(0xe2a0+index*2,value)
         self.word(0xe2a0,group);events=[]
         def hook(c,address,size,user):
-            if address not in (0x1ee50,0x1f188,0x10a54,0x1f8b0,0x2b6f0,0x12f4c):return
+            if address==0x67b85:
+                pointer=c.reg_read(UC_X86_REG_EAX)
+                length=bytes(c.mem_read(pointer,4096)).index(0)
+                c.reg_write(UC_X86_REG_EAX,length)
+                sp=c.reg_read(UC_X86_REG_ESP);ret=struct.unpack('<I',c.mem_read(sp,4))[0]
+                c.reg_write(UC_X86_REG_ESP,sp+4);c.reg_write(UC_X86_REG_EIP,ret)
+                return
+            if address not in (0x1ee50,0x1f188,0x10a54,0x1f8b0,0x2b6f0,0x12f4c,0x1eb30,0x134b8):return
             sp=c.reg_read(UC_X86_REG_ESP);ret=struct.unpack('<I',c.mem_read(sp,4))[0]
             args=[c.reg_read(r) for r in (UC_X86_REG_EAX,UC_X86_REG_EDX,UC_X86_REG_EBX,UC_X86_REG_ECX)]
             if address in (0x1ee50,0x1f188):
@@ -151,12 +158,14 @@ class OriginalFieldMachine:
             elif address==0x10a54:events.append(dict(kind='animation',id=args[0]))
             elif address==0x1f8b0:events.append(dict(kind='dialogue'))
             elif address==0x12f4c:events.append(dict(kind='party_remove',id=args[0]))
+            elif address==0x1eb30:events.append(dict(kind='place',name=bytes(c.mem_read(args[0],200)).split(b'\0')[0].decode('cp1361')))
+            elif address==0x134b8:events.append(dict(kind='video',name=bytes(c.mem_read(args[0],200)).split(b'\0')[0].decode('ascii'),args=args[1:]))
             else:events.append(dict(kind='effect',id=args[0]))
             c.reg_write(UC_X86_REG_ESP,sp+4);c.reg_write(UC_X86_REG_EIP,ret)
         token=self.cpu.hook_add(UC_HOOK_CODE,hook)
         try:self.call(0x25304,argument)
         finally:self.cpu.hook_del(token)
-        return dict(events=events,variables={str(i):self.word(0xe2a0+i*2) for i in (0,1,2,6,8)})
+        return dict(events=events,variables={str(i):self.word(0xe2a0+i*2) for i in (0,1,2,6,7,8)})
 
 
 def extract_field(game_directory, output_root, executable=None):
@@ -174,13 +183,12 @@ def extract_field(game_directory, output_root, executable=None):
     metadata = dict(version=1, directions=[1,2,4,8], maps={}, source_sha256=hashlib.sha256(raw).hexdigest(), soc_sha256=hashlib.sha256((root/'MAP/AREA00.SOC').read_bytes()).hexdigest())
     soc_offsets=read_offsets(root/'MAP/AREA00.SDA')
     soc_all=(root/'MAP/AREA00.SOC').read_bytes()
-    for number in (0,1,2,3):
-        source_number=0 if number==3 else number
-        source = raw[offsets[source_number]:offsets[source_number+1]]
+    for key,number,opened in [(0,0,False),(1,1,False),(2,2,False),("0-open",0,True),(3,3,False),(4,4,False),(12,12,False)]:
+        source = raw[offsets[number]:offsets[number+1]]
         machine.load_map(source)
         width, height = machine.width, machine.height
         changed=None
-        if number==3:
+        if opened:
             start=soc_offsets[source[32]]
             changed=machine.open_cabin_door(soc_all[start:start+70818])
         results = bytearray()
@@ -192,16 +200,16 @@ def extract_field(game_directory, output_root, executable=None):
                         if allowed not in (0,1,2,3,4,6,8,9,12) or next_layer not in range(3):
                             raise ValueError('원작 이동 판정 범위 오류')
                         results.append(allowed | next_layer << 4)
-        filename = f'movement-{number}.bin'
+        filename = f'movement-{key}.bin'
         (output / filename).write_bytes(results)
         start = 48+width*height*4+source[33]*8+source[34]*54
         rectangles = [list(struct.unpack_from('<5I',source,start+i*20)) for i in range(source[35])]
-        metadata['maps'][str(number)] = dict(width=width,height=height,file=filename,
+        metadata['maps'][str(key)] = dict(width=width,height=height,file=filename,
             sha256=hashlib.sha256(results).hexdigest(), rectangles=rectangles,
             attributes=[a for _,a in struct.iter_unpack('<HH',changed or source[48:48+width*height*4])])
         if changed:
             metadata['door_changes']=[dict(index=i,tid=t,attr=a) for i,((t,a),before) in enumerate(zip(struct.iter_unpack('<HH',changed),struct.iter_unpack('<HH',source[48:48+width*height*4]))) if (t,a)!=before]
-        print('원작 이동 판정 추출:',number,len(results),flush=True)
+        print('원작 이동 판정 추출:',key,len(results),flush=True)
     (output/'field.json').write_text(json.dumps(metadata,ensure_ascii=False,separators=(',',':'))+'\n')
     return metadata
 
@@ -258,15 +266,14 @@ def verify_field(game_directory, output_root, executable=None):
     maps=(root/'MAP/AREA00.MAP').read_bytes();offsets=read_offsets(root/'MAP/AREA00.MDA')
     soc=(root/'MAP/AREA00.SOC').read_bytes();soc_offsets=read_offsets(root/'MAP/AREA00.SDA')
     machine=OriginalFieldMachine(exe);cases=[]
-    for number in (0,1,2,3):
-        n=0 if number==3 else number
-        source=maps[offsets[n]:offsets[n+1]];machine.load_map(source)
-        if number==3:
+    for key,number,opened in [(0,0,False),(1,1,False),(2,2,False),("0-open",0,True),(3,3,False),(4,4,False),(12,12,False)]:
+        source=maps[offsets[number]:offsets[number+1]];machine.load_map(source)
+        if opened:
             start=soc_offsets[source[32]];machine.open_cabin_door(soc[start:start+70818])
-        data=(folder/f'movement-{number}.bin').read_bytes()
+        data=(folder/f'movement-{key}.bin').read_bytes()
         digest=hashlib.sha256(data).hexdigest()
-        if digest!=metadata['maps'][str(number)]['sha256']:raise ValueError('이동 자산 해시 불일치')
-        width,height=source[2]*40,source[3]*25;rng=random.Random(1996+number)
+        if digest!=metadata['maps'][str(key)]['sha256']:raise ValueError('이동 자산 해시 불일치')
+        width,height=source[2]*40,source[3]*25;rng=random.Random(1996+number+(100 if opened else 0))
         for _ in range(250):
             x=rng.randrange(1,width-4)*8+rng.randrange(8)
             y=rng.randrange(1,height-4)*8+rng.randrange(8)
@@ -274,18 +281,37 @@ def verify_field(game_directory, output_root, executable=None):
             actual=machine.query(x,y,direction,layer)
             value=data[((layer*height+y//8)*width+x//8)*4+[1,2,4,8].index(direction)]
             if actual!=(value&15,value>>4):raise ValueError(f'원작 비정렬 이동 판정 불일치: {number,x,y,layer,direction}')
-        cases.append(dict(map=number,unaligned_queries=250,sha256=digest))
+        cases.append(dict(map=key,unaligned_queries=250,sha256=digest))
     script=(root/'DATA/AREA00.G&M').read_bytes()
     doors=[]
     for group in (0,1):
         for stage in range(4):
             result=OriginalFieldMachine(exe).trace_event(script,group,1,{8:stage})
             doors.append(dict(group=group,stage=stage,result=result))
-    report=dict(compiled_queries=120000,unaligned_checks=1000,maps=cases,
+    report=dict(compiled_queries=sum(len((folder/m["file"]).read_bytes()) for m in metadata["maps"].values()),unaligned_checks=1750,maps=cases,
                 door_changes=metadata['door_changes'],native_doors=doors,
                 party_removal=verify_party_removal(exe,(root/'DATA/START.DAT').read_bytes()))
     (output/'docs/field-native-verification.json').write_text(json.dumps(report,indent=2)+'\n')
-    print('원작 필드 교차 검사: 1,000개 비정렬 좌표·8개 출입구 분기 일치')
+    print('원작 필드 교차 검사: 1,750개 비정렬 좌표·8개 출입구 분기 일치')
+    return report
+
+
+def verify_town(game_directory, output_root, executable=None):
+    import hashlib
+    import json
+    from pathlib import Path
+    from verify_original_map import unpack_game
+    root=Path(game_directory)
+    exe=executable if executable is not None else unpack_game(root)
+    raw=(root/'DATA/AREA00.G&M').read_bytes();cases=[]
+    for group,argument in [(1,2),(2,0),(2,1),(2,2),(2,4),(3,1)]:
+        for seen in (0,1):
+            for stage in (0,2,3):
+                result=OriginalFieldMachine(exe).trace_event(raw,group,argument,{7:seen,8:stage})
+                cases.append(dict(group=group,argument=argument,seen=seen,stage=stage,result=result))
+    report=dict(source_sha256=hashlib.sha256(raw).hexdigest(),cases=cases)
+    (Path(output_root)/'docs/town-native-verification.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+    print('원작 마을 이벤트 36개 분기 확인')
     return report
 
 
@@ -300,4 +326,6 @@ if __name__ == '__main__':
     from verify_original_map import unpack_game
     executable=unpack_game(args.game_directory)
     extract_field(args.game_directory,args.output_root,executable)
-    if args.verify:verify_field(args.game_directory,args.output_root,executable)
+    if args.verify:
+        verify_field(args.game_directory,args.output_root,executable)
+        verify_town(args.game_directory,args.output_root,executable)

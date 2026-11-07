@@ -87,3 +87,12 @@ tasks.register<JavaExec>("verifyFieldTravel") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 원본 폴더 없는 조우 영상·마을 왕복과 저장 실행 검사.
+tasks.register<JavaExec>("verifyTownTravel") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.TownTravelCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}

@@ -61,15 +61,15 @@ private class TravelApplication(val saves:Path):ApplicationAdapter() {
         while(queue.isNotEmpty()) {
             val node=queue.removeFirst()
             for(d in listOf(1,2,4,8)) {
-                val open=node.doorOpen || (save.map==0 && rules.event(0,node.x.toFloat(),node.y.toFloat(),d)==0)
-                val ruleMap=if(save.map==0 && open) 3 else save.map
-                if(rules.event(ruleMap,node.x.toFloat(),node.y.toFloat(),d)==1) {
+                val open=node.doorOpen || (save.map==0 && rules.event(0,node.x.toFloat(),node.y.toFloat(),d,node.doorOpen)==0)
+                val ruleMap=save.map
+                if(rules.event(ruleMap,node.x.toFloat(),node.y.toFloat(),d,open)==1) {
                     val result=mutableListOf(d);var cursor=node
                     while(cursor!=start) { val (parent,dir)=previous.getValue(cursor);result+=dir;cursor=parent }
                     return result.reversed()
                 }
-                if(rules.event(ruleMap,node.x.toFloat(),node.y.toFloat(),d)==16) continue
-                val step=rules.step(ruleMap,node.x.toFloat(),node.y.toFloat(),d,node.layer)
+                if(rules.event(ruleMap,node.x.toFloat(),node.y.toFloat(),d,open)==16) continue
+                val step=rules.step(ruleMap,node.x.toFloat(),node.y.toFloat(),d,node.layer,open)
                 if(step.direction==0) continue
                 val next=Node(node.x+FieldRules.dx(step.direction)*8,node.y+FieldRules.dy(step.direction)*8,step.layer,open)
                 if(visited.add(next)) { previous[next]=node to d;queue+=next }
