@@ -27,3 +27,17 @@ tasks.named<JavaExec>("run") {
         "-XstartOnFirstThread"
     )
 }
+
+// 일반 단위 검사와 분리해 실제 그래픽 실행 환경에서만 실행한다.
+val qa by sourceSets.creating {
+    compileClasspath += sourceSets["main"].runtimeClasspath
+    runtimeClasspath += output + compileClasspath
+}
+
+tasks.register<JavaExec>("verifyFieldBounds") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.FieldBoundsCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}

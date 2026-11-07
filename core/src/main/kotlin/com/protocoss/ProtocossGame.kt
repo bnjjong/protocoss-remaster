@@ -16,6 +16,7 @@ import com.protocoss.dialogue.DialogueBox
 import com.protocoss.dialogue.DialogueManager
 import com.protocoss.dialogue.DialogueRepository
 import com.protocoss.dialogue.FontManager
+import com.protocoss.map.FieldBounds
 import com.protocoss.map.TileMap
 import com.protocoss.map.TileMapRenderer
 import com.protocoss.player.Player
@@ -23,7 +24,7 @@ import com.protocoss.player.Player
 /**
  * 프로토코스 리마스터 엔진의 메인 게임 라이프사이클을 관리합니다.
  *
- * 320x200 고정 종횡비 픽셀 뷰포트 내에서 16x16 필드 타일맵 렌더링, 플레이어 8방향 이동,
+ * 320x200 고정 종횡비 픽셀 뷰포트 내에서 원본 크기의 필드 타일맵 렌더링, 플레이어 8방향 이동,
  * 부드러운 카메라 추적(Lerp Camera Follow) 및 한글 대화창 UI 인터프리터 시스템을 구동합니다.
  */
 class ProtocossGame : ApplicationAdapter() {
@@ -89,13 +90,14 @@ class ProtocossGame : ApplicationAdapter() {
         )
 
         camera.position.set(player.x, player.y, 0f)
+        updateFieldView(0f)
         camera.update()
     }
 
     override fun render() {
         val delta = Gdx.graphics.deltaTime
         handleInput(delta)
-        updateCamera(delta)
+        updateFieldView(delta)
 
         dialogueManager.update(delta)
         dialogueBox.update(delta)
@@ -103,8 +105,10 @@ class ProtocossGame : ApplicationAdapter() {
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
 
+        // 창 크기·전체화면 전환이 화면 영역을 바꿔도 매 프레임 원래 표시 영역을 복구한다.
+        viewport.apply()
+
         // 1단계: 월드 좌표계 렌더링 (필드 맵 및 플레이어)
-        camera.update()
         batch.projectionMatrix = camera.combined
 
         batch.begin()
@@ -146,6 +150,8 @@ class ProtocossGame : ApplicationAdapter() {
 
     override fun resize(width: Int, height: Int) {
         viewport.update(width, height)
+        updateFieldView(0f)
+        camera.update()
     }
 
     override fun dispose() {
@@ -225,15 +231,19 @@ class ProtocossGame : ApplicationAdapter() {
     }
 
     /**
-     * 플레이어를 중심으로 부드럽게 카메라를 이동(Lerp 보간)시킵니다.
+     * 맵 경계 안에서 캐릭터 위치를 제한하고 카메라가 부드럽게 뒤따르게 한다.
      */
-    private fun updateCamera(delta: Float) {
+    private fun updateFieldView(delta: Float) {
+        val field = tileMap.takeIf { isTileMapMode }
+        field?.let { FieldBounds.constrainPlayer(player, it) }
         val targetX = player.x
         val targetY = player.y
 
         val lerpFactor = MathUtils.clamp(delta * CAMERA_LERP_SPEED, 0f, 1f)
         camera.position.x += (targetX - camera.position.x) * lerpFactor
         camera.position.y += (targetY - camera.position.y) * lerpFactor
+        // 갤러리에서 돌아왔거나 기존 카메라가 밖에 있어도 이번 프레임에 바로 복구한다.
+        field?.let { FieldBounds.constrainCamera(camera, it) }
     }
 
     /**

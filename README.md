@@ -4,7 +4,7 @@
 
 현재는 원작 데이터와 산출물을 하나씩 대조하며 복원하는 단계입니다. **완료한 범위는 USER.SPR 11개 캐릭터·599프레임의 추출·비교와 첫 오두막의 정적 배경 검증입니다.** 컷씬, NPC·다른 스프라이트·UI, 음원 재생, 이벤트·전투·저장은 후속 작업입니다.
 
-[USER.SPR 복원 근거와 재현 방법](docs/sprite-format.md) · [첫 오두막 맵 분석](docs/map-format.md)
+[USER.SPR 복원 근거와 재현 방법](docs/sprite-format.md) · [첫 오두막 맵 분석](docs/map-format.md) · [필드 경계 수정·실행 검사](docs/field-bounds.md)
 
 ## 1. 프로젝트 구조
 
