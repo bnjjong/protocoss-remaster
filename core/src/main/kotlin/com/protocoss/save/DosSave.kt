@@ -57,6 +57,17 @@ class DosSave private constructor(private val data: ByteArray) {
             return save
         }
 
+        /** 두 AUTOANI 시작 연출이 끝난 뒤 원작이 기록하는 이벤트 상태. */
+        fun afterOpening(start: ByteArray): DosSave {
+            val result = newGame(start).bytes()
+            ByteBuffer.wrap(result).order(ByteOrder.LITTLE_ENDIAN).apply {
+                putShort(2342, 0) // 지역 이벤트 번호
+                putShort(2344, 14) // AUTOANI.001의 마지막 대화 호출 번호
+                putShort(2346, 0) // 연출 종료 플래그
+            }
+            return parse(result)
+        }
+
         /** AREA00.G&M 초기 분기의 0x16 명령: 맵 2, 스크롤 0,0, 화면 위치 96,56. */
         fun newGame(start: ByteArray): DosSave {
             val result = parse(start).bytes()

@@ -69,3 +69,12 @@ tasks.register<JavaExec>("verifyPrologueRealtime") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 시작 연출에서 첫 자유 이동까지 실제 입력·화면을 검사한다.
+tasks.register<JavaExec>("verifyOpening") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.OpeningCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}

@@ -102,11 +102,11 @@ class Player(
     }
 
     companion object {
-        /** 원작 카만 기본 가로 픽셀 크기 */
-        const val WIDTH: Float = 34f
+        /** PEOPLE.SPR 필드 인물의 가로 픽셀 크기 */
+        const val WIDTH: Float = 24f
 
-        /** 원작 카만 기본 세로 픽셀 크기 */
-        const val HEIGHT: Float = 44f
+        /** PEOPLE.SPR 필드 인물의 세로 픽셀 크기 */
+        const val HEIGHT: Float = 24f
 
         /** 일반 걷기 이동 속도 (초당 픽셀) */
         const val WALK_SPEED: Float = 85f

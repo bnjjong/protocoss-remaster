@@ -26,6 +26,8 @@ import com.protocoss.map.TileMap
 import com.protocoss.map.TileMapRenderer
 import com.protocoss.player.Player
 import com.protocoss.prologue.ProloguePlayer
+import com.protocoss.opening.OpeningTimeline
+import com.protocoss.opening.OpeningRenderer
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -39,7 +41,7 @@ class ProtocossGame(
     private val originalDirectory: Path? = defaultOriginalDirectory(),
     saveDirectory: Path = Path.of(System.getProperty("user.home"), "Library/Application Support/Protocoss/Saves")
 ) : ApplicationAdapter() {
-    private enum class Scene { TITLE, PROLOGUE, FIELD, PAUSE, LOAD, SAVE, CONFIRM_SAVE, CONFIRM_TITLE }
+    private enum class Scene { TITLE, PROLOGUE, OPENING, FIELD, PAUSE, LOAD, SAVE, CONFIRM_SAVE, CONFIRM_TITLE }
     private var scene = Scene.TITLE
     private var selected = 0
     private var loadReturn = Scene.TITLE
@@ -50,6 +52,12 @@ class ProtocossGame(
     private var session: DosSave? = null
     private var pendingSlot = 0
     private var prologue: ProloguePlayer? = null
+    private lateinit var opening: OpeningTimeline
+    private lateinit var openingRenderer: OpeningRenderer
+    private var walkingTime = 0f
+    private var fieldFade = 0f
+    private var openingMusic: com.badlogic.gdx.audio.Music? = null
+    private var resumeOpeningMusic = false
 
     private lateinit var batch: SpriteBatch
     private lateinit var camera: OrthographicCamera
@@ -60,7 +68,6 @@ class ProtocossGame(
     private val backgroundTextures = mutableListOf<Texture>()
     private var currentBackgroundIndex = 0
 
-    private var playerTexture: Texture? = null
     private lateinit var player: Player
 
     private var tilesetTexture: Texture? = null
@@ -99,7 +106,8 @@ class ProtocossGame(
         dialogueBox = DialogueBox(fontManager)
 
         loadExtractedBackgrounds()
-        loadPlayerTexture()
+        opening = OpeningTimeline.parse(Gdx.files.internal("assets/opening/opening.json").readString("UTF-8"))
+        openingRenderer = OpeningRenderer(opening)
         loadFieldMap()
 
         // 원본 맵의 실제 타일 크기로 오두막 중앙 위치를 계산한다.
@@ -109,7 +117,7 @@ class ProtocossGame(
         player = Player(
             initialX = initialX,
             initialY = initialY,
-            texture = playerTexture
+            texture = null
         )
 
         camera.position.set(player.x, player.y, 0f)
@@ -130,8 +138,18 @@ class ProtocossGame(
                 movie.update(delta)
                 if (movie.finished) finishPrologue()
             }
+        } else if (scene == Scene.OPENING) {
+            opening.update(delta)
+            openingRenderer.update(delta)
+            if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) opening.advance()
+            if (opening.finished) {
+                enterField(DosSave.afterOpening(Gdx.files.internal("assets/data/original/start.dat").readBytes()))
+                playOpeningMusic(25)
+                fieldFade=1f
+            }
         } else if (scene == Scene.FIELD) {
-            if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            if(fieldFade>0f) { fieldFade=(fieldFade-delta*70f/64f).coerceAtLeast(0f) }
+            else if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
                 scene = Scene.PAUSE
                 selected = 0
                 message = "방향키 선택 · Enter 확인 · Esc 계속"
@@ -140,8 +158,11 @@ class ProtocossGame(
                 updateFieldView(delta)
                 dialogueManager.update(delta)
                 dialogueBox.update(delta)
+                openingRenderer.update(delta)
+                if (player.isMoving) walkingTime += delta else walkingTime = 0f
             }
         } else handleMenuInput()
+        if(scene == Scene.TITLE && openingMusic != null) { openingMusic?.dispose();openingMusic=null }
         // 메뉴 확인에 쓴 Enter·Space가 필드의 대화·이동으로 전달되지 않는다.
         if (!wasField && scene == Scene.FIELD) updateFieldView(0f)
 
@@ -153,7 +174,9 @@ class ProtocossGame(
         if (scene != Scene.FIELD) {
             uiCamera.update()
             batch.projectionMatrix = uiCamera.combined
-            if (scene == Scene.PROLOGUE) prologue!!.render(batch) else renderMenu()
+            if (scene == Scene.PROLOGUE) prologue!!.render(batch)
+            else if (scene == Scene.OPENING) { batch.begin(); openingRenderer.render(batch); batch.end() }
+            else renderMenu()
             return
         }
 
@@ -164,7 +187,8 @@ class ProtocossGame(
 
         if (isTileMapMode && tileMapRenderer != null) {
             // 1-A. 필드 타일맵 렌더링
-            tileMapRenderer!!.render(batch, camera)
+            if(session?.area==0 && session?.map in 1..2) openingRenderer.renderMap(batch,session!!.map,0f,0f)
+            else tileMapRenderer!!.render(batch, camera)
         } else if (backgroundTextures.isNotEmpty()) {
             // 1-B. 단일 배경 갤러리 렌더링
             val bg = backgroundTextures[currentBackgroundIndex]
@@ -178,7 +202,23 @@ class ProtocossGame(
         }
 
         // 2. 플레이어 렌더링
-        player.render(batch)
+        val mapHeight = tileMap?.totalPixelHeight ?: 200f
+        val mapNumber = session?.map
+        if (session?.area == 0 && mapNumber in 0..2) {
+            opening.data.get("maps").get(mapNumber.toString()).get("npcs").forEach { npc ->
+                openingRenderer.renderActor(batch,npc.getInt("sprite"),npc.getInt("frame"),npc.getFloat("x"),200f-mapHeight+npc.getFloat("y"))
+                openingRenderer.coverActor(batch,mapNumber!!,npc.getFloat("x"),npc.getFloat("y"),0f,mapHeight-200f,npc.getInt("mask"))
+            }
+        }
+        val base = when(player.direction) {
+            com.protocoss.player.Direction.NORTH -> 0
+            com.protocoss.player.Direction.NORTH_EAST, com.protocoss.player.Direction.EAST, com.protocoss.player.Direction.SOUTH_EAST -> 4
+            com.protocoss.player.Direction.SOUTH -> 8
+            else -> 12
+        }
+        openingRenderer.renderActor(batch,0,base+(walkingTime*9).toInt()%4,player.x-12f,188f-player.y)
+        if (session?.area == 0 && mapNumber in 0..2)
+            openingRenderer.coverActor(batch,mapNumber!!,player.x-12f,mapHeight-player.y-12f,0f,mapHeight-200f,0)
 
         batch.end()
 
@@ -188,13 +228,8 @@ class ProtocossGame(
 
         if (dialogueManager.isActive) {
             dialogueBox.render(batch, dialogueManager)
-        } else {
-            batch.begin()
-            val retroFont = fontManager.getFont(11)
-            retroFont.color = Color(1f, 1f, 0.4f, 0.85f)
-            retroFont.draw(batch, "WASD 이동  Shift 대시  T 대화  Esc 메뉴", 8f, 192f)
-            batch.end()
         }
+        if(fieldFade>0f) { batch.begin();openingRenderer.fade(batch,fieldFade);batch.end() }
     }
 
     override fun resize(width: Int, height: Int) {
@@ -203,17 +238,26 @@ class ProtocossGame(
         camera.update()
     }
 
-    override fun pause() { prologue?.pause() }
-    override fun resume() { prologue?.resume() }
+    override fun pause() {
+        prologue?.pause()
+        resumeOpeningMusic = openingMusic?.isPlaying == true
+        openingMusic?.pause()
+    }
+    override fun resume() {
+        prologue?.resume()
+        if(resumeOpeningMusic) openingMusic?.play()
+        resumeOpeningMusic = false
+    }
 
     override fun dispose() {
         prologue?.dispose()
+        openingRenderer.dispose()
+        openingMusic?.dispose()
         batch.dispose()
         menu.dispose()
         debugFont.dispose()
         fontManager.dispose()
         dialogueBox.dispose()
-        playerTexture?.dispose()
         tilesetTexture?.dispose()
         backgroundTextures.forEach { it.dispose() }
         backgroundTextures.clear()
@@ -273,18 +317,6 @@ class ProtocossGame(
     }
 
     /**
-     * 플레이어(카만) 스프라이트 텍스처를 로드합니다.
-     */
-    private fun loadPlayerTexture() {
-        val spriteFile = Gdx.files.internal("assets/sprites/kaman_test.png")
-        if (spriteFile.exists()) {
-            playerTexture = Texture(spriteFile).apply {
-                setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest)
-            }
-        }
-    }
-
-    /**
      * 맵 경계 안에서 캐릭터 위치를 제한하고 카메라가 부드럽게 뒤따르게 한다.
      */
     private fun updateFieldView(delta: Float) {
@@ -324,16 +356,6 @@ class ProtocossGame(
         val isDash = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT)
 
         player.update(delta, up, down, left, right, isDash)
-
-        // T 키 또는 Space 키: 스토리 대화창 열기 (지역 00 세그먼트 데모)
-        if (Gdx.input.isKeyJustPressed(Input.Keys.T) || Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-            val segment = dialogueRepository.getSegment(currentDemoSegmentId)
-            if (segment != null) {
-                dialogueManager.startDialogue(segment)
-                // 다음번에는 다음 대화 세그먼트(예: 0 -> 1 -> 2)를 시연
-                currentDemoSegmentId = (currentDemoSegmentId + 1) % 3
-            }
-        }
 
         // M 키: 필드 타일맵 모드 ↔ 정적 배경 갤러리 모드 전환
         if (Gdx.input.isKeyJustPressed(Input.Keys.M)) {
@@ -442,7 +464,16 @@ class ProtocossGame(
         message = "방향키 선택 · Enter 불러오기 · Esc 뒤로"
     }
 
+    private fun playOpeningMusic(track: Int) {
+        openingMusic?.dispose()
+        openingMusic=Gdx.audio.newMusic(Gdx.files.internal("assets/opening/music-${track.toString().padStart(2,'0')}/music.ogg")).apply {
+            isLooping=true
+            play()
+        }
+    }
+
     private fun startNewGame() {
+        openingMusic?.dispose();openingMusic=null
         var movie: ProloguePlayer? = null
         try {
             val save = DosSave.newGame(Gdx.files.internal("assets/data/original/start.dat").readBytes())
@@ -463,7 +494,11 @@ class ProtocossGame(
     private fun finishPrologue() {
         prologue?.dispose()
         prologue = null
-        scene = Scene.FIELD
+        openingRenderer.dispose()
+        opening = OpeningTimeline.parse(Gdx.files.internal("assets/opening/opening.json").readString("UTF-8"))
+        openingRenderer = OpeningRenderer(opening)
+        scene = Scene.OPENING
+        playOpeningMusic(2)
     }
 
     private fun loadSelected() {
@@ -471,6 +506,7 @@ class ProtocossGame(
         if (entry.save == null) { message = entry.error ?: "저장된 게임이 없습니다."; return }
         try {
             val loaded = saves.load(entry)
+            openingMusic?.dispose();openingMusic=null
             enterField(loaded.save)
             currentDemoSegmentId = loaded.nextDialogue
         } catch (e: Exception) {
@@ -485,8 +521,8 @@ class ProtocossGame(
         require(original != null || (save.area == 0 && save.map in 1..2)) { "이 저장 지점에는 원본 MAP 데이터가 필요합니다." }
         val fallbackMap = if (save.map == 2) "new_game_map.json" else "area00_map.json"
         val map = original?.map ?: TileMap.fromJson(Gdx.files.internal("assets/data/maps/$fallbackMap").readString())
-        val x = save.worldX
-        val y = save.worldY(map.totalPixelHeight)
+        val x = save.worldX + 12f
+        val y = save.worldY(map.totalPixelHeight) - 12f
         require(x in 0f..map.totalPixelWidth && y in 0f..map.totalPixelHeight) { "저장 위치가 맵 밖에 있습니다." }
         val texture = if (original != null) {
             val pixmap = Pixmap(original.atlasWidth, original.atlasHeight, Pixmap.Format.RGBA8888)
@@ -504,12 +540,13 @@ class ProtocossGame(
         camera.position.set((save.scrollX * 8 + 160).toFloat(), map.totalPixelHeight - (save.scrollY * 8 + 100), 0f)
         FieldBounds.constrainCamera(camera, map)
         session = save
+        fieldFade=0f
         scene = Scene.FIELD
     }
 
     private fun saveSelected() {
         try {
-            val current = requireNotNull(session).atPosition(player.x, player.y, tileMap!!.totalPixelHeight, tileMap!!.totalPixelWidth)
+            val current = requireNotNull(session).atPosition(player.x - 12f, player.y + 12f, tileMap!!.totalPixelHeight, tileMap!!.totalPixelWidth)
             saves.write(pendingSlot, current, currentDemoSegmentId)
             session = current
             scene = Scene.PAUSE
