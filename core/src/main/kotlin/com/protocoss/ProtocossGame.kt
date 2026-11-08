@@ -28,6 +28,7 @@ import com.protocoss.field.FieldRules
 import com.protocoss.field.FieldMovement
 import com.protocoss.field.FieldNpcs
 import com.protocoss.field.BuildingTravel
+import com.protocoss.field.SwordStory
 import com.protocoss.field.FieldDialogue
 import com.protocoss.field.PlaceBanner
 import com.protocoss.field.TownTravel
@@ -71,6 +72,9 @@ class ProtocossGame(
     private lateinit var openingRenderer: OpeningRenderer
     private lateinit var fieldRules: FieldRules
     private lateinit var buildingTravel: BuildingTravel
+    private lateinit var swordStory:SwordStory
+    private var shopConversation=false
+    private var swordReceived=false
     private lateinit var doorSound: com.badlogic.gdx.audio.Sound
     private var fieldMovement: FieldMovement? = null
     private var fieldNpcs: FieldNpcs? = null
@@ -132,6 +136,7 @@ class ProtocossGame(
         loadExtractedBackgrounds()
         opening = OpeningTimeline.parse(Gdx.files.internal("assets/opening/opening.json").readString("UTF-8"))
         openingRenderer = OpeningRenderer(opening)
+        swordStory=SwordStory(opening.data.get("sword_story"))
         fieldRules = FieldRules(Gdx.files.internal("assets/data/field/field.json").readString()) {
             Gdx.files.internal("assets/data/field/$it").readBytes()
         }
@@ -170,6 +175,7 @@ class ProtocossGame(
         } else if (scene == Scene.CLIP) {
             updateEncounterClip(delta)
         } else if (scene == Scene.OPENING) {
+            if(opening.continuesField) fieldMovement?.update(delta,0,false,tick={ x,y -> fieldNpcs?.tick(x,y) }) { false }
             opening.update(delta)
             openingRenderer.update(delta)
             if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) opening.advance()
@@ -181,9 +187,10 @@ class ProtocossGame(
                 val wasEvent=fieldEvent!=null
                 val destination=eventDestination ?: DosSave.afterOpening(Gdx.files.internal("assets/data/original/start.dat").readBytes())
                 fieldEvent=null;eventDestination=null
-                enterField(destination)
-                if(!wasEvent || openingMusic==null) playOpeningMusic(destination.variable(4).takeIf { it in setOf(10,24,25) } ?: 25)
-                fieldFade=1f
+                enterField(destination,preserveField=opening.continuesField)
+                val track=destination.variable(4).takeIf { it in setOf(10,24,25) } ?: 25
+                if(!wasEvent || openingMusic==null || activeTrack!=track) playOpeningMusic(track)
+                fieldFade=if(opening.continuesField) 0f else 1f
             }
         } else if (scene == Scene.FIELD) {
             if(fieldFade>0f) {
@@ -223,7 +230,7 @@ class ProtocossGame(
             uiCamera.update()
             batch.projectionMatrix = uiCamera.combined
             if (scene == Scene.PROLOGUE) prologue!!.render(batch)
-            else if (scene == Scene.OPENING) { batch.begin(); openingRenderer.render(batch); batch.end() }
+            else if (scene == Scene.OPENING) { batch.begin(); openingRenderer.render(batch,if(opening.continuesField) fieldNpcs?.actors.orEmpty() else emptyList()); batch.end() }
             else if (scene == Scene.CLIP) {
                 if(clipStarted && !clipReturning) encounterClip!!.render(batch)
                 else { batch.begin();openingRenderer.render(batch);openingRenderer.fade(batch,clipFade);batch.end() }
@@ -289,7 +296,7 @@ class ProtocossGame(
             batch.begin()
             openingRenderer.renderFieldDialogue(batch,session!!.map,camera.position.x-160f,mapHeight-camera.position.y-100f,
                 fieldNpcs!!.actors,player.x-12f,mapHeight-player.y-12f,fieldMovement!!.pose,fieldMovement!!.layer,
-                dialogue.page,dialogue.visibleCharacters)
+                dialogue.page,dialogue.visibleCharacters,dialogue.rewardX)
             batch.end()
         }
         placeBanner?.takeIf { fieldFade<=0f }?.let { banner ->
@@ -417,11 +424,13 @@ class ProtocossGame(
             val index=npcs.talkTarget(movement.x,movement.y,movement.pose,movement.layer)
             if(index!=null) {
                 val event=npcs.actors[index].event
-                val pages=FieldDialogue.pages(opening.data,event,session!!.variable(8))
+                val shop=swordStory.shopPages(session!!,event)
+                val pages=shop ?: FieldDialogue.pages(opening.data,event,session!!.variable(8))
                 if(pages!=null && pages.size>0) {
                     movement.faceForTalk()
                     npcs.beginTalk(index,movement.pose)
                     fieldDialogue=FieldDialogue(index,pages)
+                    shopConversation=shop!=null;swordReceived=false
                     session=session!!.calledEvent(event)
                 }
             }
@@ -429,12 +438,17 @@ class ProtocossGame(
             fieldDialogue!!.advance()
             if(fieldDialogue!!.finished) {
                 if(fieldDialogue!!.npcIndex>=0) npcs!!.endTalk()
+                if(shopConversation) session=swordStory.finishShop(session!!)
+                shopConversation=false;swordReceived=false
                 fieldDialogue=null
                 player.setMotion(null,false)
                 return
             }
         }
         if(fieldDialogue!=null) {
+            if(shopConversation && fieldDialogue!!.isReward && !swordReceived) {
+                session=session!!.receiveRepairedSword();swordReceived=true
+            }
             movement!!.update(delta,0,false,tick={ x,y -> npcs!!.tick(x,y) }) { false }
             if(fieldDialogueReady()) fieldDialogue!!.update(delta)
             player.setMotion(null,false)
@@ -488,6 +502,11 @@ class ProtocossGame(
 
     private fun handleFieldEvent(movement: FieldMovement, event: Int): Boolean {
         val current=requireNotNull(session)
+        if(swordStory.joins(current,event)) {
+            startFieldEvent(5,swordStory.joinDestination(current))
+            return true
+        }
+        if(current.map==4 && current.variable(0)==3 && event==15) session=current.calledEvent(15)
         if(current.map==4 && current.variable(0)==3 && event==9 && current.variable(8)<3) {
             movement.face(1)
             player.setMotion(Direction.NORTH,false)
@@ -677,10 +696,11 @@ class ProtocossGame(
 
     private fun startFieldEvent(program: Int, destination: DosSave) {
         val data=opening.data
-        openingRenderer.dispose()
         opening=OpeningTimeline(data,program,program)
-        openingRenderer=OpeningRenderer(opening)
-        if(openingMusic==null) playOpeningMusic(25)
+        if(opening.continuesField) openingRenderer.continueField(opening)
+        else { openingRenderer.dispose();openingRenderer=OpeningRenderer(opening) }
+        val track=when(program) { 3->27;5->24;else->25 }
+        if(openingMusic==null || activeTrack!=track) playOpeningMusic(track)
         fieldEvent=program;eventDestination=destination;scene=Scene.OPENING
         player.setMotion(null,false)
     }
@@ -711,7 +731,9 @@ class ProtocossGame(
         }
     }
 
-    private fun enterField(save: DosSave) {
+    private fun enterField(save:DosSave)=enterField(save,false)
+
+    private fun enterField(save: DosSave,preserveField:Boolean) {
         // 파일·맵·좌표를 모두 확인한 뒤에 현재 세션을 교체한다.
         val original = originalDirectory?.let { OriginalMapData.load(it, save.area, save.map) }
         require(original != null || (save.area == 0 && save.map in 0..12)) { "이 저장 지점에는 원본 MAP 데이터가 필요합니다." }
@@ -739,11 +761,12 @@ class ProtocossGame(
         camera.position.set((save.scrollX * 8 + 160).toFloat(), map.totalPixelHeight - (save.scrollY * 8 + 100), 0f)
         FieldBounds.constrainCamera(camera, map)
         session = save
-        fieldRules.reset(save.map)
+        shopConversation=false;swordReceived=false
+        if(!preserveField) fieldRules.reset(save.map)
         fieldDialogue=null
-        fieldNpcs=if(save.area==0 && save.map in 4..12) FieldNpcs(opening.data.get("maps").get(save.map.toString()),npcClock) else null
+        if(!preserveField) fieldNpcs=if(save.area==0 && save.map in 4..12) FieldNpcs(opening.data.get("maps").get(save.map.toString()),npcClock) else null
         placeBanner=null
-        openingRenderer.resetFieldMaps()
+        if(!preserveField) openingRenderer.resetFieldMaps()
         fieldMovement = if(save.area==0 && save.map in 0..12) FieldMovement(fieldRules,save.map,save.layer.coerceIn(0,2),save.pose).apply {
             place(save.worldX,map.totalPixelHeight-save.worldY(map.totalPixelHeight))
             npcs=fieldNpcs

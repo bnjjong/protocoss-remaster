@@ -8,20 +8,24 @@ class FieldDialogue(val npcIndex:Int, private val pages:JsonValue) {
     val page get()=pages[pageIndex]
     var visibleCharacters=0; private set
     var finished=false; private set
-    val pageComplete get()=visibleCharacters>=page.getString("text").length
+    val isReward get()=page.getString("kind","")=="reward"
+    var rewardX=334f; private set
+    val pageComplete get()=if(isReward) rewardX<=14f else visibleCharacters>=page.getString("text").length
     private var accumulator=0f
     fun update(delta:Float) {
         accumulator+=delta*70f
         val count=accumulator.toInt();accumulator-=count
+        if(isReward) { rewardX=(rewardX-count*16).coerceAtLeast(14f);visibleCharacters=page.getString("text").length;return }
         visibleCharacters=(visibleCharacters+count).coerceAtMost(page.getString("text").length)
     }
     fun advance() {
-        if(!pageComplete) { visibleCharacters=page.getString("text").length;return }
+        if(!pageComplete) { if(isReward) rewardX=14f;visibleCharacters=page.getString("text").length;return }
         if(pageIndex+1==pages.size) { finished=true;return }
         val previous=page;pageIndex++
         val retained=previous.getString("text").substringAfterLast('\n')+"\n"
         visibleCharacters=if(page.getString("speaker")==previous.getString("speaker") && page.getString("text").startsWith(retained)) retained.length else 0
         accumulator=0f
+        rewardX=334f
     }
     companion object {
         fun pages(data:JsonValue,event:Int,stage:Int):JsonValue? = data.get("npc_dialogues")?.get(event.toString())?.get(when { stage<3->"0";stage<4->"3";else->"4" })

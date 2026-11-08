@@ -9,6 +9,7 @@ class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val la
                      var direction: Int = 0, var animate: Boolean = false, var speed: Int = 0, var mask: Int = 0)
     val actors = mutableListOf<Actor>()
     var program = firstProgram; private set
+    val continuesField = data.get("programs")[firstProgram].getBoolean("continues_field",false)
     var map = 0; private set
     var scrollX = 0f; private set
     var scrollY = 0f; private set
@@ -30,7 +31,7 @@ class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val la
     private var fadingOut = false
     val fadeAlpha get() = if(fadingOut) 1f-fadeTicks/64f else fadeTicks/64f
 
-    init { loadProgram(); execute(); fadeTicks=64 }
+    init { loadProgram(); execute(); if(!continuesField) fadeTicks=64 }
 
     private fun loadProgram() {
         val current = data.get("programs")[program]
@@ -74,7 +75,7 @@ class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val la
                 }
                 "V" -> { videoId=value.asString();accumulator=0f }
                 "F" -> Unit // 원작 효과음 번호는 데이터에 보존한다. 이번 단계는 화면·대화 실행을 연결한다.
-                "E" -> { fadeTicks=64;fadingOut=true }
+                "E" -> { if(continuesField) finished=true else { fadeTicks=64;fadingOut=true } }
                 else -> error("지원하지 않는 시작 연출 명령")
             }
         }

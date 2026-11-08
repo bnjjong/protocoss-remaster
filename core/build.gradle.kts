@@ -18,6 +18,7 @@ kotlin {
 tasks.test {
     inputs.file(rootProject.file("docs/npc-native-verification.json"))
     inputs.file(rootProject.file("docs/buildings-native-verification.json"))
+    inputs.file(rootProject.file("docs/sword-native-verification.json"))
     inputs.dir(rootProject.file("assets/opening"))
     inputs.dir(rootProject.file("assets/data/field"))
 }

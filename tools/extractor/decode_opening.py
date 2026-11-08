@@ -105,11 +105,15 @@ def extract(game_dir, output_root, executable=None):
     sources = {}
     def read(name):
         raw = (game_dir/name).read_bytes(); sources[name]=hashlib.sha256(raw).hexdigest(); return raw
-    programs = [animation(read(f'DATA/AUTOANI.{i:03}')) for i in (0,1,3,6,4)]
+    programs = [animation(read(f'DATA/AUTOANI.{i:03}')) for i in (0,1,3,6,4,5)]
+    # 0x10A54의 mode=0은 현재 맵·주민을 유지하고 화면 전환 없이 실행한다.
+    programs[5]['continues_field']=True
     for command in programs[3]['commands']:
         if command['op']=='C':command['value']+=100
     for command in programs[4]['commands']:
         if command['op']=='C':command['value']+=200
+    for command in programs[5]['commands']:
+        if command['op']=='C':command['value']+=300
     script = read('DATA/AREA00.G&M'); count=struct.unpack_from('<H',script,4)[0]
     script = bytes(v^127 for v in script[6+count*2:])
     dialogues = {}
@@ -117,6 +121,22 @@ def extract(game_dir, output_root, executable=None):
     event_machine=OriginalFieldMachine(executable)
     gate_trace=event_machine.trace_event(read('DATA/AREA00.G&M'),3,9,{8:0},capture_dialogue=True)
     building_dialogues={'locked':[page for e in gate_trace['events'] for page in dialogue(e['text'].encode('cp1361'))]}
+    from sword_story import StoryReference
+    weapon=read('DATA/WEAPON.LST');weapon_name=weapon[:21].split(b'\0')[0].decode('cp1361')
+    item_icon=struct.unpack_from('<H',weapon,21)[0]
+    notice_format=bytes(event_machine.cpu.mem_read(0x702a0,100)).split(b'\0')[0].decode('cp1361')
+    shop={}
+    for stage in (0,1,3,4):
+        source=bytearray(read('DATA/START.DAT'));struct.pack_into('<H',source,2358,stage)
+        native=StoryReference(executable);native.load_save(source)
+        events=native.event(game_dir,4,2);pages=[]
+        for event in events:
+            if event['kind']=='dialogue':pages+=dialogue(event['text'].encode('cp1361'))
+            elif event['kind']=='item':
+                if event!={'kind':'item','id':0,'count':1,'category':1}:raise ValueError('검 수리 보상 형식이 다릅니다.')
+                pages.append(dict(kind='reward',speaker='',portrait=-1,text=notice_format%(weapon_name,1),icon=item_icon))
+        shop[str(stage)]=pages
+    sword_story=dict(shop=shop,weapon_name=weapon_name,icon=item_icon,join=dict(program=5,scroll=programs[5]['scroll'],music=24,last_dialogue=17))
     for number in (10,11,12,13,14,18,19):
         variants={}
         for stage in (0,3,4):
@@ -125,7 +145,7 @@ def extract(game_dir, output_root, executable=None):
             variants[str(stage)]=[page for e in trace['events'] for page in dialogue(e['text'].encode('cp1361'))]
         npc_dialogues[str(number)]=variants
     group_offsets=struct.unpack_from(f'<{count}H',read('DATA/AREA00.G&M'),6)
-    for group,numbers in [(0,(2,3,14,17)),(1,(4,5,6,7)),(2,(3,))]:
+    for group,numbers in [(0,(2,3,14,17)),(1,(4,5,6,7)),(2,(3,)),(3,(16,17))]:
         p=group_offsets[group];entries={}
         while script[p]==0xf0:
             argument,destination=struct.unpack_from('<HH',script,p+3)
@@ -162,6 +182,10 @@ def extract(game_dir, output_root, executable=None):
             atlas.paste(image,(frame*24,row*24));verified_pixels+=576
     atlas.save(directory/'people.png')
     common=parse_img(read('GRP/COMMON.IMG'))
+    item=decode_img_frame(common[item_icon])
+    icon_image=item.to_image(palette)
+    if icon_image.tobytes()!=renderer.render(struct.pack('<HH',item.width,item.height)+common[item_icon],palette).tobytes():raise ValueError('검 보상 아이콘 픽셀 불일치')
+    icon_image.save(directory/'sword-reward.png')
     for number in (0,1,17):
         f=decode_img_frame(common[number]); im=f.to_image(palette)
         if im.tobytes()!=renderer.render(struct.pack('<HH',f.width,f.height)+common[number],palette).tobytes():raise ValueError('초상화 픽셀 불일치')
@@ -230,12 +254,13 @@ def extract(game_dir, output_root, executable=None):
                 kind=values[14],speed=values[15],mode=values[16],mask=values[17]))
         map_info[str(number)]=dict(width=w,height=h,cells=[list(c) for c in cells],animations=animations,
                                   next_tiles=list(struct.unpack_from('<1000H',block,66770)),npcs=npcs)
-    all_pages=[p for pages in dialogues.values() for p in pages]+[p for variants in npc_dialogues.values() for pages in variants.values() for p in pages]+building_dialogues['locked']
+    all_pages=[p for pages in dialogues.values() for p in pages]+[p for variants in npc_dialogues.values() for pages in variants.values() for p in pages]+building_dialogues['locked']+[p for pages in shop.values() for p in pages]
     chars=sorted((set(''.join(p['speaker']+p['text'] for p in all_pages)) | set('엘가임 마을벨슨그의 오두막')) - {'\n'})
     font=read('HANGUL.FNT');english=read('ENGLISH.FNT');tables=code[0x4040:0x4108]
     reference=OpeningReference(code,data,font)
     checkpoints=reference.motions(programs[1])
-    field_checkpoints={str(i):OriginalFieldMachine(executable).animation_checkpoints(programs[i]) for i in (2,3,4)}
+    field_checkpoints={str(i):OriginalFieldMachine(executable).animation_checkpoints(programs[i]) for i in (2,3,4,5)}
+    sword_story['join']['hero']=[field_checkpoints['5'][-1]['actors'][0][key] for key in ('x','y','frame')]
     glyphs=Image.new('RGBA',(256,((len(chars)+15)//16)*16)); widths={}
     for i,c in enumerate(chars):
         im=glyph(c,font,english,tables)
@@ -247,10 +272,16 @@ def extract(game_dir, output_root, executable=None):
     glyphs.save(directory/'font.png')
     sub=maps[mo[1]:mo[2]]; block=soc[so[1]:so[1]+70818];pal=block[2:770]
     refs=[]
-    jobs=[(1,c) for c in checkpoints]+[(i,c) for i in (2,3,4) for c in field_checkpoints[str(i)] if c['op']=='C' and dialogues.get(str(c['dialogue']))]
+    jobs=[(1,c) for c in checkpoints]+[(i,c) for i in (2,3,4,5) for c in field_checkpoints[str(i)] if c['op']=='C' and dialogues.get(str(c['dialogue']))]
     for program_index,checkpoint in jobs:
         number=programs[program_index]['map'];sub=maps[mo[number]:mo[number+1]]
         start=so[sub[32]];block=soc[start:start+70818];pal=block[2:770]
+        if program_index==5:
+            sx,sy=programs[program_index]['scroll'];w=sub[2]*40
+            cropped=bytearray(sub[:48]);cropped[2]=1;cropped[3]=1
+            for y in range(sy//8,sy//8+25):cropped.extend(sub[48+(y*w+sx//8)*4:48+(y*w+sx//8+40)*4])
+            sub=bytes(cropped)
+            checkpoint=dict(checkpoint,actors=[dict(a,x=a['x']-sx,y=a['y']-sy) for a in checkpoint['actors'] if -24<a['x']-sx<320 and -24<a['y']-sy<200])
         im,indices=scene_reference(renderer,sub,block,checkpoint,
             [sprite_blocks[i] for i in programs[program_index]['sprites']],list(data[0x1588:0x1598]),pal)
         remap=block[68770+4*256:68770+5*256]
@@ -280,7 +311,7 @@ def extract(game_dir, output_root, executable=None):
         image.save(directory/f'reference-town-{number}.png')
     for command in programs[4]['commands']:
         if command['op']=='C' and command['value']==204:command['op']='V';command['value']='encounter'
-    result=dict(programs=programs,dialogues=dialogues,npc_dialogues=npc_dialogues,building_dialogues=building_dialogues,maps=map_info,sprites=sprite_ids,
+    result=dict(programs=programs,dialogues=dialogues,npc_dialogues=npc_dialogues,building_dialogues=building_dialogues,sword_story=sword_story,maps=map_info,sprites=sprite_ids,
                 frame_map=list(data[0x1588:0x1598]),motion_frame_bases=[{0x13ca:0,0x13e7:4,0x140e:8,0x1435:12,0x145a:-1}[v] for v in struct.unpack_from('<12I',code,0x1368)],font=dict(characters=''.join(chars),widths=widths),
                 sources=sources,native_sprite_pixels=verified_pixels,native_checkpoints=checkpoints,field_native_checkpoints=field_checkpoints,references=refs)
     (directory/'opening.json').write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n')
