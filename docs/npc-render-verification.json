@@ -1,0 +1,45 @@
+{
+  "compared_pixels": 640000,
+  "scenes": [
+    {
+      "name": "stage-0-event-14-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "stage-0-event-14-page-1",
+      "pixels": 64000
+    },
+    {
+      "name": "stage-0-event-14-page-2",
+      "pixels": 64000
+    },
+    {
+      "name": "stage-0-event-19-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "stage-3-event-14-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "stage-3-event-19-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "stage-3-event-19-page-1",
+      "pixels": 64000
+    },
+    {
+      "name": "stage-4-event-14-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "stage-4-event-19-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "stage-4-event-19-page-1",
+      "pixels": 64000
+    }
+  ]
+}

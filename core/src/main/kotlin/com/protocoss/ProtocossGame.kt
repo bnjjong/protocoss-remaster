@@ -26,6 +26,8 @@ import com.protocoss.map.TileMap
 import com.protocoss.map.TileMapRenderer
 import com.protocoss.field.FieldRules
 import com.protocoss.field.FieldMovement
+import com.protocoss.field.FieldNpcs
+import com.protocoss.field.FieldDialogue
 import com.protocoss.field.PlaceBanner
 import com.protocoss.field.TownTravel
 import com.protocoss.field.CabinDoors
@@ -68,6 +70,9 @@ class ProtocossGame(
     private lateinit var openingRenderer: OpeningRenderer
     private lateinit var fieldRules: FieldRules
     private var fieldMovement: FieldMovement? = null
+    private var fieldNpcs: FieldNpcs? = null
+    private var fieldDialogue: FieldDialogue? = null
+    private val npcClock=FieldNpcs.Clock()
     private var fieldEvent: Int? = null
     private var eventDestination: DosSave? = null
     private var walkingTime = 0f
@@ -179,17 +184,18 @@ class ProtocossGame(
             if(fieldFade>0f) { fieldFade=(fieldFade-delta*70f/64f).coerceAtLeast(0f) }
             else if(placeBanner!=null) {
                 val banner=placeBanner!!
+                fieldMovement?.update(delta,0,false,tick={ x,y -> fieldNpcs?.tick(x,y) }) { false }
                 if(Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY)) banner.advance()
                 banner.update(delta)
                 openingRenderer.update(delta)
                 if(banner.finished) placeBanner=null
-            } else if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            } else if (fieldDialogue==null && Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
                 scene = Scene.PAUSE
                 selected = 0
                 message = "방향키 선택 · Enter 확인 · Esc 계속"
             } else {
                 handleInput(delta)
-                updateFieldView(delta)
+                if(fieldDialogue==null) updateFieldView(delta)
                 dialogueManager.update(delta)
                 dialogueBox.update(delta)
                 openingRenderer.update(delta)
@@ -243,7 +249,11 @@ class ProtocossGame(
         val mapHeight = tileMap?.totalPixelHeight ?: 200f
         val mapNumber = session?.map
         if (session?.area == 0 && mapNumber in setOf(0,1,2,3,4,12)) {
-            opening.data.get("maps").get(mapNumber.toString()).get("npcs").forEach { npc ->
+            val npcs=fieldNpcs
+            if(npcs!=null) npcs.actors.forEach { npc ->
+                openingRenderer.renderActor(batch,npc.sprite,npc.frame,npc.x.toFloat(),200f-mapHeight+npc.y)
+                openingRenderer.coverActor(batch,mapNumber!!,npc.x.toFloat(),npc.y.toFloat(),0f,mapHeight-200f,npc.mask)
+            } else opening.data.get("maps").get(mapNumber.toString()).get("npcs").forEach { npc ->
                 openingRenderer.renderActor(batch,npc.getInt("sprite"),npc.getInt("frame"),npc.getFloat("x"),200f-mapHeight+npc.getFloat("y"))
                 openingRenderer.coverActor(batch,mapNumber!!,npc.getFloat("x"),npc.getFloat("y"),0f,mapHeight-200f,npc.getInt("mask"))
             }
@@ -267,11 +277,18 @@ class ProtocossGame(
         if (dialogueManager.isActive) {
             dialogueBox.render(batch, dialogueManager)
         }
+        fieldDialogue?.takeIf { fieldNpcs?.talkReady==true }?.let { dialogue ->
+            batch.begin()
+            openingRenderer.renderFieldDialogue(batch,session!!.map,camera.position.x-160f,mapHeight-camera.position.y-100f,
+                fieldNpcs!!.actors,player.x-12f,mapHeight-player.y-12f,fieldMovement!!.pose,fieldMovement!!.layer,
+                dialogue.page,dialogue.visibleCharacters)
+            batch.end()
+        }
         placeBanner?.takeIf { fieldFade<=0f }?.let { banner ->
             batch.begin()
             val height=tileMap!!.totalPixelHeight
             openingRenderer.renderPlaceBanner(batch,session!!.map,camera.position.x-160f,height-camera.position.y-100f,
-                banner.x,banner.name,player.x-12f,height-player.y-12f,fieldMovement!!.pose,fieldMovement!!.layer)
+                banner.x,banner.name,player.x-12f,height-player.y-12f,fieldMovement!!.pose,fieldMovement!!.layer,fieldNpcs?.actors)
             batch.end()
         }
         if(fieldFade>0f) { batch.begin();openingRenderer.fade(batch,fieldFade);batch.end() }
@@ -384,6 +401,35 @@ class ProtocossGame(
      * 키보드 입력을 처리하여 플레이어 이동, 대화 진행 및 시스템 조작을 수행합니다.
      */
     private fun handleInput(delta: Float) {
+        val npcs=fieldNpcs
+        val movement=fieldMovement.takeIf { isTileMapMode }
+        val talkKey=Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isKeyJustPressed(Input.Keys.E)
+        if(fieldDialogue==null && npcs!=null && movement?.atRest==true && talkKey) {
+            val index=npcs.talkTarget(movement.x,movement.y,movement.pose,movement.layer)
+            if(index!=null) {
+                val event=npcs.actors[index].event
+                val pages=FieldDialogue.pages(opening.data,event,session!!.variable(8))
+                if(pages!=null && pages.size>0) {
+                    movement.faceForTalk()
+                    npcs.beginTalk(index,movement.pose)
+                    fieldDialogue=FieldDialogue(index,pages)
+                    session=session!!.calledEvent(event)
+                }
+            }
+        } else if(fieldDialogue!=null && npcs?.talkReady==true && talkKey) {
+            fieldDialogue!!.advance()
+            if(fieldDialogue!!.finished) {
+                npcs.endTalk();fieldDialogue=null
+                player.setMotion(null,false)
+                return
+            }
+        }
+        if(fieldDialogue!=null) {
+            movement!!.update(delta,0,false,tick={ x,y -> npcs!!.tick(x,y) }) { false }
+            if(npcs!!.talkReady) fieldDialogue!!.update(delta)
+            player.setMotion(null,false)
+            return
+        }
         // 대화창이 열려 있는 경우: 대화 조작만 처리하고 플레이어 이동 잠금
         if (dialogueManager.isActive) {
             player.update(delta, false, false, false, false, false)
@@ -403,7 +449,6 @@ class ProtocossGame(
         val right = Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D)
         val isDash = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT)
 
-        val movement = fieldMovement.takeIf { isTileMapMode }
         if(movement == null) player.update(delta,up,down,left,right,isDash)
         else {
             val height=tileMap!!.totalPixelHeight
@@ -411,7 +456,7 @@ class ProtocossGame(
             if(kotlin.math.abs(px-movement.x)>.01f || kotlin.math.abs(py-movement.y)>.01f) movement.place(px,py)
             val input=(if(up && !down) 1 else if(down && !up) 4 else 0) or
                 (if(right && !left) 2 else if(left && !right) 8 else 0)
-            val travelled=movement.update(delta,input,isDash) { event -> handleFieldEvent(movement,event) }
+            val travelled=movement.update(delta,input,isDash,tick={ x,y -> npcs?.tick(x,y) }) { event -> handleFieldEvent(movement,event) }
             if(travelled) return
             player.setPosition(movement.x+12f,height-movement.y-12f)
             player.setMotion(Direction.fromInput(FieldRules.dy(movement.direction)<0,FieldRules.dy(movement.direction)>0,
@@ -660,10 +705,13 @@ class ProtocossGame(
         camera.position.set((save.scrollX * 8 + 160).toFloat(), map.totalPixelHeight - (save.scrollY * 8 + 100), 0f)
         FieldBounds.constrainCamera(camera, map)
         session = save
+        fieldDialogue=null
+        fieldNpcs=if(save.area==0 && save.map in setOf(4,12)) FieldNpcs(opening.data.get("maps").get(save.map.toString()),npcClock) else null
         placeBanner=null
         openingRenderer.resetFieldMaps()
         fieldMovement = if(save.area==0 && save.map in setOf(0,1,2,3,4,12)) FieldMovement(fieldRules,save.map,save.layer.coerceIn(0,2),save.pose).apply {
             place(save.worldX,map.totalPixelHeight-save.worldY(map.totalPixelHeight))
+            npcs=fieldNpcs
         } else null
         player.setMotion(when(save.pose/4) { 0 -> Direction.NORTH;1 -> Direction.EAST;2 -> Direction.SOUTH;else -> Direction.WEST },false)
         fieldFade=0f
