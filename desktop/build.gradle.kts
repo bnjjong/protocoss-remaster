@@ -104,3 +104,11 @@ tasks.register<JavaExec>("verifyNpcs") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+tasks.register<JavaExec>("verifyBuildings") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.BuildingCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}

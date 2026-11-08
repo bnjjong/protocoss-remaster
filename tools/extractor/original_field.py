@@ -82,6 +82,9 @@ class OriginalFieldMachine:
         self.word(0xe1e0,source[34]);self.dword(0x157c,0x220000)
         start=end+source[33]*8
         if source[34]:self.cpu.mem_write(0x220000,source[start:start+source[34]*54])
+        start+=source[34]*54
+        self.byte(0xe50e,source[35]);self.dword(0x15a0,0x225000)
+        if source[35]:self.cpu.mem_write(0x225000,source[start:start+source[35]*20])
 
     def query(self,x,y,direction,layer=0):
         sx=max(0,min(self.width-40,(x-144)//8));sy=max(0,min(self.height-25,(y-88)//8))
@@ -117,10 +120,13 @@ class OriginalFieldMachine:
         return checkpoints
 
     def open_cabin_door(self, soc):
+        return self.open_door(soc,336,216,0,1)
+
+    def open_door(self, soc, x, y, pose=0, layer=0):
         """0x11CDC의 실제 타일·통과 플래그 변경을 실행한다. 화면 출력과 음악 대기만 생략한다."""
         self.cpu.mem_write(self.DATA+0xb880,soc[66770:68770])
-        self.query(336,216,1,1)
-        self.byte(0xe1fc,0)
+        self.query(x,y,1,layer)
+        self.byte(0xe1fc,pose)
         self.cpu.mem_write(0x3e0000,b'\xc3');self.dword(0xfd40,0x3e0000)
         cleanup={0x2d1e6:0,0x2cb5f:8,0x243f0:0,0x65760:0,0x22148:0,0x2ca5e:8}
         def hook(c,address,size,user):
@@ -149,13 +155,14 @@ class OriginalFieldMachine:
                 sp=c.reg_read(UC_X86_REG_ESP);ret=struct.unpack('<I',c.mem_read(sp,4))[0]
                 c.reg_write(UC_X86_REG_ESP,sp+4);c.reg_write(UC_X86_REG_EIP,ret)
                 return
-            if address not in (0x1ee50,0x1f188,0x10a54,0x1f8b0,0x2b6f0,0x12f4c,0x1eb30,0x134b8):return
+            if address not in (0x1ee50,0x1f188,0x10a54,0x1f8b0,0x2b6f0,0x12f4c,0x1eb30,0x134b8,0x11cdc):return
             sp=c.reg_read(UC_X86_REG_ESP);ret=struct.unpack('<I',c.mem_read(sp,4))[0]
             args=[c.reg_read(r) for r in (UC_X86_REG_EAX,UC_X86_REG_EDX,UC_X86_REG_EBX,UC_X86_REG_ECX)]
             if address in (0x1ee50,0x1f188):
                 args+=list(struct.unpack('<4I',c.mem_read(sp+4,16)))
                 events.append(dict(kind='warp',args=args));sp+=16
             elif address==0x10a54:events.append(dict(kind='animation',id=args[0]))
+            elif address==0x11cdc:events.append(dict(kind='door',id=args[0]))
             elif address==0x1f8b0:
                 event=dict(kind='dialogue')
                 if capture_dialogue:
@@ -173,7 +180,7 @@ class OriginalFieldMachine:
 
 
 def extract_field(game_directory, output_root, executable=None):
-    """세 맵의 8픽셀 보행 단위와 세 높이 층을 원작 함수로 판정한다."""
+    """패키지 맵의 8픽셀 보행 단위와 세 높이 층을 원작 함수로 판정한다."""
     import hashlib
     import json
     from pathlib import Path
@@ -187,11 +194,11 @@ def extract_field(game_directory, output_root, executable=None):
     metadata = dict(version=1, directions=[1,2,4,8], maps={}, source_sha256=hashlib.sha256(raw).hexdigest(), soc_sha256=hashlib.sha256((root/'MAP/AREA00.SOC').read_bytes()).hexdigest())
     soc_offsets=read_offsets(root/'MAP/AREA00.SDA')
     soc_all=(root/'MAP/AREA00.SOC').read_bytes()
-    for key,number,opened in [(0,0,False),(1,1,False),(2,2,False),("0-open",0,True),(3,3,False),(4,4,False),(12,12,False)]:
+    for key,number,opened in [(0,0,False),(1,1,False),(2,2,False),("0-open",0,True),(3,3,False),*[(i,i,False) for i in range(4,13)]]:
         source = raw[offsets[number]:offsets[number+1]]
         machine.load_map(source)
         # 주민은 초기 위치를 굳힌 판정표 대신 실행 중의 목표 좌표로 검사한다.
-        if number in (4,12):machine.word(0xe1e0,0)
+        if number in range(4,13):machine.word(0xe1e0,0)
         width, height = machine.width, machine.height
         changed=None
         if opened:
@@ -213,7 +220,7 @@ def extract_field(game_directory, output_root, executable=None):
         metadata['maps'][str(key)] = dict(width=width,height=height,file=filename,
             sha256=hashlib.sha256(results).hexdigest(), rectangles=rectangles,
             attributes=[a for _,a in struct.iter_unpack('<HH',changed or source[48:48+width*height*4])])
-        if number in (4,12):
+        if number in range(4,13):
             metadata['maps'][str(key)]['dynamic_npcs']=True
         if changed:
             metadata['door_changes']=[dict(index=i,tid=t,attr=a) for i,((t,a),before) in enumerate(zip(struct.iter_unpack('<HH',changed),struct.iter_unpack('<HH',source[48:48+width*height*4]))) if (t,a)!=before]
@@ -276,7 +283,7 @@ def verify_field(game_directory, output_root, executable=None):
     machine=OriginalFieldMachine(exe);cases=[]
     for key,number,opened in [(0,0,False),(1,1,False),(2,2,False),("0-open",0,True),(3,3,False),(4,4,False),(12,12,False)]:
         source=maps[offsets[number]:offsets[number+1]];machine.load_map(source)
-        if number in (4,12):machine.word(0xe1e0,0)
+        if number in range(4,13):machine.word(0xe1e0,0)
         if opened:
             start=soc_offsets[source[32]];machine.open_cabin_door(soc[start:start+70818])
         data=(folder/f'movement-{key}.bin').read_bytes()

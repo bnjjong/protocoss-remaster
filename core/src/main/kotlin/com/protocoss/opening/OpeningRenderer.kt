@@ -133,7 +133,10 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
         cells.keys.forEach { mapTicks[it]=animationTick }
     }
     fun openCabinDoor(changes: JsonValue) {
-        changes.forEach { cells.getValue(0)[it.getInt("index")]=it.getInt("tid") }
+        changeCells(0,changes)
+    }
+    fun changeCells(number:Int,changes:JsonValue) {
+        changes.forEach { cells.getValue(number)[it.getInt("index")]=it.getInt("tid") }
     }
     fun renderMap(batch: SpriteBatch, number: Int, sx: Float, sy: Float, fullMap: Boolean = false) {
         val m = map(number); val width = m.getInt("width"); val height = m.getInt("height")

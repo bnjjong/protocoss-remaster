@@ -1,0 +1,53 @@
+{
+  "compared_pixels": 768000,
+  "scenes": [
+    {
+      "name": "opened-4",
+      "pixels": 64000
+    },
+    {
+      "name": "stage-0-entry-2-room-5",
+      "pixels": 64000
+    },
+    {
+      "name": "mayor-side-room-0",
+      "pixels": 64000
+    },
+    {
+      "name": "locked-joel",
+      "pixels": 64000
+    },
+    {
+      "name": "opened-12",
+      "pixels": 64000
+    },
+    {
+      "name": "stage-3-entry-2-room-5",
+      "pixels": 64000
+    },
+    {
+      "name": "stage-3-entry-4-room-8",
+      "pixels": 64000
+    },
+    {
+      "name": "mayor-side-room-3",
+      "pixels": 64000
+    },
+    {
+      "name": "stage-3-entry-5-room-10",
+      "pixels": 64000
+    },
+    {
+      "name": "stage-3-entry-6-room-11",
+      "pixels": 64000
+    },
+    {
+      "name": "stage-3-entry-7-room-6",
+      "pixels": 64000
+    },
+    {
+      "name": "stage-3-entry-8-room-7",
+      "pixels": 64000
+    }
+  ]
+}

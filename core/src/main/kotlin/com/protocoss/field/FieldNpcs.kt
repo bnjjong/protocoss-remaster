@@ -49,6 +49,10 @@ class FieldNpcs(source: JsonValue, private val clock: Clock = Clock()) {
     private var talkPose=0
     val talkReady get()=talking?.let { actors[it].mode==2 } ?: false
 
+    fun changeCells(changes:JsonValue) {
+        changes.forEach { cells[it.getInt("index")].apply { this[0]=it.getInt("tid");this[1]=it.getInt("attr") } }
+    }
+
     private fun blocked(x:Int,y:Int,layer:Int): Boolean {
         if(x !in 0 until width || y !in 0 until height) return true
         val cell=cells[y*width+x]
