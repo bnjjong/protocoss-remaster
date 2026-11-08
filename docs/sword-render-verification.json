@@ -1,0 +1,45 @@
+{
+  "compared_pixels": 640000,
+  "scenes": [
+    {
+      "name": "deposit-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "deposit-page-12",
+      "pixels": 64000
+    },
+    {
+      "name": "not-ready-1-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "scene-316",
+      "pixels": 64000
+    },
+    {
+      "name": "scene-317",
+      "pixels": 64000
+    },
+    {
+      "name": "not-ready-2-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "scene-106",
+      "pixels": 64000
+    },
+    {
+      "name": "retrieve-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "reward",
+      "pixels": 64000
+    },
+    {
+      "name": "repeat-page-0",
+      "pixels": 64000
+    }
+  ]
+}

@@ -52,10 +52,14 @@ def verify(game_dir, output_root, executable=None, folder=None, report_name='npc
                     index=remap[indices[y*320+x]]
                     expected.putpixel((x,y),tuple(v*4 for v in pal[index*3:index*3+3])+(255,))
             page=scene['page'];portrait=page['portrait']
-            if portrait>=0:
+            if page.get('kind')=='reward':
+                decoded=decode_img_frame(common[page['icon']])
+                expected.alpha_composite(renderer.render(struct.pack('<HH',decoded.width,decoded.height)+common[page['icon']],palette),(30,134))
+            elif portrait>=0:
                 decoded=decode_img_frame(common[portrait])
                 expected.alpha_composite(renderer.render(struct.pack('<HH',decoded.width,decoded.height)+common[portrait],palette),(14,62))
-            for text,x,y,color in [(page['speaker'],94 if portrait>=0 else 14,118,(252,252,0)),(page['text'][:scene['visible']],14,139,(252,252,252))]:
+            text_rows=[(page['text'],14,158,(252,252,252))] if page.get('kind')=='reward' else [(page['speaker'],94 if portrait>=0 else 14,118,(252,252,0)),(page['text'][:scene['visible']],14,139,(252,252,252))]
+            for text,x,y,color in text_rows:
                 left=x
                 for ch in text:
                     if ch=='\n':x=left;y+=16;continue

@@ -11,7 +11,9 @@ import kotlin.math.floor
 import com.protocoss.field.FieldNpcs
 
 /** 위에서 아래로 기록된 원작 좌표를 320×200 화면에 그린다. 필드와 전투 그림을 구분한다. */
-class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
+class OpeningRenderer(timeline: OpeningTimeline) : Disposable {
+    var timeline=timeline; private set
+    fun continueField(next:OpeningTimeline) { check(next.continuesField);timeline=next }
     private val data = timeline.data
     private val textures = mutableListOf<Texture>()
     private fun texture(name: String) = Texture(Gdx.files.internal("assets/opening/$name")).also {
@@ -27,6 +29,7 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
     private var clipTop=66f
     private var passMap=0
     private val font = texture("font.png")
+    private val swordReward=texture("sword-reward.png")
     private val portraits = mapOf(0 to texture("portrait-0.png"), 1 to texture("portrait-1.png"), 17 to texture("portrait-17.png"))
     private val tiles = mapNumbers.associateWith { texture("tiles-$it.png") }
     private val darkTiles = mapNumbers.associateWith { texture("tiles-dialogue-$it.png") }
@@ -67,9 +70,14 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
         batch.draw(texture,x,bottom,size,top-bottom,id%40*8,id/40*8+(y+size-top).toInt(),8,(top-bottom).toInt(),false,false)
     }
 
-    fun render(batch: SpriteBatch) {
+    fun render(batch: SpriteBatch,npcs:List<FieldNpcs.Actor> = emptyList()) {
         renderMap(batch,timeline.map,timeline.scrollX,timeline.scrollY)
         val sprites = data.get("programs")[timeline.program].get("sprites")
+        fun renderNpcs() = npcs.forEach { npc ->
+            renderActor(batch,npc.sprite,npc.frame,npc.x-timeline.scrollX,npc.y-timeline.scrollY)
+            coverActor(batch,timeline.map,npc.x.toFloat(),npc.y.toFloat(),timeline.scrollX,timeline.scrollY,npc.mask)
+        }
+        renderNpcs()
         timeline.actors.forEach { actor ->
             renderActor(batch, sprites[actor.sprite].asInt(), actor.frame,
                 actor.x-timeline.scrollX, actor.y-timeline.scrollY)
@@ -80,6 +88,7 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
             batch.draw(dialogueBackgrounds.getValue(timeline.map),0f,26f,320f,40f,
                 timeline.scrollX.toInt(),timeline.scrollY.toInt()+134,320,40,false,false)
             dialoguePass=true;passMap=timeline.map
+            renderNpcs()
             timeline.actors.forEach { actor ->
                 renderActor(batch,sprites[actor.sprite].asInt(),actor.frame,actor.x-timeline.scrollX,actor.y-timeline.scrollY)
                 coverActor(batch,timeline.map,actor.x,actor.y,timeline.scrollX,timeline.scrollY,actor.mask)
@@ -108,7 +117,7 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
     }
 
     fun renderFieldDialogue(batch:SpriteBatch,number:Int,sx:Float,sy:Float,npcs:List<FieldNpcs.Actor>,
-                            heroX:Float,heroY:Float,pose:Int,layer:Int,page:JsonValue,visible:Int) {
+                            heroX:Float,heroY:Float,pose:Int,layer:Int,page:JsonValue,visible:Int,rewardX:Float=14f) {
         dialoguePass=true;passMap=number
         renderMap(batch,number,sx,sy)
         npcs.forEach { npc ->
@@ -118,10 +127,15 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
         renderActor(batch,0,pose,heroX-sx,heroY-sy)
         coverActor(batch,number,heroX,heroY,sx,sy,layer)
         dialoguePass=false
-        renderDialogueText(batch,page,visible)
+        renderDialogueText(batch,page,visible,rewardX)
     }
 
-    private fun renderDialogueText(batch:SpriteBatch,page:JsonValue,visible:Int) {
+    private fun renderDialogueText(batch:SpriteBatch,page:JsonValue,visible:Int,rewardX:Float=14f) {
+        if(page.getString("kind","")=="reward") {
+            batch.draw(swordReward,rewardX+16f,66f-swordReward.height,swordReward.width.toFloat(),swordReward.height.toFloat())
+            text(batch,page.getString("text"),rewardX,158f,Color(252f/255f,252f/255f,252f/255f,1f))
+            return
+        }
         val portrait=portraits[page.getInt("portrait")]
         if(portrait!=null) batch.draw(portrait,14f,200f-62f-portrait.height,portrait.width.toFloat(),portrait.height.toFloat())
         text(batch,page.getString("speaker"),if(portrait==null)14f else 94f,118f,Color(252f/255f,252f/255f,0f,1f))

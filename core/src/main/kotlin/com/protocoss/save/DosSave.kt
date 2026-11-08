@@ -24,6 +24,25 @@ class DosSave private constructor(private val data: ByteArray) {
         require(index in 0 until 300)
         return ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).getShort(2342+index*2).toInt() and 65535
     }
+    fun withVariables(values:Map<Int,Int>):DosSave {
+        val result=data.copyOf();val buffer=ByteBuffer.wrap(result).order(ByteOrder.LITTLE_ENDIAN)
+        values.forEach { (index,value) -> require(index in 0 until 300 && value in 0..65535);buffer.putShort(2342+index*2,value.toShort()) }
+        return parse(result)
+    }
+    /** 원작 0x12924(0,1,1)의 단검 한 개. 장비는 자동으로 교체하지 않는다. */
+    fun receiveRepairedSword():DosSave {
+        val result=data.copyOf();result[162]=minOf((result[162].toInt()+1) and 255,99).toByte()
+        return parse(result)
+    }
+    /** 원작 0x1255C(1): 합류 시 현재 체력·마력과 사용 중인 변신 상태를 복구한다. */
+    fun withEnkidu():DosSave {
+        val result=data.copyOf();val b=ByteBuffer.wrap(result).order(ByteOrder.LITTLE_ENDIAN)
+        result[500]=1;result[625]=1
+        b.putShort(505,b.getShort(507));b.putShort(509,b.getShort(511))
+        val form=result[540].toInt() and 255
+        if(form!=0) { require(form<=12);result[600+form]=result[612+form] }
+        return parse(result)
+    }
     fun withFieldState(layer: Int, pose: Int): DosSave {
         require(layer in 0..2 && pose in 0..15)
         val result=data.copyOf();result[116]=0;result[117]=layer.toByte();result[118]=pose.toByte()
