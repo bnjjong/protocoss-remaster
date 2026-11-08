@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""실제 GPU의 주민 대화 화면을 같은 상태의 원작 VGA 함수 출력과 대조한다."""
+"""실제 GPU의 필드 화면을 같은 상태의 원작 VGA 함수 출력과 대조한다."""
 import argparse
 import json
 from pathlib import Path
@@ -14,10 +14,10 @@ from verify_original_title_save import objects
 from verify_original_user_sprite import OriginalSpriteRenderer
 
 
-def verify(game_dir, output_root, executable=None):
+def verify(game_dir, output_root, executable=None, folder=None, report_name='npc-render-verification.json'):
     exe=executable if executable is not None else unpack_game(game_dir)
     (_,code),(_,data)=objects(exe)
-    folder=output_root/'desktop/build/reports/npcs'
+    folder=folder if folder is not None else output_root/'desktop/build/reports/npcs'
     scenes=json.loads((folder/'scenes.json').read_text());report=[]
     offsets=read_offsets(game_dir/'MAP/AREA00.MDA');maps=(game_dir/'MAP/AREA00.MAP').read_bytes()
     so=read_offsets(game_dir/'MAP/AREA00.SDA');soc=(game_dir/'MAP/AREA00.SOC').read_bytes()
@@ -70,11 +70,11 @@ def verify(game_dir, output_root, executable=None):
         expected.save(folder/(scene['name']+'-native.png'))
         actual=Image.open(folder/(scene['name']+'.png')).convert('RGBA').resize((320,200),Image.Resampling.NEAREST)
         different=[(x,y) for y in range(200) for x in range(320) if expected.getpixel((x,y))!=actual.getpixel((x,y))]
-        if different:raise ValueError(f'주민 대화 화면 불일치: {scene["name"]}, {len(different)}픽셀, 처음 {different[:5]}')
+        if different:raise ValueError(f'필드 화면 불일치: {scene["name"]}, {len(different)}픽셀, 처음 {different[:5]}')
         report.append(dict(name=scene['name'],pixels=64000))
     result=dict(compared_pixels=sum(c['pixels'] for c in report),scenes=report)
-    (output_root/'docs/npc-render-verification.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
-    print('주민 대화 원작 화면 일치:',len(report),'장,',result['compared_pixels'],'픽셀')
+    (output_root/'docs'/report_name).write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+    print('필드 원작 화면 일치:',len(report),'장,',result['compared_pixels'],'픽셀')
     return result
 
 

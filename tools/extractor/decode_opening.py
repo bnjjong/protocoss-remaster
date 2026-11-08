@@ -115,6 +115,8 @@ def extract(game_dir, output_root, executable=None):
     dialogues = {}
     npc_dialogues = {}
     event_machine=OriginalFieldMachine(executable)
+    gate_trace=event_machine.trace_event(read('DATA/AREA00.G&M'),3,9,{8:0},capture_dialogue=True)
+    building_dialogues={'locked':[page for e in gate_trace['events'] for page in dialogue(e['text'].encode('cp1361'))]}
     for number in (10,11,12,13,14,18,19):
         variants={}
         for stage in (0,3,4):
@@ -140,7 +142,7 @@ def extract(game_dir, output_root, executable=None):
     sprite_blocks={}
     mo=read_offsets(game_dir/'MAP/AREA00.MDA');maps=read('MAP/AREA00.MAP')
     npc_sprites=set()
-    for number in (0,1,2,3,4,12):
+    for number in range(13):
         sub=maps[mo[number]:mo[number+1]];start=48+sub[2]*40*sub[3]*25*4+sub[33]*8
         npc_sprites.update(struct.unpack_from('<I',sub,start+i*54)[0] for i in range(sub[34]))
     sprite_ids = sorted({0,12,*npc_sprites,*[i for program in programs for i in program['sprites']]})
@@ -166,7 +168,7 @@ def extract(game_dir, output_root, executable=None):
         im.save(directory/f'portrait-{number}.png')
     mo=read_offsets(game_dir/'MAP/AREA00.MDA');so=read_offsets(game_dir/'MAP/AREA00.SDA')
     maps=read('MAP/AREA00.MAP');soc=read('MAP/AREA00.SOC');map_info={}
-    for number in (0,1,2,3,4,12):
+    for number in range(13):
         sub=maps[mo[number]:mo[number+1]];w,h=sub[2]*40,sub[3]*25; block=soc[so[sub[32]]:so[sub[32]]+70818]
         pal=block[2:770]; cells=list(struct.iter_unpack('<HH',sub[48:48+w*h*4])); frames=[]
         for i in range(1000):
@@ -228,7 +230,7 @@ def extract(game_dir, output_root, executable=None):
                 kind=values[14],speed=values[15],mode=values[16],mask=values[17]))
         map_info[str(number)]=dict(width=w,height=h,cells=[list(c) for c in cells],animations=animations,
                                   next_tiles=list(struct.unpack_from('<1000H',block,66770)),npcs=npcs)
-    all_pages=[p for pages in dialogues.values() for p in pages]+[p for variants in npc_dialogues.values() for pages in variants.values() for p in pages]
+    all_pages=[p for pages in dialogues.values() for p in pages]+[p for variants in npc_dialogues.values() for pages in variants.values() for p in pages]+building_dialogues['locked']
     chars=sorted((set(''.join(p['speaker']+p['text'] for p in all_pages)) | set('엘가임 마을벨슨그의 오두막')) - {'\n'})
     font=read('HANGUL.FNT');english=read('ENGLISH.FNT');tables=code[0x4040:0x4108]
     reference=OpeningReference(code,data,font)
@@ -278,7 +280,7 @@ def extract(game_dir, output_root, executable=None):
         image.save(directory/f'reference-town-{number}.png')
     for command in programs[4]['commands']:
         if command['op']=='C' and command['value']==204:command['op']='V';command['value']='encounter'
-    result=dict(programs=programs,dialogues=dialogues,npc_dialogues=npc_dialogues,maps=map_info,sprites=sprite_ids,
+    result=dict(programs=programs,dialogues=dialogues,npc_dialogues=npc_dialogues,building_dialogues=building_dialogues,maps=map_info,sprites=sprite_ids,
                 frame_map=list(data[0x1588:0x1598]),motion_frame_bases=[{0x13ca:0,0x13e7:4,0x140e:8,0x1435:12,0x145a:-1}[v] for v in struct.unpack_from('<12I',code,0x1368)],font=dict(characters=''.join(chars),widths=widths),
                 sources=sources,native_sprite_pixels=verified_pixels,native_checkpoints=checkpoints,field_native_checkpoints=field_checkpoints,references=refs)
     (directory/'opening.json').write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n')

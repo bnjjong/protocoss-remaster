@@ -15,6 +15,11 @@ class FieldMovement(private val rules: FieldRules, val map: Int, var layer: Int,
     private var vector = 0
     fun place(x: Float, y: Float) { this.x=x;this.y=y;remaining=0;accumulator=0f;moving=false }
     fun faceForTalk() { check(atRest);pose=pose/4*4;moving=false }
+    fun face(direction:Int) {
+        check(atRest)
+        this.direction=direction
+        pose=when(direction) { 1->0;2->4;4->8;else->12 };moving=false
+    }
 
     /** 이벤트가 맵을 교체하면 true를 반환하여 남은 프레임의 보행을 중단한다. */
     fun update(delta: Float, input: Int, dash: Boolean, tick: ((Float,Float)->Unit)? = null, event: (Int) -> Boolean): Boolean {

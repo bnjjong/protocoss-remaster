@@ -27,6 +27,7 @@ import com.protocoss.map.TileMapRenderer
 import com.protocoss.field.FieldRules
 import com.protocoss.field.FieldMovement
 import com.protocoss.field.FieldNpcs
+import com.protocoss.field.BuildingTravel
 import com.protocoss.field.FieldDialogue
 import com.protocoss.field.PlaceBanner
 import com.protocoss.field.TownTravel
@@ -69,6 +70,8 @@ class ProtocossGame(
     private lateinit var opening: OpeningTimeline
     private lateinit var openingRenderer: OpeningRenderer
     private lateinit var fieldRules: FieldRules
+    private lateinit var buildingTravel: BuildingTravel
+    private lateinit var doorSound: com.badlogic.gdx.audio.Sound
     private var fieldMovement: FieldMovement? = null
     private var fieldNpcs: FieldNpcs? = null
     private var fieldDialogue: FieldDialogue? = null
@@ -132,6 +135,8 @@ class ProtocossGame(
         fieldRules = FieldRules(Gdx.files.internal("assets/data/field/field.json").readString()) {
             Gdx.files.internal("assets/data/field/$it").readBytes()
         }
+        buildingTravel=BuildingTravel(Gdx.files.internal("assets/data/field/buildings.json").readString())
+        doorSound=Gdx.audio.newSound(Gdx.files.internal("assets/audio/sfx/e0000.wav"))
         loadFieldMap()
 
         // 원본 맵의 실제 타일 크기로 오두막 중앙 위치를 계산한다.
@@ -177,11 +182,14 @@ class ProtocossGame(
                 val destination=eventDestination ?: DosSave.afterOpening(Gdx.files.internal("assets/data/original/start.dat").readBytes())
                 fieldEvent=null;eventDestination=null
                 enterField(destination)
-                if(!wasEvent || openingMusic==null) playOpeningMusic(destination.variable(4).takeIf { it in setOf(24,25) } ?: 25)
+                if(!wasEvent || openingMusic==null) playOpeningMusic(destination.variable(4).takeIf { it in setOf(10,24,25) } ?: 25)
                 fieldFade=1f
             }
         } else if (scene == Scene.FIELD) {
-            if(fieldFade>0f) { fieldFade=(fieldFade-delta*70f/64f).coerceAtLeast(0f) }
+            if(fieldFade>0f) {
+                fieldMovement?.update(delta,0,false,tick={ x,y -> fieldNpcs?.tick(x,y) }) { false }
+                fieldFade=(fieldFade-delta*70f/64f).coerceAtLeast(0f)
+            }
             else if(placeBanner!=null) {
                 val banner=placeBanner!!
                 fieldMovement?.update(delta,0,false,tick={ x,y -> fieldNpcs?.tick(x,y) }) { false }
@@ -231,7 +239,7 @@ class ProtocossGame(
 
         if (isTileMapMode && tileMapRenderer != null) {
             // 1-A. 필드 타일맵 렌더링
-            if(session?.area==0 && session?.map in setOf(0,1,2,3,4,12)) openingRenderer.renderMap(batch,session!!.map,0f,tileMap!!.totalPixelHeight-200f,true)
+            if(session?.area==0 && session?.map in 0..12) openingRenderer.renderMap(batch,session!!.map,0f,tileMap!!.totalPixelHeight-200f,true)
             else tileMapRenderer!!.render(batch, camera)
         } else if (backgroundTextures.isNotEmpty()) {
             // 1-B. 단일 배경 갤러리 렌더링
@@ -248,7 +256,7 @@ class ProtocossGame(
         // 2. 플레이어 렌더링
         val mapHeight = tileMap?.totalPixelHeight ?: 200f
         val mapNumber = session?.map
-        if (session?.area == 0 && mapNumber in setOf(0,1,2,3,4,12)) {
+        if (session?.area == 0 && mapNumber in 0..12) {
             val npcs=fieldNpcs
             if(npcs!=null) npcs.actors.forEach { npc ->
                 openingRenderer.renderActor(batch,npc.sprite,npc.frame,npc.x.toFloat(),200f-mapHeight+npc.y)
@@ -265,7 +273,7 @@ class ProtocossGame(
             else -> 12
         }
         openingRenderer.renderActor(batch,0,(if(player.isMoving) base+(walkingTime*9).toInt()%4 else fieldMovement?.pose ?: base),player.x-12f,188f-player.y)
-        if (session?.area == 0 && mapNumber in setOf(0,1,2,3,4,12))
+        if (session?.area == 0 && mapNumber in 0..12)
             openingRenderer.coverActor(batch,mapNumber!!,player.x-12f,mapHeight-player.y-12f,0f,mapHeight-200f,fieldMovement?.layer ?: 0)
 
         batch.end()
@@ -277,7 +285,7 @@ class ProtocossGame(
         if (dialogueManager.isActive) {
             dialogueBox.render(batch, dialogueManager)
         }
-        fieldDialogue?.takeIf { fieldNpcs?.talkReady==true }?.let { dialogue ->
+        fieldDialogue?.takeIf { fieldDialogueReady() }?.let { dialogue ->
             batch.begin()
             openingRenderer.renderFieldDialogue(batch,session!!.map,camera.position.x-160f,mapHeight-camera.position.y-100f,
                 fieldNpcs!!.actors,player.x-12f,mapHeight-player.y-12f,fieldMovement!!.pose,fieldMovement!!.layer,
@@ -317,6 +325,7 @@ class ProtocossGame(
         prologue?.dispose()
         encounterClip?.dispose()
         openingRenderer.dispose()
+        doorSound.dispose()
         openingMusic?.dispose()
         batch.dispose()
         menu.dispose()
@@ -416,17 +425,18 @@ class ProtocossGame(
                     session=session!!.calledEvent(event)
                 }
             }
-        } else if(fieldDialogue!=null && npcs?.talkReady==true && talkKey) {
+        } else if(fieldDialogue!=null && fieldDialogueReady() && talkKey) {
             fieldDialogue!!.advance()
             if(fieldDialogue!!.finished) {
-                npcs.endTalk();fieldDialogue=null
+                if(fieldDialogue!!.npcIndex>=0) npcs!!.endTalk()
+                fieldDialogue=null
                 player.setMotion(null,false)
                 return
             }
         }
         if(fieldDialogue!=null) {
             movement!!.update(delta,0,false,tick={ x,y -> npcs!!.tick(x,y) }) { false }
-            if(npcs!!.talkReady) fieldDialogue!!.update(delta)
+            if(fieldDialogueReady()) fieldDialogue!!.update(delta)
             player.setMotion(null,false)
             return
         }
@@ -478,6 +488,13 @@ class ProtocossGame(
 
     private fun handleFieldEvent(movement: FieldMovement, event: Int): Boolean {
         val current=requireNotNull(session)
+        if(current.map==4 && current.variable(0)==3 && event==9 && current.variable(8)<3) {
+            movement.face(1)
+            player.setMotion(Direction.NORTH,false)
+            fieldDialogue=FieldDialogue(-1,opening.data.get("building_dialogues").get("locked"))
+            session=current.calledEvent(event)
+            return true
+        }
         if(current.map==0 && event==0 && current.variable(0)==1 && !movement.doorOpen) {
             movement.doorOpen=true
             session=current.calledEvent(0)
@@ -487,17 +504,32 @@ class ProtocossGame(
             startFieldEvent(2,current.travel(1,0,0,72,56,10,0,mapOf(1 to 17,4 to 25,6 to 1)))
             return true
         }
+        if(current.map in setOf(4,12) && current.variable(0)==3 && (event==0 || event==9)) {
+            val direction=if(movement.direction and 1!=0) 1 else movement.direction
+            val changes=fieldRules.openDoor(current.map,movement.x,movement.y,direction)
+            if(changes!=null) {
+                openingRenderer.changeCells(current.map,changes)
+                fieldNpcs?.changeCells(changes)
+                session=current.calledEvent(event)
+                movement.face(direction)
+                player.setMotion(Direction.NORTH,false)
+                doorSound.play()
+                return true
+            }
+        }
+        val building=buildingTravel.travel(current,event)
         val town=TownTravel.travel(current,event)
         if(current.map==3 && event==2 && current.variable(7)==0) {
             startFieldEvent(4,current.travel(3,0,0,232,120,8,0,mapOf(1 to 3,7 to 1)))
             return true
         }
-        val destination=town ?: CabinDoors.travel(current,event) ?: return false
+        val destination=building ?: town ?: CabinDoors.travel(current,event) ?: return false
+        if(building!=null && buildingTravel.hasDoorSound(current,event)) doorSound.play()
         if(town==null && current.map==0 && current.variable(8)==2) startFieldEvent(3,destination)
         else {
             enterField(destination)
             if(town!=null && (destination.map in setOf(4,12) || current.map in setOf(4,12))) placeBanner=PlaceBanner(destination.location)
-            val track=destination.variable(4).takeIf { it in setOf(24,25) } ?: 25
+            val track=destination.variable(4).takeIf { it in setOf(10,24,25) } ?: 25
             if(openingMusic==null || activeTrack!=track) playOpeningMusic(track)
             fieldFade=1f
         }
@@ -508,6 +540,8 @@ class ProtocossGame(
         if (Gdx.graphics.isFullscreen) Gdx.graphics.setWindowedMode(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT)
         else Gdx.graphics.setFullscreenMode(Gdx.graphics.displayMode)
     }
+
+    private fun fieldDialogueReady()=fieldDialogue?.let { it.npcIndex<0 || fieldNpcs?.talkReady==true } ?: false
 
     private fun renderMenu() {
         if (scene == Scene.TITLE) {
@@ -669,7 +703,7 @@ class ProtocossGame(
             val loaded = saves.load(entry)
             openingMusic?.dispose();openingMusic=null
             enterField(loaded.save)
-            loaded.save.variable(4).takeIf { it in setOf(24,25) }?.let { playOpeningMusic(it) }
+            loaded.save.variable(4).takeIf { it in setOf(10,24,25) }?.let { playOpeningMusic(it) }
             currentDemoSegmentId = loaded.nextDialogue
         } catch (e: Exception) {
             message = "불러오지 못했습니다. 원본 게임 경로와 파일을 확인해주세요."
@@ -680,9 +714,9 @@ class ProtocossGame(
     private fun enterField(save: DosSave) {
         // 파일·맵·좌표를 모두 확인한 뒤에 현재 세션을 교체한다.
         val original = originalDirectory?.let { OriginalMapData.load(it, save.area, save.map) }
-        require(original != null || (save.area == 0 && save.map in setOf(0,1,2,3,4,12))) { "이 저장 지점에는 원본 MAP 데이터가 필요합니다." }
+        require(original != null || (save.area == 0 && save.map in 0..12)) { "이 저장 지점에는 원본 MAP 데이터가 필요합니다." }
         val fallbackMap = if (save.map == 2) "new_game_map.json" else "area00_map.json"
-        val map = original?.map ?: if(save.map in setOf(0,3,4,12)) {
+        val map = original?.map ?: if(save.map in setOf(0,3,4,5,6,7,8,9,10,11,12)) {
             val source=opening.data.get("maps").get(save.map.toString())
             TileMap(source.getInt("width"),source.getInt("height"),8,8)
         } else TileMap.fromJson(Gdx.files.internal("assets/data/maps/$fallbackMap").readString())
@@ -705,11 +739,12 @@ class ProtocossGame(
         camera.position.set((save.scrollX * 8 + 160).toFloat(), map.totalPixelHeight - (save.scrollY * 8 + 100), 0f)
         FieldBounds.constrainCamera(camera, map)
         session = save
+        fieldRules.reset(save.map)
         fieldDialogue=null
-        fieldNpcs=if(save.area==0 && save.map in setOf(4,12)) FieldNpcs(opening.data.get("maps").get(save.map.toString()),npcClock) else null
+        fieldNpcs=if(save.area==0 && save.map in 4..12) FieldNpcs(opening.data.get("maps").get(save.map.toString()),npcClock) else null
         placeBanner=null
         openingRenderer.resetFieldMaps()
-        fieldMovement = if(save.area==0 && save.map in setOf(0,1,2,3,4,12)) FieldMovement(fieldRules,save.map,save.layer.coerceIn(0,2),save.pose).apply {
+        fieldMovement = if(save.area==0 && save.map in 0..12) FieldMovement(fieldRules,save.map,save.layer.coerceIn(0,2),save.pose).apply {
             place(save.worldX,map.totalPixelHeight-save.worldY(map.totalPixelHeight))
             npcs=fieldNpcs
         } else null
