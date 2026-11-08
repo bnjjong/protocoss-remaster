@@ -132,7 +132,7 @@ class OriginalFieldMachine:
         finally:self.cpu.hook_del(token)
         return bytes(self.cpu.mem_read(0x200000,self.width*self.height*4))
 
-    def trace_event(self,raw,group,argument,variables):
+    def trace_event(self,raw,group,argument,variables,capture_dialogue=False):
         count=struct.unpack_from('<H',raw,4)[0]
         offsets=raw[6:6+count*2];script=bytes(b^127 for b in raw[6+count*2:])
         self.cpu.mem_write(0x230000,offsets);self.cpu.mem_write(0x240000,script)
@@ -156,7 +156,11 @@ class OriginalFieldMachine:
                 args+=list(struct.unpack('<4I',c.mem_read(sp+4,16)))
                 events.append(dict(kind='warp',args=args));sp+=16
             elif address==0x10a54:events.append(dict(kind='animation',id=args[0]))
-            elif address==0x1f8b0:events.append(dict(kind='dialogue'))
+            elif address==0x1f8b0:
+                event=dict(kind='dialogue')
+                if capture_dialogue:
+                    event['text']=bytes(c.mem_read(args[0],8192)).split(b'\0')[0].decode('cp1361')
+                events.append(event)
             elif address==0x12f4c:events.append(dict(kind='party_remove',id=args[0]))
             elif address==0x1eb30:events.append(dict(kind='place',name=bytes(c.mem_read(args[0],200)).split(b'\0')[0].decode('cp1361')))
             elif address==0x134b8:events.append(dict(kind='video',name=bytes(c.mem_read(args[0],200)).split(b'\0')[0].decode('ascii'),args=args[1:]))
@@ -186,6 +190,8 @@ def extract_field(game_directory, output_root, executable=None):
     for key,number,opened in [(0,0,False),(1,1,False),(2,2,False),("0-open",0,True),(3,3,False),(4,4,False),(12,12,False)]:
         source = raw[offsets[number]:offsets[number+1]]
         machine.load_map(source)
+        # 주민은 초기 위치를 굳힌 판정표 대신 실행 중의 목표 좌표로 검사한다.
+        if number in (4,12):machine.word(0xe1e0,0)
         width, height = machine.width, machine.height
         changed=None
         if opened:
@@ -207,6 +213,8 @@ def extract_field(game_directory, output_root, executable=None):
         metadata['maps'][str(key)] = dict(width=width,height=height,file=filename,
             sha256=hashlib.sha256(results).hexdigest(), rectangles=rectangles,
             attributes=[a for _,a in struct.iter_unpack('<HH',changed or source[48:48+width*height*4])])
+        if number in (4,12):
+            metadata['maps'][str(key)]['dynamic_npcs']=True
         if changed:
             metadata['door_changes']=[dict(index=i,tid=t,attr=a) for i,((t,a),before) in enumerate(zip(struct.iter_unpack('<HH',changed),struct.iter_unpack('<HH',source[48:48+width*height*4]))) if (t,a)!=before]
         print('원작 이동 판정 추출:',key,len(results),flush=True)
@@ -268,6 +276,7 @@ def verify_field(game_directory, output_root, executable=None):
     machine=OriginalFieldMachine(exe);cases=[]
     for key,number,opened in [(0,0,False),(1,1,False),(2,2,False),("0-open",0,True),(3,3,False),(4,4,False),(12,12,False)]:
         source=maps[offsets[number]:offsets[number+1]];machine.load_map(source)
+        if number in (4,12):machine.word(0xe1e0,0)
         if opened:
             start=soc_offsets[source[32]];machine.open_cabin_door(soc[start:start+70818])
         data=(folder/f'movement-{key}.bin').read_bytes()

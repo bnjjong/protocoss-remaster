@@ -113,6 +113,15 @@ def extract(game_dir, output_root, executable=None):
     script = read('DATA/AREA00.G&M'); count=struct.unpack_from('<H',script,4)[0]
     script = bytes(v^127 for v in script[6+count*2:])
     dialogues = {}
+    npc_dialogues = {}
+    event_machine=OriginalFieldMachine(executable)
+    for number in (10,11,12,13,14,18,19):
+        variants={}
+        for stage in (0,3,4):
+            trace=event_machine.trace_event(read('DATA/AREA00.G&M'),3,number,{8:stage},capture_dialogue=True)
+            if any(e['kind']!='dialogue' for e in trace['events']):raise ValueError('주민 대화에 미지원 명령이 있습니다.')
+            variants[str(stage)]=[page for e in trace['events'] for page in dialogue(e['text'].encode('cp1361'))]
+        npc_dialogues[str(number)]=variants
     group_offsets=struct.unpack_from(f'<{count}H',read('DATA/AREA00.G&M'),6)
     for group,numbers in [(0,(2,3,14,17)),(1,(4,5,6,7)),(2,(3,))]:
         p=group_offsets[group];entries={}
@@ -182,6 +191,11 @@ def extract(game_dir, output_root, executable=None):
             image=image.convert('RGBA')
             if alpha is not None:image.putalpha(Image.frombytes('L',size,alpha))
             return image
+        dark_tiles=Image.new('RGBA',(320,200))
+        for tile in range(1000):
+            ids=decode_tile_pixels(block[770+tile*64:834+tile*64])
+            dark_tiles.paste(remapped(ids),(tile%40*8,tile//40*8))
+        dark_tiles.save(directory/f'tiles-dialogue-{number}.png')
         dark_people=Image.new('RGBA',atlas.size)
         for row,sprite in enumerate(sprite_ids):
             for frame,raw in enumerate(sprite_blocks[sprite]):
@@ -209,10 +223,13 @@ def extract(game_dir, output_root, executable=None):
         npcs=[]
         for i in range(sub[34]):
             values=struct.unpack_from('<12I6B',sub,tail+i*54)
-            npcs.append(dict(sprite=values[0],x=values[1],y=values[2],frame=values[13],mask=values[17]))
+            npcs.append(dict(sprite=values[0],x=values[1],y=values[2],tile_x=values[5],tile_y=values[6],
+                bounds=list(values[7:11]),event=values[11],direction=values[12],frame=values[13],
+                kind=values[14],speed=values[15],mode=values[16],mask=values[17]))
         map_info[str(number)]=dict(width=w,height=h,cells=[list(c) for c in cells],animations=animations,
                                   next_tiles=list(struct.unpack_from('<1000H',block,66770)),npcs=npcs)
-    chars=sorted((set(''.join(p['speaker']+p['text'] for pages in dialogues.values() for p in pages)) | set('엘가임 마을벨슨그의 오두막')) - {'\n'})
+    all_pages=[p for pages in dialogues.values() for p in pages]+[p for variants in npc_dialogues.values() for pages in variants.values() for p in pages]
+    chars=sorted((set(''.join(p['speaker']+p['text'] for p in all_pages)) | set('엘가임 마을벨슨그의 오두막')) - {'\n'})
     font=read('HANGUL.FNT');english=read('ENGLISH.FNT');tables=code[0x4040:0x4108]
     reference=OpeningReference(code,data,font)
     checkpoints=reference.motions(programs[1])
@@ -261,7 +278,7 @@ def extract(game_dir, output_root, executable=None):
         image.save(directory/f'reference-town-{number}.png')
     for command in programs[4]['commands']:
         if command['op']=='C' and command['value']==204:command['op']='V';command['value']='encounter'
-    result=dict(programs=programs,dialogues=dialogues,maps=map_info,sprites=sprite_ids,
+    result=dict(programs=programs,dialogues=dialogues,npc_dialogues=npc_dialogues,maps=map_info,sprites=sprite_ids,
                 frame_map=list(data[0x1588:0x1598]),motion_frame_bases=[{0x13ca:0,0x13e7:4,0x140e:8,0x1435:12,0x145a:-1}[v] for v in struct.unpack_from('<12I',code,0x1368)],font=dict(characters=''.join(chars),widths=widths),
                 sources=sources,native_sprite_pixels=verified_pixels,native_checkpoints=checkpoints,field_native_checkpoints=field_checkpoints,references=refs)
     (directory/'opening.json').write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n')

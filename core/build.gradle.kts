@@ -14,3 +14,9 @@ dependencies {
 kotlin {
     jvmToolchain(21)
 }
+
+tasks.test {
+    inputs.file(rootProject.file("docs/npc-native-verification.json"))
+    inputs.dir(rootProject.file("assets/opening"))
+    inputs.dir(rootProject.file("assets/data/field"))
+}

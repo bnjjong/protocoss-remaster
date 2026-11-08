@@ -2,11 +2,11 @@
 
 1995년작 고전 국산 DOS RPG 《프로토코스: 신들의 예언서 (Team AMOS)》를 최신 macOS(Apple Silicon/Intel) 환경에서 네이티브로 실행되는 고품질 2D 리마스터 게임으로 재구현하는 프로젝트입니다.
 
-현재는 원작 데이터와 산출물을 하나씩 대조하며 복원하는 단계입니다. **현재 검증한 범위는 USER.SPR 11개 캐릭터·599프레임, 첫 오두막 정적 배경, 원작 시작 화면·새 게임 프롤로그와 음악·DOS 저장 파일 읽기·쓰기 및 필드 진입입니다.** 새 게임의 외부 연출·식탁과 침대 대화·첫 조작도 연결했습니다. 다른 장면의 NPC·UI·이벤트·전투와 문 이동·충돌은 후속 작업입니다. DOS 저장의 파티·이벤트 상태는 보존하지만 해당 게임 시스템과의 연결은 아직 남아 있습니다.
+현재는 원작 데이터와 산출물을 하나씩 대조하며 복원하는 단계입니다. **현재 검증한 범위는 USER.SPR 11개 캐릭터·599프레임, 오두막 배경·보행·문 왕복, 시작 화면·새 게임 프롤로그·음악, 검은 망토 조우와 마을 진입, 엘가임 주민 이동·대화, DOS 저장 읽기·쓰기입니다.** 엘가임 맵 4·12의 주민을 연결했으며, 다른 지역의 NPC·건물 출입·상점·전투는 후속 작업입니다. DOS 저장의 파티·이벤트 상태는 보존하지만 해당 게임 시스템과의 연결은 아직 남아 있습니다.
 
-[USER.SPR 복원 근거와 재현 방법](docs/sprite-format.md) · [첫 오두막 맵 분석](docs/map-format.md) · [필드 경계 수정·실행 검사](docs/field-bounds.md) · [시작 화면·DOS 저장](docs/title-save.md) · [프롤로그 복원](docs/prologue.md) · [오두막 시작 연출·비교 화면](docs/opening.md) · [보행·문 왕복·기상 연출](docs/field-travel.md) · [마을 진입·검은 망토 조우](docs/town-travel.md)
+[USER.SPR 복원 근거와 재현 방법](docs/sprite-format.md) · [첫 오두막 맵 분석](docs/map-format.md) · [필드 경계 수정·실행 검사](docs/field-bounds.md) · [시작 화면·DOS 저장](docs/title-save.md) · [프롤로그 복원](docs/prologue.md) · [오두막 시작 연출·비교 화면](docs/opening.md) · [보행·문 왕복·기상 연출](docs/field-travel.md) · [마을 진입·검은 망토 조우](docs/town-travel.md) · [엘가임 주민 이동·대화와 비교 화면](docs/town-npcs.md)
 
-실행은 `./gradlew :desktop:run`입니다. 원작 타이틀에서 `NEW START`를 선택하면 프롤로그와 음악이 재생됩니다. 역사 프롤로그는 Esc·Enter·Space로 건너뛸 수 있으며, 이후 오두막 외부·실내 연출과 대화가 이어집니다. 대화는 Space·Enter로 진행합니다. `CONTINUE`는 저장된 필드로 들어갑니다. 필드에서 Esc로 저장 메뉴를 엽니다.
+실행은 `./gradlew :desktop:run`입니다. 원작 타이틀에서 `NEW START`를 선택하면 프롤로그와 음악이 재생됩니다. 역사 프롤로그는 Esc·Enter·Space로 건너뛸 수 있으며, 이후 오두막 외부·실내 연출과 대화가 이어집니다. 엘가임 주민 앞에서 Space·Enter·E로 말을 걸 수 있습니다. 대화는 Space·Enter로 진행하며, 주민 대화에서는 E도 사용할 수 있습니다. `CONTINUE`는 저장된 필드로 들어갑니다. 필드에서 Esc로 저장 메뉴를 엽니다.
 
 ## 1. 프로젝트 구조
 

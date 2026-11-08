@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.utils.Disposable
 import com.badlogic.gdx.utils.JsonValue
 import kotlin.math.floor
+import com.protocoss.field.FieldNpcs
 
 /** 위에서 아래로 기록된 원작 좌표를 320×200 화면에 그린다. 필드와 전투 그림을 구분한다. */
 class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
@@ -28,6 +29,7 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
     private val font = texture("font.png")
     private val portraits = mapOf(0 to texture("portrait-0.png"), 1 to texture("portrait-1.png"), 17 to texture("portrait-17.png"))
     private val tiles = mapNumbers.associateWith { texture("tiles-$it.png") }
+    private val darkTiles = mapNumbers.associateWith { texture("tiles-dialogue-$it.png") }
     private val dialogueBackgrounds = mapNumbers.associateWith { texture("dialogue-background-$it.png") }
     private val fronts = mapNumbers.associateWith { texture("fronts-$it.png") }
     private val overlays = mapNumbers.associateWith { texture("overlays-$it.png") }
@@ -83,19 +85,19 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
                 coverActor(batch,timeline.map,actor.x,actor.y,timeline.scrollX,timeline.scrollY,actor.mask)
             }
             dialoguePass=false
-            val portrait = portraits[page.getInt("portrait")]
-            if (portrait != null) batch.draw(portrait,14f,200f-62f-portrait.height,portrait.width.toFloat(),portrait.height.toFloat())
-            text(batch,page.getString("speaker"),if(portrait == null)14f else 94f,118f,Color(252f/255f,252f/255f,0f,1f))
-            text(batch,page.getString("text").take(timeline.visibleCharacters),14f,139f,Color(252f/255f,252f/255f,252f/255f,1f))
+            renderDialogueText(batch,page,timeline.visibleCharacters)
         }
         fade(batch,timeline.fadeAlpha)
     }
 
     fun renderPlaceBanner(batch:SpriteBatch,number:Int,sx:Float,sy:Float,x:Float,name:String,
-                          heroX:Float,heroY:Float,pose:Int,layer:Int) {
-        batch.draw(dialogueBackgrounds.getValue(number),0f,176f,320f,20f,sx.toInt(),sy.toInt()+4,320,20,false,false)
+                          heroX:Float,heroY:Float,pose:Int,layer:Int,npcs:List<FieldNpcs.Actor>?=null) {
         dialoguePass=true;passMap=number;clipBottom=176f;clipTop=196f
-        map(number).get("npcs").forEach { npc ->
+        renderMap(batch,number,sx,sy)
+        if(npcs!=null) npcs.forEach { npc ->
+            renderActor(batch,npc.sprite,npc.frame,npc.x-sx,npc.y-sy)
+            coverActor(batch,number,npc.x.toFloat(),npc.y.toFloat(),sx,sy,npc.mask)
+        } else map(number).get("npcs").forEach { npc ->
             renderActor(batch,npc.getInt("sprite"),npc.getInt("frame"),npc.getFloat("x")-sx,npc.getFloat("y")-sy)
             coverActor(batch,number,npc.getFloat("x"),npc.getFloat("y"),sx,sy,npc.getInt("mask"))
         }
@@ -103,6 +105,27 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
         coverActor(batch,number,heroX,heroY,sx,sy,layer)
         dialoguePass=false;clipBottom=26f;clipTop=66f
         text(batch,name,x,7f,Color(252f/255f,252f/255f,252f/255f,1f))
+    }
+
+    fun renderFieldDialogue(batch:SpriteBatch,number:Int,sx:Float,sy:Float,npcs:List<FieldNpcs.Actor>,
+                            heroX:Float,heroY:Float,pose:Int,layer:Int,page:JsonValue,visible:Int) {
+        dialoguePass=true;passMap=number
+        renderMap(batch,number,sx,sy)
+        npcs.forEach { npc ->
+            renderActor(batch,npc.sprite,npc.frame,npc.x-sx,npc.y-sy)
+            coverActor(batch,number,npc.x.toFloat(),npc.y.toFloat(),sx,sy,npc.mask)
+        }
+        renderActor(batch,0,pose,heroX-sx,heroY-sy)
+        coverActor(batch,number,heroX,heroY,sx,sy,layer)
+        dialoguePass=false
+        renderDialogueText(batch,page,visible)
+    }
+
+    private fun renderDialogueText(batch:SpriteBatch,page:JsonValue,visible:Int) {
+        val portrait=portraits[page.getInt("portrait")]
+        if(portrait!=null) batch.draw(portrait,14f,200f-62f-portrait.height,portrait.width.toFloat(),portrait.height.toFloat())
+        text(batch,page.getString("speaker"),if(portrait==null)14f else 94f,118f,Color(252f/255f,252f/255f,0f,1f))
+        text(batch,page.getString("text").take(visible),14f,139f,Color(252f/255f,252f/255f,252f/255f,1f))
     }
 
     fun resetFieldMaps() {
@@ -129,7 +152,7 @@ class OpeningRenderer(val timeline: OpeningTimeline) : Disposable {
         }
         for (y in (if(fullMap) 0 else floor(sy/8).toInt().coerceAtLeast(0))..(if(fullMap) height-1 else ((sy+199)/8).toInt().coerceAtMost(height-1)))
             for(x in (if(fullMap) 0 else floor(sx/8).toInt().coerceAtLeast(0))..(if(fullMap) width-1 else ((sx+319)/8).toInt().coerceAtMost(width-1)))
-                tile(batch,tiles.getValue(number),current[y*width+x] and 4095,x*8f-sx,192f-y*8f+sy)
+                tile(batch,(if(dialoguePass) darkTiles else tiles).getValue(number),current[y*width+x] and 4095,x*8f-sx,192f-y*8f+sy)
     }
 
     fun renderActor(batch: SpriteBatch, sprite: Int, frame: Int, x: Float, topY: Float) {
