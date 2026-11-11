@@ -11,7 +11,7 @@ from verify_original_title_save import objects
 from verify_original_user_sprite import OriginalSpriteRenderer
 
 
-def verify(game_dir,output_root,executable=None):
+def verify(game_dir,output_root,executable=None,report_name='equipment-render-verification.json'):
     exe=executable if executable is not None else unpack_game(game_dir)
     folder=output_root/'desktop/build/reports/equipment';scenes=json.loads((folder/'scenes.json').read_text());results=[]
     ref=EquipmentReference(exe);renderer=OriginalSpriteRenderer(exe);palette=(game_dir/'DATA/PROTOCOS.PAL').read_bytes()
@@ -62,12 +62,13 @@ def verify(game_dir,output_root,executable=None):
                 elif e['kind']=='text':text(e['text'],e['x'],e['y'],e['color'])
                 elif e['kind']=='number':number(e['text'],e['x'],e['y'],e['right'],e['color']==1)
         if scene['scene']=='WEAPON':
-            if scene['stage']=='HOME':draw(ref.invoke(0x151b8,0,0))
+            character=scene.get('character',0);slot=scene.get('slot',2);index=ref.party.index(character)
+            if scene['stage']=='HOME':draw(ref.invoke(0x151b8,0,index))
             else:
-                draw(ref.invoke(0x156f8,0,2))
+                draw(ref.invoke(0x156f8,index,slot))
                 if scene['stage']=='SELECT':
-                    choices=ref.candidates()
-                    if choices:draw(ref.invoke(0x15808,0,2,choices[scene['selected']]))
+                    choices=ref.candidates(character,slot)
+                    if choices:draw(ref.invoke(0x15808,character,slot,choices[scene['selected']]))
                     draw(ref.invoke(0x15518,scene['scroll'],scene['selected']-scene['scroll']))
         else:
             equipment=scene['inventory_equipment'];text('장비' if equipment else '소지품',14,16)
@@ -88,10 +89,12 @@ def verify(game_dir,output_root,executable=None):
         if diff:raise ValueError(f'메뉴 화면 불일치: {scene["name"]}, {len(diff)}픽셀, 처음 {diff[:5]}')
         results.append(dict(name=scene['name'],pixels=64000,native_function='0x151B8/0x156F8/0x15808/0x15518' if scene['scene']=='WEAPON' else '0x19930' if not scene['inventory_equipment'] else '소지품 배치·원작 그림 조합'))
     report=dict(scenes=results,compared_pixels=len(results)*64000)
-    (output_root/'docs/equipment-render-verification.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+    (output_root/'docs'/report_name).write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
     print('장비 메뉴 화면 일치:',len(results),'장,',report['compared_pixels'],'픽셀')
     return report
 
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--game-dir',type=Path,required=True)
-    p.add_argument('--output-root',type=Path,default=Path(__file__).resolve().parents[2]);a=p.parse_args();verify(a.game_dir,a.output_root)
+    p.add_argument('--output-root',type=Path,default=Path(__file__).resolve().parents[2])
+    p.add_argument('--report-name',default='equipment-render-verification.json')
+    a=p.parse_args();verify(a.game_dir,a.output_root,report_name=a.report_name)

@@ -50,9 +50,9 @@ class EquipmentTest {
     }
     @Test fun `selection scrolling cancel and repeated exchange conserve items`() {
         val bytes=save(report.get("cases")[0].getString("before")).bytes().also { it.fill(1,162,337);it[475]=(-1).toByte() }
-        var current=DosSave.parse(bytes);val menu=WeaponMenu()
-        current=menu.confirm(model,current);assertEquals(WeaponMenu.Stage.SLOT,menu.stage)
-        current=menu.confirm(model,current);assertEquals(WeaponMenu.Stage.SELECT,menu.stage)
+        var current=DosSave.parse(bytes);val menu=EquipmentMenu(2)
+        current=menu.confirm(model,current);assertEquals(EquipmentMenu.Stage.SLOT,menu.stage)
+        current=menu.confirm(model,current);assertEquals(EquipmentMenu.Stage.SELECT,menu.stage)
         menu.move(20,model.candidates(current).size);assertEquals(20,menu.selected);assertEquals(17,menu.scroll)
         menu.move(-100,model.candidates(current).size);assertEquals(0,menu.selected);assertEquals(0,menu.scroll)
         current=menu.confirm(model,current);assertEquals(0,model.equipped(current));assertEquals(0,model.quantity(current,0,true))

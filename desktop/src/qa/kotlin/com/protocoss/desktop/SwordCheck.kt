@@ -19,16 +19,16 @@ import java.nio.file.Path
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import com.protocoss.menu.EquipmentRenderer
-import com.protocoss.menu.WeaponMenu
+import com.protocoss.menu.EquipmentMenu
 import java.util.Base64
 
 /** 새 게임부터 검 회수까지 실제 입력으로 진행한다. 원본 폴더와 사용자 저장은 쓰지 않는다. */
 object SwordCheck {
     @JvmStatic fun main(args:Array<String>)=run(false)
-    fun run(equipment:Boolean) {
+    fun run(equipment:Boolean,party:Boolean=false) {
         val saves=Files.createTempDirectory("protocoss-sword-qa-")
         try {
-            val app=SwordApplication(saves,equipment)
+            val app=SwordApplication(saves,equipment,party)
             Lwjgl3Application(app,Lwjgl3ApplicationConfiguration().apply {
                 setTitle("검 수리 스토리 자동 검사");setWindowedMode(640,400);setInitialVisible(false);useVsync(false);setForegroundFPS(0)
             })
@@ -37,7 +37,8 @@ object SwordCheck {
     }
 }
 object EquipmentCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true) }
-private class SwordApplication(private val saves:Path,private val equipment:Boolean):ApplicationAdapter() {
+object PartyEquipmentCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true) }
+private class SwordApplication(private val saves:Path,private val equipment:Boolean,private val partyEquipment:Boolean):ApplicationAdapter() {
     private val game=ProtocossGame(null,saves)
     private val held=mutableSetOf<Int>();private val pressed=mutableSetOf<Int>()
     private lateinit var input:Input;private lateinit var graphics:Graphics;private lateinit var rules:FieldRules
@@ -236,14 +237,18 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         check(scene()=="FIELD");press(Input.Keys.ESCAPE);repeat(5) { press(Input.Keys.DOWN) };press(Input.Keys.ENTER)
         check(scene()=="WEAPON")
     }
+    private fun beginWeaponList() {
+        press(Input.Keys.ENTER);press(Input.Keys.DOWN);press(Input.Keys.DOWN);press(Input.Keys.ENTER)
+    }
     private fun captureMenu(name:String) {
         val folder="desktop/build/reports/equipment"
         val image=Pixmap.createFromFrameBuffer(0,0,Gdx.graphics.backBufferWidth,Gdx.graphics.backBufferHeight)
         try { PixmapIO.writePNG(Gdx.files.local("$folder/$name.png"),image,-1,true) } finally { image.dispose() }
-        val weapon=field<WeaponMenu>("weaponMenu")
+        val weapon=field<EquipmentMenu>("equipmentMenu")
         menuCaptures.addChild(JsonValue(JsonValue.ValueType.`object`).apply {
             addChild("name",JsonValue(name));addChild("scene",JsonValue(scene()))
             addChild("save",JsonValue(Base64.getEncoder().encodeToString(session().bytes())))
+            addChild("character",JsonValue(weapon.character.toLong()));addChild("slot",JsonValue(weapon.slot.toLong()));
             addChild("stage",JsonValue(weapon.stage.toString()));addChild("selected",JsonValue(weapon.selected.toLong()));addChild("scroll",JsonValue(weapon.scroll.toLong()))
             addChild("inventory_equipment",JsonValue(field<Boolean>("inventoryEquipment")))
             addChild("inventory_selected",JsonValue(field<Int>("inventorySelection").toLong()));addChild("inventory_scroll",JsonValue(field<Int>("inventoryScroll").toLong()))
@@ -257,11 +262,11 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         val clock=field<FieldNpcs?>("fieldNpcs")!!.actors.map { it.x to it.y }
         held+=Input.Keys.W;idle(80);held.clear();press(Input.Keys.SPACE)
         check(position==(movement().x to movement().y));check(clock==field<FieldNpcs>("fieldNpcs").actors.map { it.x to it.y })
-        captureMenu("weapon-slot");press(Input.Keys.ENTER);captureMenu("dagger-preview")
+        press(Input.Keys.DOWN);press(Input.Keys.DOWN);captureMenu("weapon-slot");press(Input.Keys.ENTER);captureMenu("dagger-preview")
         press(Input.Keys.ENTER);check(model.equipped(session())==0 && model.quantity(session(),0,true)==0)
         check(model.stats(session())[0]==20);captureMenu("dagger-equipped")
         closeEquipment();saveAndReload();check(model.equipped(session())==0 && model.stats(session())[0]==20)
-        openEquipment();press(Input.Keys.ENTER);press(Input.Keys.ENTER)
+        openEquipment();beginWeaponList()
         check(model.equipped(session())==255 && model.quantity(session(),0,true)==1)
         press(Input.Keys.ESCAPE);captureMenu("cancel-detached");closeEquipment();saveAndReload()
         check(model.equipped(session())==255 && model.quantity(session(),0,true)==1)
@@ -270,16 +275,16 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         press(Input.Keys.RIGHT);captureMenu("dagger-inventory");press(Input.Keys.ENTER)
         check(model.quantity(session(),0,true)==1);press(Input.Keys.ESCAPE);press(Input.Keys.ESCAPE)
         load(DosSave.parse(session().bytes().also { it.fill(0,162,337) }))
-        openEquipment();press(Input.Keys.ENTER);press(Input.Keys.ENTER);captureMenu("empty-weapons")
+        openEquipment();beginWeaponList();captureMenu("empty-weapons")
         val empty=session().bytes();press(Input.Keys.ENTER);check(empty.contentEquals(session().bytes()));closeEquipment()
         val fixture=session().bytes().also { b ->
             b.fill(1,162,337);b.fill(2,123,162)
             b[475]=(-1).toByte();b[476]=90
         }
-        load(DosSave.parse(fixture));openEquipment();press(Input.Keys.ENTER);press(Input.Keys.ENTER)
+        load(DosSave.parse(fixture));openEquipment();beginWeaponList()
         repeat(8) { press(Input.Keys.DOWN) };captureMenu("weapon-scroll")
         val choices=model.candidates(session());val two=choices.indexOfFirst { it.category==5 }
-        while(field<WeaponMenu>("weaponMenu").selected!=two) press(if(field<WeaponMenu>("weaponMenu").selected<two) Input.Keys.DOWN else Input.Keys.UP)
+        while(field<EquipmentMenu>("equipmentMenu").selected!=two) press(if(field<EquipmentMenu>("equipmentMenu").selected<two) Input.Keys.DOWN else Input.Keys.UP)
         val blocked=session().bytes();press(Input.Keys.ENTER);check(blocked.contentEquals(session().bytes()));captureMenu("shield-blocked")
         closeEquipment();press(Input.Keys.ESCAPE);repeat(4) { press(Input.Keys.DOWN) };press(Input.Keys.ENTER)
         repeat(9) { press(Input.Keys.DOWN) };captureMenu("items-scroll")
@@ -289,6 +294,82 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         load(DosSave.parse(before));check(model.quantity(session(),0,true)==1)
         Gdx.files.local("desktop/build/reports/equipment/scenes.json").writeString(menuCaptures.toJson(JsonWriter.OutputType.json),false,"UTF-8")
         println("무기 메뉴 검사 완료: 검 회수→단검 장착→저장 재개·취소 시 해제·스크롤·방패 제한·필드 정지, ${menuCaptures.size} 화면")
+    }
+    private fun gear()=field<EquipmentMenu>("equipmentMenu")
+    private fun openGear(character:Int,slot:Int) {
+        openEquipment()
+        repeat(11) { if(gear().character!=character) press(Input.Keys.DOWN) }
+        check(gear().character==character)
+        press(Input.Keys.ENTER)
+        val queue=ArrayDeque<Int>();queue+=gear().slot
+        val previous=mutableMapOf<Int,Pair<Int,String>>()
+        val visited=mutableSetOf(gear().slot)
+        val model=field<EquipmentRenderer>("equipmentRenderer").model
+        while(queue.isNotEmpty() && slot !in visited) {
+            val current=queue.removeFirst()
+            for(d in listOf("up","down","left","right")) {
+                val next=model.data.get("slot_navigation").get(d)[current].asInt()
+                if(visited.add(next)) { previous[next]=current to d;queue+=next }
+            }
+        }
+        val path=mutableListOf<String>();var cursor=slot
+        while(cursor!=gear().slot) { val (parent,d)=previous.getValue(cursor);path+=d;cursor=parent }
+        path.reversed().forEach { press(when(it) { "up"->Input.Keys.UP;"down"->Input.Keys.DOWN;"left"->Input.Keys.LEFT;else->Input.Keys.RIGHT }) }
+        check(gear().slot==slot);press(Input.Keys.ENTER)
+    }
+    private fun chooseGear(id:Int) {
+        val model=field<EquipmentRenderer>("equipmentRenderer").model
+        val index=model.candidates(session(),gear().character,gear().slot).indexOfFirst { it.id==id }
+        check(index>=0)
+        while(gear().selected!=index) press(if(gear().selected<index) Input.Keys.DOWN else Input.Keys.UP)
+    }
+    private fun checkPartyEquipment() {
+        val model=field<EquipmentRenderer>("equipmentRenderer").model
+        val base=session().bytes();val report=com.badlogic.gdx.utils.JsonReader().parse(Files.readString(Path.of("docs/party-equipment-native.json")))
+        for(character in 0..10) {
+            val slot=character%6
+            val bytes=Base64.getDecoder().decode(report.get("fixtures")[character*6+slot].asString())
+            base.copyInto(bytes,92,92,119)
+            base.copyInto(bytes,2350,2350,2352)
+            for(i in 0..10) bytes[347+153*i]=if(i==character)1 else 0
+            load(DosSave.parse(bytes));openGear(character,slot)
+            captureMenu("party-$character-slot-$slot")
+            val choices=model.candidates(session(),character,slot)
+            if(choices.isNotEmpty()) {
+                val expected=model.equip(session(),choices[0].id,character,slot)
+                press(Input.Keys.ENTER);check(expected.bytes().contentEquals(session().bytes()))
+                check(model.equipped(session(),character,slot)==choices[0].id)
+            } else press(Input.Keys.ENTER)
+            closeEquipment();val before=session().bytes();saveAndReload()
+            for(i in 337 until 2020) check(session().bytes()[i]==before[i])
+        }
+        val bytes=base.copyOf().also { b -> b.fill(2,162,337);b.fill((-1).toByte(),473,479);b[387]=0 }
+        load(DosSave.parse(bytes));openGear(0,5);chooseGear(174);press(Input.Keys.ENTER)
+        check(session().bytes()[387].toInt()==12);captureMenu("gem-right-equipped");closeEquipment();saveAndReload()
+        openGear(0,4);chooseGear(163);val blocked=session().bytes();press(Input.Keys.ENTER)
+        check(blocked.contentEquals(session().bytes()));captureMenu("gem-left-blocked");closeEquipment()
+        openGear(0,5);check(session().bytes()[387].toInt()==0);press(Input.Keys.ESCAPE);captureMenu("gem-removed");closeEquipment();saveAndReload()
+        openGear(0,4);chooseGear(163);press(Input.Keys.ENTER);closeEquipment()
+        openGear(0,5);chooseGear(174);press(Input.Keys.ENTER)
+        check(model.equipped(session(),0,4)==163 && model.equipped(session(),0,5)==174 && session().bytes()[387].toInt()==12)
+        captureMenu("two-gems-native");closeEquipment();saveAndReload()
+        val cloak=base.copyOf().also { b -> b.fill(2,162,337);b.fill((-1).toByte(),473,479);b[387]=0 }
+        // 오두막의 연속된 빈 바닥에서 70Hz 한 번의 이동 거리를 확인한다.
+        var point:Pair<Int,Int>?=null
+        search@for(y in 32..160 step 8) for(x in 24..264 step 8)
+            if((0..2).all { rules.step(1,(x+it*8).toFloat(),y.toFloat(),2,0,true).direction==2 }) { point=x to y;break@search }
+        val (x,y)=checkNotNull(point)
+        load(DosSave.parse(cloak).travel(1,0,0,x+16,y+16,4,0,mapOf(297 to 1)))
+        openGear(0,4);chooseGear(157);press(Input.Keys.ENTER);captureMenu("cloak-equipped");closeEquipment()
+        check(field<Int>("fieldStep")==2 && movement().baseStep==2)
+        val oldX=movement().x;held+=Input.Keys.D;tick();held.clear();check(movement().x==oldX+2);idle(4)
+        saveAndReload();check(session().variable(297)==2 && movement().baseStep==2)
+        openGear(0,4);check(field<Int>("fieldStep")==1);press(Input.Keys.ESCAPE);captureMenu("cloak-removed");closeEquipment();saveAndReload()
+        check(session().variable(297)==1 && movement().baseStep==1)
+        val normalX=movement().x;held+=Input.Keys.D;tick();held.clear();check(movement().x==normalX+1)
+        load(DosSave.parse(base))
+        Gdx.files.local("desktop/build/reports/equipment/scenes.json").writeString(menuCaptures.toJson(JsonWriter.OutputType.json),false,"UTF-8")
+        println("파티 장비 검사 완료: 11명·여섯 슬롯·장착/해제/거부·구슬 비대칭·망토 이동·저장 재개, ${menuCaptures.size} 화면")
     }
     override fun render() {
         if(completed) return
@@ -312,6 +393,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         saveAndReload();shopTalk(4,"repeat");check(session().bytes()[162].toInt()==1)
         check(joins==1 && letters==1)
         if(equipment) checkEquipment()
+        if(partyEquipment) checkPartyEquipment()
         Gdx.files.local("desktop/build/reports/sword/scenes.json").writeString(captures.toJson(JsonWriter.OutputType.json),false,"UTF-8")
         println("검 수리 스토리 검사 완료: $steps 걸음, 진행 0→1→2→3→4, 합류·쪽지 각 1회, 맡기기·회수·중복 방지·저장 재개, ${captures.size} 화면")
         completed=true;Gdx.app.exit()

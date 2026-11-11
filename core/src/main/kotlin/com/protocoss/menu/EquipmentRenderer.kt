@@ -34,32 +34,35 @@ class EquipmentRenderer:Disposable {
         val str=value.toString();var left=if(right) x-str.length*8 else x
         for(c in str) { image(batch,"imenu-${c-'0'+17}${if(muted) "-muted" else ""}",left,y);left+=8 }
     }
-    fun weapon(batch:SpriteBatch,save:DosSave,state:WeaponMenu) {
+    fun weapon(batch:SpriteBatch,save:DosSave,state:EquipmentMenu) {
         batch.begin();image(batch,"imenu-96",0,0);image(batch,"imenu-232",0,0)
-        image(batch,"kaman-6",1,36)
+        image(batch,if(state.character==0) "kaman-6" else "person-${state.character}-6",1,36)
         val slots=listOf(44 to 40,44 to 76,14 to 89,75 to 89,18 to 120,70 to 120)
         val bytes=save.bytes()
         for(slot in slots.indices) {
-            val id=bytes[473+slot].toInt() and 255
+            val id=bytes[473+153*state.character+slot].toInt() and 255
             if(id in model.weapons.indices) {
                 val (x,y)=slots[slot];val offset=if(id>=163)4 else 0
                 image(batch,"common-${model.weapons[id].icon}",x+offset,y+offset)
             }
         }
-        val values=model.stats(save);val order=intArrayOf(0,1,2,3,5,4)
+        val values=model.stats(save,state.character);val order=intArrayOf(0,1,2,3,5,4)
         order.forEachIndexed { index,j -> number(batch,values[j],if(index<3)105 else 270,157+index%3*14) }
-        if(state.stage==WeaponMenu.Stage.HOME) { image(batch,"imenu-233",46,19) }
-        else image(batch,"imenu-236",13,88)
-        if(state.stage==WeaponMenu.Stage.SELECT) {
-            val choices=model.candidates(save)
+        if(state.stage==EquipmentMenu.Stage.HOME) { image(batch,"imenu-233",46,19) }
+        else {
+            val cursor=model.data.get("slot_cursors")[state.slot]
+            image(batch,"imenu-236",cursor[0].asInt(),cursor[1].asInt())
+        }
+        if(state.stage==EquipmentMenu.Stage.SELECT) {
+            val choices=model.candidates(save,state.character,state.slot)
             if(choices.isEmpty()) text(batch,model.data.getString("empty_weapon"),134,84)
             else {
-                val preview=model.preview(save,choices[state.selected].id)
+                val preview=model.preview(save,choices[state.selected].id,state.character,state.slot)
                 order.forEachIndexed { index,j -> number(batch,preview[j],if(index<3)119 else 284,157+index%3*14,false,preview[j]<=values[j]) }
                 val row=state.selected-state.scroll
                 batch.draw(TextureRegion(regions.getValue("weapon-highlight"),120,47+row*24,188,18),120f,(200-47-row*24-18).toFloat())
                 choices.drop(state.scroll).take(4).forEachIndexed { i,item ->
-                    val y=44+i*24;image(batch,"common-${item.icon}",128,y);text(batch,item.name,160,y+4)
+                    val y=44+i*24;image(batch,"common-${item.icon}",128,y+if(item.id>=163)5 else 0);text(batch,item.name,160,y+4)
                     number(batch,model.quantity(save,item.id,true),303,y+7)
                 }
             }

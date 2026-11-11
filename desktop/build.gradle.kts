@@ -128,3 +128,11 @@ tasks.register<JavaExec>("verifyEquipment") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+tasks.register<JavaExec>("verifyPartyEquipment") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.PartyEquipmentCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}

@@ -20,7 +20,7 @@ import com.protocoss.dialogue.FontManager
 import com.protocoss.map.OriginalMapData
 import com.protocoss.menu.GameMenu
 import com.protocoss.menu.EquipmentRenderer
-import com.protocoss.menu.WeaponMenu
+import com.protocoss.menu.EquipmentMenu
 import com.protocoss.save.DosSave
 import com.protocoss.save.SaveRepository
 import com.protocoss.map.FieldBounds
@@ -63,7 +63,9 @@ class ProtocossGame(
     private lateinit var menu: GameMenu
     private lateinit var equipmentRenderer:EquipmentRenderer
     private lateinit var equipmentSounds:Map<Int,com.badlogic.gdx.audio.Sound>
-    private var weaponMenu=WeaponMenu()
+    private var equipmentMenu=EquipmentMenu()
+    // 원작 0x7E510의 보행 속도. 저장 때 이벤트 변수 297로 옮긴다.
+    private var fieldStep=1
     private var inventoryEquipment=false
     private var inventorySelection=0
     private var inventoryScroll=0
@@ -560,7 +562,7 @@ class ProtocossGame(
         if(building!=null && buildingTravel.hasDoorSound(current,event)) doorSound.play()
         if(town==null && current.map==0 && current.variable(8)==2) startFieldEvent(3,destination)
         else {
-            enterField(destination)
+            enterField(destination,false)
             if(town!=null && (destination.map in setOf(4,12) || current.map in setOf(4,12))) placeBanner=PlaceBanner(destination.location)
             val track=destination.variable(4).takeIf { it in setOf(10,24,25) } ?: 25
             if(openingMusic==null || activeTrack!=track) playOpeningMusic(track)
@@ -577,14 +579,14 @@ class ProtocossGame(
     private fun fieldDialogueReady()=fieldDialogue?.let { it.npcIndex<0 || fieldNpcs?.talkReady==true } ?: false
 
     private fun renderMenu() {
-        if(scene==Scene.WEAPON) { equipmentRenderer.weapon(batch,session!!,weaponMenu);return }
+        if(scene==Scene.WEAPON) { equipmentRenderer.weapon(batch,session!!,equipmentMenu);return }
         if(scene==Scene.INVENTORY) { equipmentRenderer.inventory(batch,session!!,inventoryEquipment,inventorySelection,inventoryScroll);return }
         if (scene == Scene.TITLE) {
             menu.title(batch, selected)
             return
         }
         val rows = when (scene) {
-            Scene.PAUSE -> listOf("계속하기", "저장하기", "불러오기", "메인 화면", "소지품", "무기 장비")
+            Scene.PAUSE -> listOf("계속하기", "저장하기", "불러오기", "메인 화면", "소지품", "장비")
             Scene.LOAD, Scene.SAVE -> entries.map {
                 "${it.label}  ${it.error ?: it.save?.location?.take(17) ?: "빈 저장 공간"}"
             }
@@ -644,8 +646,9 @@ class ProtocossGame(
                 3 -> { scene = Scene.CONFIRM_TITLE; selected = 0 }
                 4 -> { scene=Scene.INVENTORY;inventoryEquipment=false;inventorySelection=0;inventoryScroll=0 }
                 5 -> {
-                    if(session!!.bytes()[347].toInt()!=0) { weaponMenu=WeaponMenu();scene=Scene.WEAPON }
-                    else message="카만이 파티에 없습니다."
+                    val party=equipmentRenderer.model.party(session!!)
+                    if(party.isNotEmpty()) { equipmentMenu=EquipmentMenu(initialCharacter=party.first());scene=Scene.WEAPON }
+                    else message="참가 중인 파티원이 없습니다."
                 }
             }
             Scene.LOAD -> loadSelected()
@@ -669,16 +672,19 @@ class ProtocossGame(
     private fun handleWeaponInput() {
         if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             equipmentSounds.getValue(8).play()
-            if(weaponMenu.back()) { scene=Scene.PAUSE;selected=5 }
+            if(equipmentMenu.back()) { scene=Scene.PAUSE;selected=5 }
             return
         }
-        val choices=equipmentRenderer.model.candidates(session!!)
-        if(Gdx.input.isKeyJustPressed(Input.Keys.UP)) { weaponMenu.move(-1,choices.size);equipmentSounds.getValue(12).play() }
-        if(Gdx.input.isKeyJustPressed(Input.Keys.DOWN)) { weaponMenu.move(1,choices.size);equipmentSounds.getValue(12).play() }
+        val model=equipmentRenderer.model
+        for((key,direction) in listOf(Input.Keys.UP to "up",Input.Keys.DOWN to "down",Input.Keys.LEFT to "left",Input.Keys.RIGHT to "right")) {
+            if(Gdx.input.isKeyJustPressed(key)) { equipmentMenu.navigate(direction,model,session!!);equipmentSounds.getValue(12).play() }
+        }
         if(menuConfirmed()) {
-            val blocked=weaponMenu.stage==WeaponMenu.Stage.SELECT && choices.isNotEmpty() && !equipmentRenderer.model.canEquip(session!!,choices[weaponMenu.selected].id)
-            equipmentSounds.getValue(if(blocked || (weaponMenu.stage==WeaponMenu.Stage.SELECT && choices.isEmpty()))13 else 8).play()
-            session=weaponMenu.confirm(equipmentRenderer.model,session!!)
+            val choices=model.candidates(session!!,equipmentMenu.character,equipmentMenu.slot)
+            val blocked=equipmentMenu.stage==EquipmentMenu.Stage.SELECT && choices.isNotEmpty() && !model.canEquip(session!!,choices[equipmentMenu.selected].id,equipmentMenu.character,equipmentMenu.slot)
+            equipmentSounds.getValue(if(blocked || (equipmentMenu.stage==EquipmentMenu.Stage.SELECT && choices.isEmpty()))13 else 8).play()
+            session=equipmentMenu.confirm(model,session!!)
+            equipmentMenu.stepChange?.let { fieldStep=it;fieldMovement?.baseStep=it }
         }
     }
 
@@ -712,6 +718,7 @@ class ProtocossGame(
     }
 
     private fun startNewGame() {
+        fieldStep=1
         openingMusic?.dispose();openingMusic=null
         var movie: ProloguePlayer? = null
         try {
@@ -782,7 +789,10 @@ class ProtocossGame(
         }
     }
 
-    private fun enterField(save:DosSave)=enterField(save,false)
+    private fun enterField(save:DosSave) {
+        fieldStep=save.variable(297).takeIf { it in listOf(1,2,4) } ?: 1
+        enterField(save,false)
+    }
 
     private fun enterField(save: DosSave,preserveField:Boolean) {
         // 파일·맵·좌표를 모두 확인한 뒤에 현재 세션을 교체한다.
@@ -821,6 +831,7 @@ class ProtocossGame(
         fieldMovement = if(save.area==0 && save.map in 0..12) FieldMovement(fieldRules,save.map,save.layer.coerceIn(0,2),save.pose).apply {
             place(save.worldX,map.totalPixelHeight-save.worldY(map.totalPixelHeight))
             npcs=fieldNpcs
+            baseStep=fieldStep
         } else null
         player.setMotion(when(save.pose/4) { 0 -> Direction.NORTH;1 -> Direction.EAST;2 -> Direction.SOUTH;else -> Direction.WEST },false)
         fieldFade=0f
@@ -831,8 +842,9 @@ class ProtocossGame(
         try {
             val pose=when(player.direction) { Direction.NORTH -> 0;Direction.EAST,Direction.NORTH_EAST,Direction.SOUTH_EAST -> 4;Direction.SOUTH -> 8;else -> 12 }
             val current = requireNotNull(session).withFieldState(fieldMovement?.layer ?: session!!.layer,fieldMovement?.pose ?: pose).atPosition(player.x - 12f, player.y + 12f, tileMap!!.totalPixelHeight, tileMap!!.totalPixelWidth)
-            saves.write(pendingSlot, current, currentDemoSegmentId)
-            session = current
+            val stored=current.withVariables(mapOf(297 to fieldStep))
+            saves.write(pendingSlot, stored, currentDemoSegmentId)
+            session = stored
             scene = Scene.PAUSE
             selected = 0
             message = "저장 ${pendingSlot + 1}에 기록했습니다."
