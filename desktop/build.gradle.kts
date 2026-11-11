@@ -154,3 +154,12 @@ tasks.register<JavaExec>("verifyFieldItems") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 텐트의 거부·휴식 대기·음악 복귀·수량·저장을 실제 그래픽 환경에서 확인한다.
+tasks.register<JavaExec>("verifyTent") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.TentCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}

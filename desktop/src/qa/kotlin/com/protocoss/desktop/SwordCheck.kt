@@ -19,6 +19,7 @@ import java.nio.file.Path
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import com.protocoss.menu.EquipmentRenderer
+import com.protocoss.menu.TentRest
 import com.protocoss.menu.ItemTargetMenu
 import com.protocoss.menu.EquipmentMenu
 import java.util.Base64
@@ -26,10 +27,10 @@ import java.util.Base64
 /** 새 게임부터 검 회수까지 실제 입력으로 진행한다. 원본 폴더와 사용자 저장은 쓰지 않는다. */
 object SwordCheck {
     @JvmStatic fun main(args:Array<String>)=run(false)
-    fun run(equipment:Boolean,party:Boolean=false,automatic:Boolean=false,items:Boolean=false) {
+    fun run(equipment:Boolean,party:Boolean=false,automatic:Boolean=false,items:Boolean=false,tent:Boolean=false) {
         val saves=Files.createTempDirectory("protocoss-sword-qa-")
         try {
-            val app=SwordApplication(saves,equipment,party,automatic,items)
+            val app=SwordApplication(saves,equipment,party,automatic,items,tent)
             Lwjgl3Application(app,Lwjgl3ApplicationConfiguration().apply {
                 setTitle("검 수리 스토리 자동 검사");setWindowedMode(640,400);setInitialVisible(false);useVsync(false);setForegroundFPS(0)
             })
@@ -41,7 +42,8 @@ object EquipmentCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(t
 object PartyEquipmentCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true) }
 object AutomaticEquipmentCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true,true) }
 object FieldItemsCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true,true,true) }
-private class SwordApplication(private val saves:Path,private val equipment:Boolean,private val partyEquipment:Boolean,private val automaticEquipment:Boolean,private val fieldItems:Boolean):ApplicationAdapter() {
+object TentCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true,true,true,true) }
+private class SwordApplication(private val saves:Path,private val equipment:Boolean,private val partyEquipment:Boolean,private val automaticEquipment:Boolean,private val fieldItems:Boolean,private val tentEnabled:Boolean):ApplicationAdapter() {
     private val game=ProtocossGame(null,saves)
     private val held=mutableSetOf<Int>();private val pressed=mutableSetOf<Int>()
     private lateinit var input:Input;private lateinit var graphics:Graphics;private lateinit var rules:FieldRules
@@ -66,7 +68,15 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
     override fun create() {
         val audio=Gdx.audio
         Gdx.audio=object:Audio by audio {
-            override fun newMusic(file:com.badlogic.gdx.files.FileHandle)=audio.newMusic(file).apply { volume=0f }.also { music+=it }
+            override fun newMusic(file:com.badlogic.gdx.files.FileHandle):com.badlogic.gdx.audio.Music {
+                val source=audio.newMusic(file).apply { volume=0f }
+                val result=if(!tentEnabled)source else object:com.badlogic.gdx.audio.Music by source {
+                    private var requested=1f
+                    override fun setVolume(value:Float) { requested=value;source.volume=0f }
+                    override fun getVolume()=requested
+                }
+                music+=result;return result
+            }
             override fun newSound(file:com.badlogic.gdx.files.FileHandle):com.badlogic.gdx.audio.Sound {
                 val sound=audio.newSound(file)
                 return object:com.badlogic.gdx.audio.Sound by sound { override fun play():Long { effects++;return sound.play(0f) } }
@@ -503,6 +513,84 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         Gdx.files.local("desktop/build/reports/equipment/scenes.json").writeString(menuCaptures.toJson(JsonWriter.OutputType.json),false,"UTF-8")
         println("대상 아이템 실행 검사: 19종·11명·치료/부활/회복 불필요·마지막 한 개·취소·대상 선택·저장 재개, ${menuCaptures.size} 화면")
     }
+    private fun checkTent() {
+        val base=session().bytes()
+        val report=com.badlogic.gdx.utils.JsonReader().parse(Files.readString(Path.of("docs/tent-native.json")))
+        val row=report.get("cases").first { it.getInt("fixture")==44 && it.getInt("permission")==1 && it.getInt("count")==1 }
+        fun fixture(permission:Int=1,count:Int=1,track:Int=base.let { (it[2350].toInt() and 255) or ((it[2351].toInt() and 255) shl 8) }):ByteArray {
+            val b=Base64.getDecoder().decode(report.get("fixtures")[44].asString())
+            base.copyInto(b,92,92,119);b[160]=count.toByte()
+            java.nio.ByteBuffer.wrap(b).order(java.nio.ByteOrder.LITTLE_ENDIAN).apply { putShort(2346,permission.toShort());putShort(2350,track.toShort()) }
+            return b
+        }
+        fun patch(b:ByteArray,key:String) { row.get(key).forEach { b[it[0].asInt()]=it[1].asInt().toByte() } }
+        fun state()=field<TentRest?>("tentRest")
+        fun open() { press(Input.Keys.ESCAPE);repeat(4) { press(Input.Keys.DOWN) };press(Input.Keys.ENTER);check(scene()=="INVENTORY") }
+        val folder="desktop/build/reports/tent"
+        val shots=JsonValue(JsonValue.ValueType.array)
+        fun png(name:String) {
+            val pixmap=Pixmap.createFromFrameBuffer(0,0,Gdx.graphics.backBufferWidth,Gdx.graphics.backBufferHeight)
+            try { PixmapIO.writePNG(Gdx.files.local("$folder/$name.png"),pixmap,-1,true) } finally { pixmap.dispose() }
+        }
+        fun capture() {
+            val rest=state() ?: return;val name="step-${shots.size}";png(name)
+            shots.addChild(JsonValue(JsonValue.ValueType.`object`).apply {
+                addChild("name",JsonValue(name));addChild("phase",JsonValue(rest.phase.toString()));addChild("level",JsonValue(rest.level.toLong()))
+                addChild("source",JsonValue(when(rest.phase) { TentRest.Phase.MENU_OUT->"menu";TentRest.Phase.RETURN_IN->"field";else->"sleep" }))
+            })
+        }
+        for((permission,count) in listOf(0 to 1,2 to 1,65535 to 1,1 to 0)) {
+            val raw=fixture(permission,count);load(DosSave.parse(raw));tick();open();press(Input.Keys.ENTER)
+            check(scene()=="INVENTORY" && state()==null && raw.contentEquals(session().bytes()))
+            press(Input.Keys.ESCAPE);press(Input.Keys.ESCAPE)
+        }
+        val raw=fixture();load(DosSave.parse(raw));tick();png("field")
+        open();val cancel=session().bytes();press(Input.Keys.ESCAPE);press(Input.Keys.ESCAPE);check(cancel.contentEquals(session().bytes()))
+        open();captureMenu("tent-menu");png("menu")
+        val oldMusic=field<com.badlogic.gdx.audio.Music>("openingMusic")
+        val position=movement().x to movement().y;val actors=field<FieldNpcs>("fieldNpcs").actors.map { it.x to it.y }
+        val oldSave=Files.readAllBytes(saves.resolve("SAVE0.DAT"))
+        press(Input.Keys.ENTER);check(scene()=="REST");capture()
+        repeat(140) {
+            if(state()?.phase!=TentRest.Phase.WAIT) {
+                press(Input.Keys.ESCAPE);check(scene()=="REST");capture()
+                check(session().bytes()[160].toInt()==1)
+            }
+        }
+        check(state()?.phase==TentRest.Phase.WAIT)
+        val atWait=raw.copyOf();patch(atWait,"at_wait");check(atWait.contentEquals(session().bytes()))
+        val sleep=field<com.badlogic.gdx.audio.Music>("tentMusic")
+        check(!oldMusic.isPlaying && sleep.isPlaying && sleep.isLooping && sleep.volume==1f)
+        game.pause();val level=state()!!.level;press(Input.Keys.SPACE);check(state()!!.phase==TentRest.Phase.WAIT && state()!!.level==level && !sleep.isPlaying)
+        game.resume();check(sleep.isPlaying)
+        delta=1f;held+=Input.Keys.A;repeat(120) { tick() };held.clear();delta=1f/70f
+        check(state()?.phase==TentRest.Phase.WAIT && atWait.contentEquals(session().bytes()))
+        check(position==(movement().x to movement().y));check(actors==field<FieldNpcs>("fieldNpcs").actors.map { it.x to it.y })
+        check(oldSave.contentEquals(Files.readAllBytes(saves.resolve("SAVE0.DAT"))))
+        press(Input.Keys.ESCAPE);capture()
+        repeat(140) { if(scene()=="REST") { tick();capture() } }
+        check(scene()=="FIELD" && state()==null && !sleep.isPlaying)
+        val expected=raw.copyOf();patch(expected,"after");check(expected.contentEquals(session().bytes()))
+        check(field<com.badlogic.gdx.audio.Music>("openingMusic").isPlaying && field<com.badlogic.gdx.audio.Music>("openingMusic").volume==1f)
+        check(field<Int>("activeTrack")==session().variable(4) && field<Int>("fieldStep")==2)
+        png("returned");val result=session().bytes();saveAndReload()
+        for(i in 123 until 2942) check(result[i]==session().bytes()[i])
+        for(track in listOf(24,25)) {
+            val initial=fixture(count=2,track=track);load(DosSave.parse(initial));tick()
+            repeat(2) {
+                open();press(Input.Keys.SPACE)
+                repeat(140) { if(state()?.phase!=TentRest.Phase.WAIT) tick() }
+                check(state()?.phase==TentRest.Phase.WAIT);press(Input.Keys.A)
+                repeat(140) { if(scene()=="REST") tick() }
+                check(scene()=="FIELD" && session().bytes()[160].toInt()==1-it && field<Int>("activeTrack")==track)
+            }
+            saveAndReload();check(session().bytes()[160].toInt()==0)
+        }
+        load(DosSave.parse(base))
+        Gdx.files.local("$folder/scenes.json").writeString(shots.toJson(JsonWriter.OutputType.json),false,"UTF-8")
+        Gdx.files.local("desktop/build/reports/equipment/scenes.json").writeString(menuCaptures.toJson(JsonWriter.OutputType.json),false,"UTF-8")
+        println("텐트 실행 검사: 조건 거부·취소·회복·새 키 대기·120초 유지·일시정지·필드 정지·완료 후 수량·음악 10/24/25 복귀·반복·저장 재개, ${shots.size} 화면")
+    }
     override fun render() {
         if(completed) return
         press(Input.Keys.ENTER);press(Input.Keys.SPACE);finishScene()
@@ -528,6 +616,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         if(partyEquipment) checkPartyEquipment()
         if(automaticEquipment) checkAutomaticEquipment()
         if(fieldItems) checkFieldItems()
+        if(tentEnabled) checkTent()
         Gdx.files.local("desktop/build/reports/sword/scenes.json").writeString(captures.toJson(JsonWriter.OutputType.json),false,"UTF-8")
         println("검 수리 스토리 검사 완료: $steps 걸음, 진행 0→1→2→3→4, 합류·쪽지 각 1회, 맡기기·회수·중복 방지·저장 재개, ${captures.size} 화면")
         completed=true;Gdx.app.exit()

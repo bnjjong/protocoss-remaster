@@ -42,21 +42,23 @@ class MusicMachine(PrologueMachine):
                 self.pit_low = None
 
 
-def render(game_dir, output_root, track=0):
-    directory = output_root / ('assets/prologue' if track == 0 else f'assets/opening/music-{track:02}')
+def render(game_dir, output_root, track=0, *, source_name=None, asset_directory=None):
+    prologue = track == 0 and source_name is None
+    directory = output_root / (asset_directory or ('assets/prologue' if prologue else f'assets/opening/music-{track:02}'))
     directory.mkdir(parents=True, exist_ok=True)
-    manifest = json.loads((directory / 'manifest.json').read_text()) if track == 0 else {'trace': []}
-    duration = manifest['duration_seconds'] if track == 0 else float('inf')
+    manifest = json.loads((directory / 'manifest.json').read_text()) if prologue else {'trace': []}
+    duration = manifest['duration_seconds'] if prologue else float('inf')
     machine = MusicMachine(game_dir)
     machine.call(0x13724, 0)
     machine.set_dword(0x5310, 1)
-    music = (game_dir / f'S&W/S{track:04}.MFA').read_bytes()
+    source_name = source_name or f'S&W/S{track:04}.MFA'
+    music = (game_dir / source_name).read_bytes()
     pointer = machine.allocate(len(music))
     machine.cpu.mem_write(pointer, music)
     machine.call(0x13af8, 127)
     machine.call(0x137b5, pointer)
     loop_end = []
-    if track != 0:
+    if not prologue:
         from unicorn import UC_HOOK_CODE
         machine.cpu.hook_add(UC_HOOK_CODE, lambda c,a,s,u: loop_end.append(machine.time),None,0x13a0e,0x13a0e)
     deadline = machine.dword(0x6b4) * machine.divisor / 1193182
@@ -99,7 +101,7 @@ def render(game_dir, output_root, track=0):
     total = round(duration * rate)
     digest = hashlib.sha256()
     peak = energy = 0
-    output = directory / ('prologue.ogg' if track == 0 else 'music.ogg')
+    output = directory / ('prologue.ogg' if prologue else 'music.ogg')
     try:
         with sf.SoundFile(output,mode='w',samplerate=rate,channels=2,format='OGG',subtype='VORBIS') as stream:
             def generate(target):
@@ -122,7 +124,7 @@ def render(game_dir, output_root, track=0):
     finally:
         opl.protocoss_opl_free(chip)
     if energy == 0: raise ValueError('원작 음악의 렌더링 결과가 무음입니다.')
-    report = {'source':f'S&W/S{track:04}.MFA','mode':'original OPL2 driver, rhythm enabled',
+    report = {'source':source_name,'mode':'original OPL2 driver, rhythm enabled',
               'sample_rate':rate,'channels':2,'sample_frames':total,'duration_seconds':total/rate,
               'native_events':ticks,'opl_writes':len(machine.writes),'pcm_sha256':digest.hexdigest(),
               'peak':peak,'rms':(energy/(total*2))**0.5,
@@ -137,5 +139,7 @@ if __name__ == '__main__':
     parser.add_argument('--game-dir',type=Path,required=True)
     parser.add_argument('--output-root',type=Path,default=Path(__file__).resolve().parents[2])
     parser.add_argument('--track',type=int,default=0)
+    parser.add_argument('--source-name', help='원본 게임 폴더 기준 MFA 경로')
+    parser.add_argument('--asset-directory', help='출력 저장소 기준 자산 폴더')
     args=parser.parse_args()
-    render(args.game_dir,args.output_root,args.track)
+    render(args.game_dir,args.output_root,args.track,source_name=args.source_name,asset_directory=args.asset_directory)

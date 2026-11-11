@@ -1,0 +1,19 @@
+{
+  "image": "rest.png",
+  "music": "music.ogg",
+  "permission_variable": 2,
+  "permission_value": 1,
+  "item": 37,
+  "palette_steps": 65,
+  "step_hz": 70,
+  "source_image": {
+    "frame": 289,
+    "x": 88,
+    "y": 48,
+    "width": 114,
+    "height": 94,
+    "pixels": 10716
+  },
+  "wait": "fresh-key",
+  "music_loop": true
+}

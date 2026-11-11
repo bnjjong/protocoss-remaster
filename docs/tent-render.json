@@ -1,0 +1,1829 @@
+{
+  "scenes": [
+    {
+      "name": "step-0",
+      "phase": "MENU_OUT",
+      "level": 64,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-1",
+      "phase": "MENU_OUT",
+      "level": 63,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-2",
+      "phase": "MENU_OUT",
+      "level": 62,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-3",
+      "phase": "MENU_OUT",
+      "level": 61,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-4",
+      "phase": "MENU_OUT",
+      "level": 60,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-5",
+      "phase": "MENU_OUT",
+      "level": 59,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-6",
+      "phase": "MENU_OUT",
+      "level": 58,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-7",
+      "phase": "MENU_OUT",
+      "level": 57,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-8",
+      "phase": "MENU_OUT",
+      "level": 56,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-9",
+      "phase": "MENU_OUT",
+      "level": 55,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-10",
+      "phase": "MENU_OUT",
+      "level": 54,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-11",
+      "phase": "MENU_OUT",
+      "level": 53,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-12",
+      "phase": "MENU_OUT",
+      "level": 52,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-13",
+      "phase": "MENU_OUT",
+      "level": 51,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-14",
+      "phase": "MENU_OUT",
+      "level": 50,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-15",
+      "phase": "MENU_OUT",
+      "level": 49,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-16",
+      "phase": "MENU_OUT",
+      "level": 48,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-17",
+      "phase": "MENU_OUT",
+      "level": 47,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-18",
+      "phase": "MENU_OUT",
+      "level": 46,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-19",
+      "phase": "MENU_OUT",
+      "level": 45,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-20",
+      "phase": "MENU_OUT",
+      "level": 44,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-21",
+      "phase": "MENU_OUT",
+      "level": 43,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-22",
+      "phase": "MENU_OUT",
+      "level": 42,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-23",
+      "phase": "MENU_OUT",
+      "level": 41,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-24",
+      "phase": "MENU_OUT",
+      "level": 40,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-25",
+      "phase": "MENU_OUT",
+      "level": 39,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-26",
+      "phase": "MENU_OUT",
+      "level": 38,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-27",
+      "phase": "MENU_OUT",
+      "level": 37,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-28",
+      "phase": "MENU_OUT",
+      "level": 36,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-29",
+      "phase": "MENU_OUT",
+      "level": 35,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-30",
+      "phase": "MENU_OUT",
+      "level": 34,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-31",
+      "phase": "MENU_OUT",
+      "level": 33,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-32",
+      "phase": "MENU_OUT",
+      "level": 32,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-33",
+      "phase": "MENU_OUT",
+      "level": 31,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-34",
+      "phase": "MENU_OUT",
+      "level": 30,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-35",
+      "phase": "MENU_OUT",
+      "level": 29,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-36",
+      "phase": "MENU_OUT",
+      "level": 28,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-37",
+      "phase": "MENU_OUT",
+      "level": 27,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-38",
+      "phase": "MENU_OUT",
+      "level": 26,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-39",
+      "phase": "MENU_OUT",
+      "level": 25,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-40",
+      "phase": "MENU_OUT",
+      "level": 24,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-41",
+      "phase": "MENU_OUT",
+      "level": 23,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-42",
+      "phase": "MENU_OUT",
+      "level": 22,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-43",
+      "phase": "MENU_OUT",
+      "level": 21,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-44",
+      "phase": "MENU_OUT",
+      "level": 20,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-45",
+      "phase": "MENU_OUT",
+      "level": 19,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-46",
+      "phase": "MENU_OUT",
+      "level": 18,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-47",
+      "phase": "MENU_OUT",
+      "level": 17,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-48",
+      "phase": "MENU_OUT",
+      "level": 16,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-49",
+      "phase": "MENU_OUT",
+      "level": 15,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-50",
+      "phase": "MENU_OUT",
+      "level": 14,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-51",
+      "phase": "MENU_OUT",
+      "level": 13,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-52",
+      "phase": "MENU_OUT",
+      "level": 12,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-53",
+      "phase": "MENU_OUT",
+      "level": 11,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-54",
+      "phase": "MENU_OUT",
+      "level": 10,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-55",
+      "phase": "MENU_OUT",
+      "level": 9,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-56",
+      "phase": "MENU_OUT",
+      "level": 8,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-57",
+      "phase": "MENU_OUT",
+      "level": 7,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-58",
+      "phase": "MENU_OUT",
+      "level": 6,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-59",
+      "phase": "MENU_OUT",
+      "level": 5,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-60",
+      "phase": "MENU_OUT",
+      "level": 4,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-61",
+      "phase": "MENU_OUT",
+      "level": 3,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-62",
+      "phase": "MENU_OUT",
+      "level": 2,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-63",
+      "phase": "MENU_OUT",
+      "level": 1,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-64",
+      "phase": "MENU_OUT",
+      "level": 0,
+      "source": "menu",
+      "pixels": 64000
+    },
+    {
+      "name": "step-65",
+      "phase": "SLEEP_IN",
+      "level": 0,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-66",
+      "phase": "SLEEP_IN",
+      "level": 1,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-67",
+      "phase": "SLEEP_IN",
+      "level": 2,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-68",
+      "phase": "SLEEP_IN",
+      "level": 3,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-69",
+      "phase": "SLEEP_IN",
+      "level": 4,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-70",
+      "phase": "SLEEP_IN",
+      "level": 5,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-71",
+      "phase": "SLEEP_IN",
+      "level": 6,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-72",
+      "phase": "SLEEP_IN",
+      "level": 7,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-73",
+      "phase": "SLEEP_IN",
+      "level": 8,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-74",
+      "phase": "SLEEP_IN",
+      "level": 9,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-75",
+      "phase": "SLEEP_IN",
+      "level": 10,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-76",
+      "phase": "SLEEP_IN",
+      "level": 11,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-77",
+      "phase": "SLEEP_IN",
+      "level": 12,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-78",
+      "phase": "SLEEP_IN",
+      "level": 13,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-79",
+      "phase": "SLEEP_IN",
+      "level": 14,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-80",
+      "phase": "SLEEP_IN",
+      "level": 15,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-81",
+      "phase": "SLEEP_IN",
+      "level": 16,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-82",
+      "phase": "SLEEP_IN",
+      "level": 17,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-83",
+      "phase": "SLEEP_IN",
+      "level": 18,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-84",
+      "phase": "SLEEP_IN",
+      "level": 19,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-85",
+      "phase": "SLEEP_IN",
+      "level": 20,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-86",
+      "phase": "SLEEP_IN",
+      "level": 21,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-87",
+      "phase": "SLEEP_IN",
+      "level": 22,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-88",
+      "phase": "SLEEP_IN",
+      "level": 23,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-89",
+      "phase": "SLEEP_IN",
+      "level": 24,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-90",
+      "phase": "SLEEP_IN",
+      "level": 25,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-91",
+      "phase": "SLEEP_IN",
+      "level": 26,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-92",
+      "phase": "SLEEP_IN",
+      "level": 27,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-93",
+      "phase": "SLEEP_IN",
+      "level": 28,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-94",
+      "phase": "SLEEP_IN",
+      "level": 29,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-95",
+      "phase": "SLEEP_IN",
+      "level": 30,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-96",
+      "phase": "SLEEP_IN",
+      "level": 31,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-97",
+      "phase": "SLEEP_IN",
+      "level": 32,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-98",
+      "phase": "SLEEP_IN",
+      "level": 33,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-99",
+      "phase": "SLEEP_IN",
+      "level": 34,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-100",
+      "phase": "SLEEP_IN",
+      "level": 35,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-101",
+      "phase": "SLEEP_IN",
+      "level": 36,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-102",
+      "phase": "SLEEP_IN",
+      "level": 37,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-103",
+      "phase": "SLEEP_IN",
+      "level": 38,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-104",
+      "phase": "SLEEP_IN",
+      "level": 39,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-105",
+      "phase": "SLEEP_IN",
+      "level": 40,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-106",
+      "phase": "SLEEP_IN",
+      "level": 41,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-107",
+      "phase": "SLEEP_IN",
+      "level": 42,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-108",
+      "phase": "SLEEP_IN",
+      "level": 43,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-109",
+      "phase": "SLEEP_IN",
+      "level": 44,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-110",
+      "phase": "SLEEP_IN",
+      "level": 45,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-111",
+      "phase": "SLEEP_IN",
+      "level": 46,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-112",
+      "phase": "SLEEP_IN",
+      "level": 47,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-113",
+      "phase": "SLEEP_IN",
+      "level": 48,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-114",
+      "phase": "SLEEP_IN",
+      "level": 49,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-115",
+      "phase": "SLEEP_IN",
+      "level": 50,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-116",
+      "phase": "SLEEP_IN",
+      "level": 51,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-117",
+      "phase": "SLEEP_IN",
+      "level": 52,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-118",
+      "phase": "SLEEP_IN",
+      "level": 53,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-119",
+      "phase": "SLEEP_IN",
+      "level": 54,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-120",
+      "phase": "SLEEP_IN",
+      "level": 55,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-121",
+      "phase": "SLEEP_IN",
+      "level": 56,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-122",
+      "phase": "SLEEP_IN",
+      "level": 57,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-123",
+      "phase": "SLEEP_IN",
+      "level": 58,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-124",
+      "phase": "SLEEP_IN",
+      "level": 59,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-125",
+      "phase": "SLEEP_IN",
+      "level": 60,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-126",
+      "phase": "SLEEP_IN",
+      "level": 61,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-127",
+      "phase": "SLEEP_IN",
+      "level": 62,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-128",
+      "phase": "SLEEP_IN",
+      "level": 63,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-129",
+      "phase": "SLEEP_IN",
+      "level": 64,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-130",
+      "phase": "WAIT",
+      "level": 64,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-131",
+      "phase": "SLEEP_OUT",
+      "level": 63,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-132",
+      "phase": "SLEEP_OUT",
+      "level": 62,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-133",
+      "phase": "SLEEP_OUT",
+      "level": 61,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-134",
+      "phase": "SLEEP_OUT",
+      "level": 60,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-135",
+      "phase": "SLEEP_OUT",
+      "level": 59,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-136",
+      "phase": "SLEEP_OUT",
+      "level": 58,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-137",
+      "phase": "SLEEP_OUT",
+      "level": 57,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-138",
+      "phase": "SLEEP_OUT",
+      "level": 56,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-139",
+      "phase": "SLEEP_OUT",
+      "level": 55,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-140",
+      "phase": "SLEEP_OUT",
+      "level": 54,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-141",
+      "phase": "SLEEP_OUT",
+      "level": 53,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-142",
+      "phase": "SLEEP_OUT",
+      "level": 52,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-143",
+      "phase": "SLEEP_OUT",
+      "level": 51,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-144",
+      "phase": "SLEEP_OUT",
+      "level": 50,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-145",
+      "phase": "SLEEP_OUT",
+      "level": 49,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-146",
+      "phase": "SLEEP_OUT",
+      "level": 48,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-147",
+      "phase": "SLEEP_OUT",
+      "level": 47,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-148",
+      "phase": "SLEEP_OUT",
+      "level": 46,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-149",
+      "phase": "SLEEP_OUT",
+      "level": 45,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-150",
+      "phase": "SLEEP_OUT",
+      "level": 44,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-151",
+      "phase": "SLEEP_OUT",
+      "level": 43,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-152",
+      "phase": "SLEEP_OUT",
+      "level": 42,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-153",
+      "phase": "SLEEP_OUT",
+      "level": 41,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-154",
+      "phase": "SLEEP_OUT",
+      "level": 40,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-155",
+      "phase": "SLEEP_OUT",
+      "level": 39,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-156",
+      "phase": "SLEEP_OUT",
+      "level": 38,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-157",
+      "phase": "SLEEP_OUT",
+      "level": 37,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-158",
+      "phase": "SLEEP_OUT",
+      "level": 36,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-159",
+      "phase": "SLEEP_OUT",
+      "level": 35,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-160",
+      "phase": "SLEEP_OUT",
+      "level": 34,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-161",
+      "phase": "SLEEP_OUT",
+      "level": 33,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-162",
+      "phase": "SLEEP_OUT",
+      "level": 32,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-163",
+      "phase": "SLEEP_OUT",
+      "level": 31,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-164",
+      "phase": "SLEEP_OUT",
+      "level": 30,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-165",
+      "phase": "SLEEP_OUT",
+      "level": 29,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-166",
+      "phase": "SLEEP_OUT",
+      "level": 28,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-167",
+      "phase": "SLEEP_OUT",
+      "level": 27,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-168",
+      "phase": "SLEEP_OUT",
+      "level": 26,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-169",
+      "phase": "SLEEP_OUT",
+      "level": 25,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-170",
+      "phase": "SLEEP_OUT",
+      "level": 24,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-171",
+      "phase": "SLEEP_OUT",
+      "level": 23,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-172",
+      "phase": "SLEEP_OUT",
+      "level": 22,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-173",
+      "phase": "SLEEP_OUT",
+      "level": 21,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-174",
+      "phase": "SLEEP_OUT",
+      "level": 20,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-175",
+      "phase": "SLEEP_OUT",
+      "level": 19,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-176",
+      "phase": "SLEEP_OUT",
+      "level": 18,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-177",
+      "phase": "SLEEP_OUT",
+      "level": 17,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-178",
+      "phase": "SLEEP_OUT",
+      "level": 16,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-179",
+      "phase": "SLEEP_OUT",
+      "level": 15,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-180",
+      "phase": "SLEEP_OUT",
+      "level": 14,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-181",
+      "phase": "SLEEP_OUT",
+      "level": 13,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-182",
+      "phase": "SLEEP_OUT",
+      "level": 12,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-183",
+      "phase": "SLEEP_OUT",
+      "level": 11,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-184",
+      "phase": "SLEEP_OUT",
+      "level": 10,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-185",
+      "phase": "SLEEP_OUT",
+      "level": 9,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-186",
+      "phase": "SLEEP_OUT",
+      "level": 8,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-187",
+      "phase": "SLEEP_OUT",
+      "level": 7,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-188",
+      "phase": "SLEEP_OUT",
+      "level": 6,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-189",
+      "phase": "SLEEP_OUT",
+      "level": 5,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-190",
+      "phase": "SLEEP_OUT",
+      "level": 4,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-191",
+      "phase": "SLEEP_OUT",
+      "level": 3,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-192",
+      "phase": "SLEEP_OUT",
+      "level": 2,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-193",
+      "phase": "SLEEP_OUT",
+      "level": 1,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-194",
+      "phase": "SLEEP_OUT",
+      "level": 0,
+      "source": "sleep",
+      "pixels": 64000
+    },
+    {
+      "name": "step-195",
+      "phase": "RETURN_IN",
+      "level": 0,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-196",
+      "phase": "RETURN_IN",
+      "level": 1,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-197",
+      "phase": "RETURN_IN",
+      "level": 2,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-198",
+      "phase": "RETURN_IN",
+      "level": 3,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-199",
+      "phase": "RETURN_IN",
+      "level": 4,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-200",
+      "phase": "RETURN_IN",
+      "level": 5,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-201",
+      "phase": "RETURN_IN",
+      "level": 6,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-202",
+      "phase": "RETURN_IN",
+      "level": 7,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-203",
+      "phase": "RETURN_IN",
+      "level": 8,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-204",
+      "phase": "RETURN_IN",
+      "level": 9,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-205",
+      "phase": "RETURN_IN",
+      "level": 10,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-206",
+      "phase": "RETURN_IN",
+      "level": 11,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-207",
+      "phase": "RETURN_IN",
+      "level": 12,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-208",
+      "phase": "RETURN_IN",
+      "level": 13,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-209",
+      "phase": "RETURN_IN",
+      "level": 14,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-210",
+      "phase": "RETURN_IN",
+      "level": 15,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-211",
+      "phase": "RETURN_IN",
+      "level": 16,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-212",
+      "phase": "RETURN_IN",
+      "level": 17,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-213",
+      "phase": "RETURN_IN",
+      "level": 18,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-214",
+      "phase": "RETURN_IN",
+      "level": 19,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-215",
+      "phase": "RETURN_IN",
+      "level": 20,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-216",
+      "phase": "RETURN_IN",
+      "level": 21,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-217",
+      "phase": "RETURN_IN",
+      "level": 22,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-218",
+      "phase": "RETURN_IN",
+      "level": 23,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-219",
+      "phase": "RETURN_IN",
+      "level": 24,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-220",
+      "phase": "RETURN_IN",
+      "level": 25,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-221",
+      "phase": "RETURN_IN",
+      "level": 26,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-222",
+      "phase": "RETURN_IN",
+      "level": 27,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-223",
+      "phase": "RETURN_IN",
+      "level": 28,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-224",
+      "phase": "RETURN_IN",
+      "level": 29,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-225",
+      "phase": "RETURN_IN",
+      "level": 30,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-226",
+      "phase": "RETURN_IN",
+      "level": 31,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-227",
+      "phase": "RETURN_IN",
+      "level": 32,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-228",
+      "phase": "RETURN_IN",
+      "level": 33,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-229",
+      "phase": "RETURN_IN",
+      "level": 34,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-230",
+      "phase": "RETURN_IN",
+      "level": 35,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-231",
+      "phase": "RETURN_IN",
+      "level": 36,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-232",
+      "phase": "RETURN_IN",
+      "level": 37,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-233",
+      "phase": "RETURN_IN",
+      "level": 38,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-234",
+      "phase": "RETURN_IN",
+      "level": 39,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-235",
+      "phase": "RETURN_IN",
+      "level": 40,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-236",
+      "phase": "RETURN_IN",
+      "level": 41,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-237",
+      "phase": "RETURN_IN",
+      "level": 42,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-238",
+      "phase": "RETURN_IN",
+      "level": 43,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-239",
+      "phase": "RETURN_IN",
+      "level": 44,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-240",
+      "phase": "RETURN_IN",
+      "level": 45,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-241",
+      "phase": "RETURN_IN",
+      "level": 46,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-242",
+      "phase": "RETURN_IN",
+      "level": 47,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-243",
+      "phase": "RETURN_IN",
+      "level": 48,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-244",
+      "phase": "RETURN_IN",
+      "level": 49,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-245",
+      "phase": "RETURN_IN",
+      "level": 50,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-246",
+      "phase": "RETURN_IN",
+      "level": 51,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-247",
+      "phase": "RETURN_IN",
+      "level": 52,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-248",
+      "phase": "RETURN_IN",
+      "level": 53,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-249",
+      "phase": "RETURN_IN",
+      "level": 54,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-250",
+      "phase": "RETURN_IN",
+      "level": 55,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-251",
+      "phase": "RETURN_IN",
+      "level": 56,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-252",
+      "phase": "RETURN_IN",
+      "level": 57,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-253",
+      "phase": "RETURN_IN",
+      "level": 58,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-254",
+      "phase": "RETURN_IN",
+      "level": 59,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-255",
+      "phase": "RETURN_IN",
+      "level": 60,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-256",
+      "phase": "RETURN_IN",
+      "level": 61,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-257",
+      "phase": "RETURN_IN",
+      "level": 62,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-258",
+      "phase": "RETURN_IN",
+      "level": 63,
+      "source": "field",
+      "pixels": 64000
+    },
+    {
+      "name": "step-259",
+      "phase": "RETURN_IN",
+      "level": 64,
+      "source": "field",
+      "pixels": 64000
+    }
+  ],
+  "compared_pixels": 16640000,
+  "dac_entries": 4160,
+  "source_basis": "휴식: 원작 그림 함수, 메뉴: 별도 메뉴 원작 비교, 필드: 실행 전후 동일 화면; 전환: 원작 DAC 함수 실행 표",
+  "audio_frames": 2358915,
+  "audio_duration": 53.49013605442177
+}

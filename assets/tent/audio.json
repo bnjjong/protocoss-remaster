@@ -1,0 +1,15 @@
+{
+  "source": "S&W/SLEEP.MFA",
+  "mode": "original OPL2 driver, rhythm enabled",
+  "sample_rate": 44100,
+  "channels": 2,
+  "sample_frames": 2358915,
+  "duration_seconds": 53.49013605442177,
+  "native_events": 194,
+  "opl_writes": 1875,
+  "pcm_sha256": "a85b54c55c47f366929afe8497f4cb326179a987037ee1a9287605f3124805b5",
+  "peak": 11691,
+  "rms": 2572.197599792372,
+  "ogg_sha256": "6ee1117b1a8a684bc17a706d56298c84dd727c9b4a49f4a0dd70e6e6541e0430",
+  "opl_emulator": "Nuked-OPL3 765ec962e473aeb767e4cba74ffdc8f588ffbfe8"
+}
