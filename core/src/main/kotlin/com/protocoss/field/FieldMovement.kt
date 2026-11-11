@@ -10,6 +10,9 @@ class FieldMovement(private val rules: FieldRules, val map: Int, var layer: Int,
     var moving = false; private set
     val atRest get() = remaining == 0
     var npcs: FieldNpcs? = null
+    /** 원작 0x2238A가 매 틱 더하는 거리. 코넬의 망토는 2로 바꾼다. */
+    var baseStep=1
+        set(value) { require(value in listOf(1,2,4));field=value }
     private var accumulator = 0f
     private var remaining = 0
     private var vector = 0
@@ -43,7 +46,7 @@ class FieldMovement(private val rules: FieldRules, val map: Int, var layer: Int,
                 pose=(pose+1).takeIf { it in base..base+3 } ?: base
                 layer = step.layer; vector = step.direction; remaining=8
             }
-            val amount = minOf(remaining, if(dash) 2 else 1)
+            val amount = minOf(remaining, maxOf(baseStep,if(dash) 2 else 1))
             x += FieldRules.dx(vector)*amount; y += FieldRules.dy(vector)*amount
             remaining -= amount;moving=true
         }

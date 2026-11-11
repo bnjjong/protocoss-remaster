@@ -20,6 +20,7 @@ tasks.test {
     inputs.file(rootProject.file("docs/buildings-native-verification.json"))
     inputs.file(rootProject.file("docs/sword-native-verification.json"))
     inputs.file(rootProject.file("docs/equipment-native-verification.json"))
+    inputs.file(rootProject.file("docs/party-equipment-native.json"))
     inputs.dir(rootProject.file("assets/ui/equipment"))
     inputs.dir(rootProject.file("assets/opening"))
     inputs.dir(rootProject.file("assets/data/field"))

@@ -1,5 +1,7 @@
 # 소지품 조회와 카만의 무기 장착
 
+이 문서는 [PR #22](https://github.com/bnjjong/protocoss-remaster/pull/22)의 1차 복원 당시 범위·검사 기록이다. 현재 Esc 메뉴의 이름은 `장비`이며, 조작과 확대된 범위는 [파티원별 장비 메뉴](party-equipment.md)를 따른다.
+
 잡화점에서 받은 단검을 메뉴에서 장착하고, 저장한 뒤 같은 장비와 능력치로 이어갈 수 있다. [이슈 #21](https://github.com/bnjjong/protocoss-remaster/issues/21)의 가 안에 따라 카만의 무기부터 복원했다. 소지품 조회는 일반 아이템 39종과 장비 175종을 읽으며, 장착 변경은 카만에게 허용된 무기 32종만 다룬다.
 
 ## 조작과 범위

@@ -17,6 +17,7 @@ def records(raw,size):
         r=raw[i*size:(i+1)*size]
         result.append(dict(id=i,name=r[:21].split(b'\0')[0].decode('cp1361'),icon=struct.unpack_from('<H',r,21)[0],
             category=r[34] if size==84 else r[23],allowed=r[23] if size==84 else 0,
+            allowed_by=list(r[23:34]) if size==84 else [],
             stats=list(struct.unpack_from('<6h',r,35)) if size==84 else [],
             effects=list(struct.unpack_from('<8h',r,35)) if size==84 else [],
             description='' if size==84 else r[28:].split(b'\0')[0].decode('cp1361')))
@@ -36,6 +37,7 @@ def extract(game_dir,output_root,executable=None):
     renderer=OriginalSpriteRenderer(exe);verified=0;images={}
     wanted={'imenu-'+str(i) for i in (70,96,231,232,233,*range(17,53),*range(236,239))}
     wanted|={'common-'+str(r['icon']) for r in weapons+items};wanted.add('kaman-6')
+    wanted|={f'person-{i}-6' for i in range(1,11)}
     for name in sorted(wanted):
         raw=ref.raw[name];frame=decode_img_frame(raw);image=frame.to_image(palette)
         native=renderer.render(struct.pack('<HH',frame.width,frame.height)+raw,palette)
@@ -63,7 +65,8 @@ def extract(game_dir,output_root,executable=None):
     (_,code),(_,data)=objects(exe);font=read('HANGUL.FNT');english=read('ENGLISH.FNT');tables=code[0x4040:0x4108]
     empty_weapon=bytes(ref.cpu.mem_read(0x704ac,40)).split(b'\0')[0].decode('cp1361')
     empty_items=bytes(ref.cpu.mem_read(0x70544,40)).split(b'\0')[0].decode('cp1361')
-    text=''.join(r['name']+r['description'] for r in weapons+items)+empty_weapon+empty_items+'소지품장비'
+    characters=[start[337+i*153:347+i*153].split(b'\0')[0].decode('cp1361') for i in range(11)]
+    text=''.join(r['name']+r['description'] for r in weapons+items)+empty_weapon+empty_items+'소지품장비'+''.join(characters)
     chars=sorted(set(text)-{'/','\n'});reference=OpeningReference(code,data,font)
     for c in chars:
         im=glyph(c,font,english,tables)
@@ -79,8 +82,16 @@ def extract(game_dir,output_root,executable=None):
     eligible=[]
     raw=bytearray(start);raw[162:337]=bytes([1])*175;ref.prepare(game_dir,raw);eligible=ref.candidates()
     trace=ref.invoke(0x156f8,0,2)
+    nav={d:[next(e['slot'] for e in reversed(ref.invoke(0x16388,0,keys=(key,1),initial_slot=s)) if e['kind']=='slot') for s in range(6)]
+        for d,key in [('up',72),('right',77),('down',80),('left',75)]}
+    cursors=[]
+    for slot in range(6):
+        ref.byte(0x163c,0)
+        e=[e for e in ref.invoke(0x156f8,0,slot) if e['kind']=='image'][-1]
+        cursors.append([e['x'],e['y']])
     result=dict(weapons=weapons,items=items,rects=rects,palette=[v*4 for v in palette],sources=sources,
-        native_sprite_pixels=verified,eligible=eligible,stat_layout=[e for e in trace if e['kind']=='number'],empty_weapon=empty_weapon,empty_items=empty_items)
+        native_sprite_pixels=verified,eligible=eligible,stat_layout=[e for e in trace if e['kind']=='number'],empty_weapon=empty_weapon,empty_items=empty_items,
+        characters=characters,slot_navigation=nav,slot_cursors=cursors)
     (directory/'equipment.json').write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n')
     cases=[]
     for n,item in enumerate(eligible):
