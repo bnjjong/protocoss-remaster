@@ -1,0 +1,350 @@
+{
+  "scenes": [
+    {
+      "name": "weapon-home",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "weapon-slot",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "dagger-preview",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "dagger-equipped",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "cancel-detached",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "empty-items",
+      "pixels": 64000,
+      "native_function": "0x19930"
+    },
+    {
+      "name": "dagger-inventory",
+      "pixels": 64000,
+      "native_function": "소지품 배치·원작 그림 조합"
+    },
+    {
+      "name": "empty-weapons",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "weapon-scroll",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "shield-blocked",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "items-scroll",
+      "pixels": 64000,
+      "native_function": "0x19930"
+    },
+    {
+      "name": "items-special",
+      "pixels": 64000,
+      "native_function": "0x19930"
+    },
+    {
+      "name": "equipment-inventory-scroll",
+      "pixels": 64000,
+      "native_function": "소지품 배치·원작 그림 조합"
+    },
+    {
+      "name": "party-0-slot-0",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "party-1-slot-1",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "party-2-slot-2",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "party-3-slot-3",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "party-4-slot-4",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "party-5-slot-5",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "party-6-slot-0",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "party-7-slot-1",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "party-8-slot-2",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "party-9-slot-3",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "party-10-slot-4",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "gem-right-equipped",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "gem-left-blocked",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "gem-removed",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "two-gems-native",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "cloak-equipped",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "cloak-removed",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-0-full-unequip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-0-full-equip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-0-empty-unequip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-0-empty-equip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-0-overflow-unequip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-0-overflow-equip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-0-twohand-unequip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-0-twohand-equip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-0-shield-only-unequip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-0-shield-only-equip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-1-full-unequip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-1-full-equip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-2-full-unequip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-2-full-equip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-3-full-unequip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-3-full-equip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-4-full-unequip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-4-full-equip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-5-full-unequip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-5-full-equip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-6-full-unequip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-6-full-equip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-7-full-unequip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-7-full-equip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-8-full-unequip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-8-full-equip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-9-full-unequip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-9-full-equip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-10-full-unequip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-10-full-equip",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-tab-0",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-tab-1",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-tab-2",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-tab-3",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-tab-4",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-tab-5",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-tab-6",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-tab-7",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    },
+    {
+      "name": "auto-tab-8",
+      "pixels": 64000,
+      "native_function": "0x151B8/0x156F8/0x15808/0x15518"
+    }
+  ],
+  "compared_pixels": 4416000
+}

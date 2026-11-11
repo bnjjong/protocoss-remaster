@@ -25,10 +25,10 @@ import java.util.Base64
 /** 새 게임부터 검 회수까지 실제 입력으로 진행한다. 원본 폴더와 사용자 저장은 쓰지 않는다. */
 object SwordCheck {
     @JvmStatic fun main(args:Array<String>)=run(false)
-    fun run(equipment:Boolean,party:Boolean=false) {
+    fun run(equipment:Boolean,party:Boolean=false,automatic:Boolean=false) {
         val saves=Files.createTempDirectory("protocoss-sword-qa-")
         try {
-            val app=SwordApplication(saves,equipment,party)
+            val app=SwordApplication(saves,equipment,party,automatic)
             Lwjgl3Application(app,Lwjgl3ApplicationConfiguration().apply {
                 setTitle("검 수리 스토리 자동 검사");setWindowedMode(640,400);setInitialVisible(false);useVsync(false);setForegroundFPS(0)
             })
@@ -38,7 +38,8 @@ object SwordCheck {
 }
 object EquipmentCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true) }
 object PartyEquipmentCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true) }
-private class SwordApplication(private val saves:Path,private val equipment:Boolean,private val partyEquipment:Boolean):ApplicationAdapter() {
+object AutomaticEquipmentCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true,true) }
+private class SwordApplication(private val saves:Path,private val equipment:Boolean,private val partyEquipment:Boolean,private val automaticEquipment:Boolean):ApplicationAdapter() {
     private val game=ProtocossGame(null,saves)
     private val held=mutableSetOf<Int>();private val pressed=mutableSetOf<Int>()
     private lateinit var input:Input;private lateinit var graphics:Graphics;private lateinit var rules:FieldRules
@@ -249,7 +250,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
             addChild("name",JsonValue(name));addChild("scene",JsonValue(scene()))
             addChild("save",JsonValue(Base64.getEncoder().encodeToString(session().bytes())))
             addChild("character",JsonValue(weapon.character.toLong()));addChild("slot",JsonValue(weapon.slot.toLong()));
-            addChild("stage",JsonValue(weapon.stage.toString()));addChild("selected",JsonValue(weapon.selected.toLong()));addChild("scroll",JsonValue(weapon.scroll.toLong()))
+            addChild("tab",JsonValue(weapon.tab.toLong()));addChild("stage",JsonValue(weapon.stage.toString()));addChild("selected",JsonValue(weapon.selected.toLong()));addChild("scroll",JsonValue(weapon.scroll.toLong()))
             addChild("inventory_equipment",JsonValue(field<Boolean>("inventoryEquipment")))
             addChild("inventory_selected",JsonValue(field<Int>("inventorySelection").toLong()));addChild("inventory_scroll",JsonValue(field<Int>("inventoryScroll").toLong()))
         })
@@ -371,6 +372,62 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         Gdx.files.local("desktop/build/reports/equipment/scenes.json").writeString(menuCaptures.toJson(JsonWriter.OutputType.json),false,"UTF-8")
         println("파티 장비 검사 완료: 11명·여섯 슬롯·장착/해제/거부·구슬 비대칭·망토 이동·저장 재개, ${menuCaptures.size} 화면")
     }
+    private fun checkAutomaticEquipment() {
+        val base=session().bytes()
+        val report=com.badlogic.gdx.utils.JsonReader().parse(Files.readString(Path.of("docs/automatic-equipment-native.json")))
+        fun normalize(bytes:ByteArray):ByteArray {
+            base.copyInto(bytes,92,92,119);base.copyInto(bytes,2350,2350,2352)
+            return bytes
+        }
+        fun patch(bytes:ByteArray,changes:JsonValue) { changes.forEach { bytes[it[0].asInt()]=it[1].asInt().toByte() } }
+        for(row in report.get("cases").filter { it.getString("name").endsWith("-full") || it.getString("name") in listOf("0-empty","0-overflow","0-twohand","0-shield-only") }) {
+            val name=row.getString("name");val character=row.getInt("character")
+            val expected=normalize(Base64.getDecoder().decode(row.getString("before")))
+            load(DosSave.parse(expected));openEquipment()
+            repeat(11) { if(gear().character!=character) press(Input.Keys.DOWN) }
+            check(gear().character==character)
+            for((index,step) in row.get("steps").withIndex()) {
+                val tab=if(step.getString("action")=="equip")1 else 2
+                while(gear().tab!=tab) press(if(gear().tab<tab)Input.Keys.RIGHT else Input.Keys.LEFT)
+                val position=movement().x to movement().y
+                val actors=field<FieldNpcs>("fieldNpcs").actors.map { it.x to it.y }
+                press(if(index%2==0)Input.Keys.ENTER else Input.Keys.SPACE)
+                patch(expected,step.get("after"))
+                check(expected.contentEquals(session().bytes())) { "자동 장비 저장 불일치: $name/$index ${expected.indices.filter { expected[it]!=session().bytes()[it] }.take(20).map { Triple(it,expected[it],session().bytes()[it]) }}" }
+                check(gear().stage==EquipmentMenu.Stage.HOME && gear().tab==tab)
+                check(field<Int>("fieldStep")==step.getInt("step") && movement().baseStep==step.getInt("step"))
+                check(position==(movement().x to movement().y))
+                check(actors==field<FieldNpcs>("fieldNpcs").actors.map { it.x to it.y })
+                if(index==0 || index==2) {
+                    captureMenu("auto-$name-${step.getString("action")}")
+                    closeEquipment();val bytes=session().bytes();saveAndReload()
+                    for(i in 123 until 2020) check(session().bytes()[i]==bytes[i])
+                    check(session().variable(297)==step.getInt("step"))
+                    // 저장 시각 검증 값만 새 파일의 값으로 이어받는다. 장비 변경은 전체 바이트로 비교한다.
+                    session().bytes().copyInto(expected,2942,2942,2944)
+                    openEquipment();repeat(11) { if(gear().character!=character) press(Input.Keys.DOWN) }
+                }
+            }
+            closeEquipment()
+        }
+        for(row in report.get("controllers")) {
+            val expected=normalize(Base64.getDecoder().decode(row.getString("before")))
+            load(DosSave.parse(expected));openEquipment()
+            for((index,key) in row.get("keys").withIndex()) {
+                press(when(key.asInt()) { 72->Input.Keys.UP;80->Input.Keys.DOWN;75->Input.Keys.LEFT;77->Input.Keys.RIGHT;28->Input.Keys.ENTER;57->Input.Keys.SPACE;else->Input.Keys.ESCAPE })
+                if(key.asInt()!=1) {
+                    check(gear().stage==EquipmentMenu.Stage.HOME)
+                    check(gear().tab==row.get("tabs")[index].asInt())
+                    if(row.getString("name")=="tab-bounds") captureMenu("auto-tab-$index")
+                }
+            }
+            patch(expected,row.get("after"));check(expected.contentEquals(session().bytes()))
+            check(scene()=="PAUSE");press(Input.Keys.ESCAPE)
+        }
+        load(DosSave.parse(base))
+        Gdx.files.local("desktop/build/reports/equipment/scenes.json").writeString(menuCaptures.toJson(JsonWriter.OutputType.json),false,"UTF-8")
+        println("자동 장비 검사 완료: 11명·자동 장착/해제·반복·빈 소지품·수량 넘침·양손 무기·방패·탭/파티 순환·저장 재개, ${menuCaptures.size} 화면")
+    }
     override fun render() {
         if(completed) return
         press(Input.Keys.ENTER);press(Input.Keys.SPACE);finishScene()
@@ -394,6 +451,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         check(joins==1 && letters==1)
         if(equipment) checkEquipment()
         if(partyEquipment) checkPartyEquipment()
+        if(automaticEquipment) checkAutomaticEquipment()
         Gdx.files.local("desktop/build/reports/sword/scenes.json").writeString(captures.toJson(JsonWriter.OutputType.json),false,"UTF-8")
         println("검 수리 스토리 검사 완료: $steps 걸음, 진행 0→1→2→3→4, 합류·쪽지 각 1회, 맡기기·회수·중복 방지·저장 재개, ${captures.size} 화면")
         completed=true;Gdx.app.exit()

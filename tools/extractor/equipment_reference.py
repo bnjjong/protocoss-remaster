@@ -21,6 +21,7 @@ class EquipmentReference(StoryReference):
             self.dword(pointer,table);self.dword(pointer+4,blob)
         people=(game_dir/'GRP/PEOPLE.SPR').read_bytes();sda=(game_dir/'GRP/PEOPLE.SDA').read_bytes()
         self.party=[i for i in range(11) if source[347+i*153]!=0]
+        if len(self.party)>5:raise ValueError("원작 참가 파티 표의 다섯 자리 범위를 넘었습니다.")
         blob=0x311000
         for character in range(11):
             start,length=struct.unpack_from('<II',sda,4+character*8);block=people[start:start+length]
@@ -44,6 +45,7 @@ class EquipmentReference(StoryReference):
             a,d,b,x=[c.reg_read(r) for r in (UC_X86_REG_EAX,UC_X86_REG_EDX,UC_X86_REG_EBX,UC_X86_REG_ECX)]
             if address==0x163ad and initial_slot is not None and not initialized:
                 c.mem_write(c.reg_read(UC_X86_REG_EBP)-8,struct.pack('<I',initial_slot));initialized=True
+            elif address in (0x16658,0x166d0):events.append(dict(kind='automatic',action='unequip' if address==0x16658 else 'equip',character=a))
             elif address==0x156f8:events.append(dict(kind='slot',party_index=a,slot=d))
             elif address in (0x2d11a,0x2cf03):
                 if b not in self.images:raise ValueError(f'알 수 없는 메뉴 그림: {b:x}')

@@ -63,7 +63,7 @@ def verify(game_dir,output_root,executable=None,report_name='equipment-render-ve
                 elif e['kind']=='number':number(e['text'],e['x'],e['y'],e['right'],e['color']==1)
         if scene['scene']=='WEAPON':
             character=scene.get('character',0);slot=scene.get('slot',2);index=ref.party.index(character)
-            if scene['stage']=='HOME':draw(ref.invoke(0x151b8,0,index))
+            if scene['stage']=='HOME':draw(ref.invoke(0x151b8,scene.get('tab',0),index))
             else:
                 draw(ref.invoke(0x156f8,index,slot))
                 if scene['stage']=='SELECT':

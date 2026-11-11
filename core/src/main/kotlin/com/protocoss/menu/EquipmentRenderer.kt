@@ -48,7 +48,10 @@ class EquipmentRenderer:Disposable {
         }
         val values=model.stats(save,state.character);val order=intArrayOf(0,1,2,3,5,4)
         order.forEachIndexed { index,j -> number(batch,values[j],if(index<3)105 else 270,157+index%3*14) }
-        if(state.stage==EquipmentMenu.Stage.HOME) { image(batch,"imenu-233",46,19) }
+        if(state.stage==EquipmentMenu.Stage.HOME) {
+            val cursor=model.data.get("home_tabs")[state.tab]
+            image(batch,"imenu-${233+state.tab}",cursor[0].asInt(),cursor[1].asInt())
+        }
         else {
             val cursor=model.data.get("slot_cursors")[state.slot]
             image(batch,"imenu-236",cursor[0].asInt(),cursor[1].asInt())
