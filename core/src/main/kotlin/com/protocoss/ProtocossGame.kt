@@ -20,6 +20,9 @@ import com.protocoss.dialogue.FontManager
 import com.protocoss.map.OriginalMapData
 import com.protocoss.menu.GameMenu
 import com.protocoss.menu.EquipmentRenderer
+import com.protocoss.menu.TentRest
+import com.protocoss.menu.TentRecovery
+import com.protocoss.menu.TentRenderer
 import com.protocoss.menu.FieldItems
 import com.protocoss.menu.ItemTargetMenu
 import com.protocoss.menu.EquipmentMenu
@@ -55,7 +58,7 @@ class ProtocossGame(
     private val originalDirectory: Path? = defaultOriginalDirectory(),
     saveDirectory: Path = Path.of(System.getProperty("user.home"), "Library/Application Support/Protocoss/Saves")
 ) : ApplicationAdapter() {
-    private enum class Scene { TITLE, PROLOGUE, OPENING, CLIP, FIELD, PAUSE, LOAD, SAVE, CONFIRM_SAVE, CONFIRM_TITLE, WEAPON, INVENTORY }
+    private enum class Scene { TITLE, PROLOGUE, OPENING, CLIP, FIELD, PAUSE, LOAD, SAVE, CONFIRM_SAVE, CONFIRM_TITLE, WEAPON, INVENTORY, REST }
     private var scene = Scene.TITLE
     private var selected = 0
     private var loadReturn = Scene.TITLE
@@ -69,6 +72,12 @@ class ProtocossGame(
     // 원작 0x7E510의 보행 속도. 저장 때 이벤트 변수 297로 옮긴다.
     private var fieldStep=1
     private var itemTarget:ItemTargetMenu?=null
+    private lateinit var tentRenderer:TentRenderer
+    private var tentRest:TentRest?=null
+    private var tentMusic:com.badlogic.gdx.audio.Music?=null
+    private var tentReturnTrack=25
+    private var tentBaseVolume=1f
+    private var resumeTentMusic=false
     private var inventoryEquipment=false
     private var inventorySelection=0
     private var inventoryScroll=0
@@ -142,6 +151,7 @@ class ProtocossGame(
         fontManager = FontManager()
         menu = GameMenu(fontManager)
         equipmentRenderer=EquipmentRenderer()
+        tentRenderer=TentRenderer()
         equipmentSounds=listOf(8,12,13).associateWith { Gdx.audio.newSound(Gdx.files.internal("assets/audio/sfx/e${it.toString().padStart(4,'0')}.wav")) }
         dialogueRepository = DialogueRepository()
         loadDialogueScripts()
@@ -178,7 +188,8 @@ class ProtocossGame(
         val delta = Gdx.graphics.deltaTime
         val wasField = scene == Scene.FIELD
         if (Gdx.input.isKeyJustPressed(Input.Keys.F11)) toggleFullscreen()
-        if (scene == Scene.PROLOGUE) {
+        if(scene==Scene.REST) updateTentRest(delta)
+        else if (scene == Scene.PROLOGUE) {
             val movie = requireNotNull(prologue)
             if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) ||
                 Gdx.input.isKeyJustPressed(Input.Keys.SPACE) ||
@@ -238,15 +249,18 @@ class ProtocossGame(
         // 메뉴 확인에 쓴 Enter·Space가 필드의 대화·이동으로 전달되지 않는다.
         if (!wasField && scene == Scene.FIELD) updateFieldView(0f)
 
+        val renderingTentField=scene==Scene.REST && tentRest?.phase==TentRest.Phase.RETURN_IN
+        if(renderingTentField) tentRenderer.beginField()
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
 
         // 창 크기·전체화면 전환이 화면 영역을 바꿔도 매 프레임 원래 표시 영역을 복구한다.
-        viewport.apply()
-        if (scene != Scene.FIELD) {
+        if(!renderingTentField) viewport.apply()
+        if (scene != Scene.FIELD && !renderingTentField) {
             uiCamera.update()
             batch.projectionMatrix = uiCamera.combined
-            if (scene == Scene.PROLOGUE) prologue!!.render(batch)
+            if(scene==Scene.REST) tentRenderer.render(batch,requireNotNull(tentRest))
+            else if (scene == Scene.PROLOGUE) prologue!!.render(batch)
             else if (scene == Scene.OPENING) { batch.begin(); openingRenderer.render(batch,if(opening.continuesField) fieldNpcs?.actors.orEmpty() else emptyList()); batch.end() }
             else if (scene == Scene.CLIP) {
                 if(clipStarted && !clipReturning) encounterClip!!.render(batch)
@@ -324,6 +338,10 @@ class ProtocossGame(
             batch.end()
         }
         if(fieldFade>0f) { batch.begin();openingRenderer.fade(batch,fieldFade);batch.end() }
+        if(renderingTentField) {
+            tentRenderer.endField();viewport.apply()
+            tentRenderer.render(batch,requireNotNull(tentRest))
+        }
     }
 
     override fun resize(width: Int, height: Int) {
@@ -335,12 +353,17 @@ class ProtocossGame(
     override fun pause() {
         prologue?.pause()
         encounterClip?.pause()
+        tentRest?.paused=true
+        resumeTentMusic=tentMusic?.isPlaying==true;tentMusic?.pause()
         resumeOpeningMusic = openingMusic?.isPlaying == true
         openingMusic?.pause()
     }
     override fun resume() {
         prologue?.resume()
         encounterClip?.resume()
+        tentRest?.paused=false
+        if(resumeTentMusic) tentMusic?.play()
+        resumeTentMusic=false
         if(resumeOpeningMusic) openingMusic?.play()
         resumeOpeningMusic = false
     }
@@ -351,6 +374,7 @@ class ProtocossGame(
         openingRenderer.dispose()
         doorSound.dispose()
         openingMusic?.dispose()
+        tentMusic?.dispose();tentRenderer.dispose()
         batch.dispose()
         menu.dispose()
         equipmentRenderer.dispose()
@@ -723,8 +747,44 @@ class ProtocossGame(
         inventoryScroll=inventoryScroll.coerceIn((inventorySelection-5).coerceAtLeast(0),inventorySelection)
         if(menuConfirmed() && !inventoryEquipment) {
             val id=choices[inventorySelection].id
-            if(use.targetable(id)) { itemTarget=ItemTargetMenu(id);equipmentSounds.getValue(8).play() }
+            if(id==37 && TentRecovery.canUse(session!!)) { equipmentSounds.getValue(8).play();startTentRest() }
+            else if(use.targetable(id)) { itemTarget=ItemTargetMenu(id);equipmentSounds.getValue(8).play() }
             else equipmentSounds.getValue(13).play()
+        }
+    }
+
+    private fun startTentRest() {
+        tentReturnTrack=session!!.variable(4).takeIf { Gdx.files.internal("assets/opening/music-${it.toString().padStart(2,'0')}/music.ogg").exists() } ?: activeTrack ?: 25
+        tentBaseVolume=openingMusic?.volume ?: 1f
+        uiCamera.update();batch.projectionMatrix=uiCamera.combined
+        tentRenderer.captureMenu(batch,equipmentRenderer,session!!,inventorySelection,inventoryScroll)
+        tentRest=TentRest { phase -> when(phase) {
+            TentRest.Phase.SLEEP_IN -> {
+                openingMusic?.dispose();openingMusic=null
+                tentMusic=Gdx.audio.newMusic(Gdx.files.internal("assets/tent/music.ogg")).apply { isLooping=true;volume=0f;play() }
+            }
+            TentRest.Phase.WAIT -> session=TentRecovery.recover(session!!)
+            TentRest.Phase.RETURN_IN -> {
+                tentMusic?.dispose();tentMusic=null;playOpeningMusic(tentReturnTrack,0f)
+            }
+            TentRest.Phase.DONE -> {
+                session=TentRecovery.consume(session!!);openingMusic?.volume=tentBaseVolume
+                tentRest=null;scene=Scene.FIELD
+            }
+            else -> Unit
+        } }
+        scene=Scene.REST
+    }
+    private fun updateTentRest(delta:Float) {
+        val rest=tentRest ?: return
+        // 원작 0x17242가 전환 중의 키를 지운 뒤 새 키 입력을 기다린다.
+        if(rest.phase==TentRest.Phase.WAIT && Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY)) rest.continueRest()
+        rest.update(delta)
+        val level=tentBaseVolume*rest.volume()
+        when(rest.phase) {
+            TentRest.Phase.MENU_OUT,TentRest.Phase.RETURN_IN -> openingMusic?.volume=level
+            TentRest.Phase.SLEEP_IN,TentRest.Phase.WAIT,TentRest.Phase.SLEEP_OUT -> tentMusic?.volume=level
+            else -> Unit
         }
     }
 
@@ -736,11 +796,12 @@ class ProtocossGame(
         message = "방향키 선택 · Enter 불러오기 · Esc 뒤로"
     }
 
-    private fun playOpeningMusic(track: Int) {
+    private fun playOpeningMusic(track: Int,initialVolume:Float?=null) {
         activeTrack=track
         openingMusic?.dispose()
         openingMusic=Gdx.audio.newMusic(Gdx.files.internal("assets/opening/music-${track.toString().padStart(2,'0')}/music.ogg")).apply {
             isLooping=true
+            initialVolume?.let { volume=it }
             play()
         }
     }
