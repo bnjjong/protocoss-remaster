@@ -145,3 +145,12 @@ tasks.register<JavaExec>("verifyAutomaticEquipment") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 원본 폴더 없이 파티원 대상 소지품 사용·취소·저장을 실행한다.
+tasks.register<JavaExec>("verifyFieldItems") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.FieldItemsCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}

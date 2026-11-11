@@ -72,7 +72,8 @@ class EquipmentRenderer:Disposable {
         }
         batch.end()
     }
-    fun inventory(batch:SpriteBatch,save:DosSave,equipment:Boolean,selected:Int,scroll:Int) {
+    fun inventory(batch:SpriteBatch,save:DosSave,equipment:Boolean,selected:Int,scroll:Int,target:ItemTargetMenu?=null) {
+        if(target!=null) { itemTarget(batch,save,target);return }
         batch.begin();image(batch,"imenu-96",0,0);image(batch,"imenu-231",0,0)
         text(batch,if(equipment) "장비" else "소지품",14,16)
         val items=model.inventory(save,equipment)
@@ -87,6 +88,34 @@ class EquipmentRenderer:Disposable {
             }
             if(!equipment) text(batch,items[selected].description,24,169)
         }
+        batch.end()
+    }
+    private fun itemTarget(batch:SpriteBatch,save:DosSave,target:ItemTargetMenu) {
+        batch.begin();image(batch,"item-target-highlight-${target.index}",0,0)
+        val bytes=save.bytes()
+        fun word(i:Int)=(bytes[i].toInt() and 255) or ((bytes[i+1].toInt() and 255) shl 8)
+        model.party(save).forEachIndexed { index,character ->
+            val x=18+index%3*100;val y=52+index/3*74;val offset=153*character
+            if(index==target.index) image(batch,"imenu-107",x-6,y-9)
+            val status=bytes[472+offset].toInt() and 255
+            val actor=if(character==0) "kaman-6" else "person-$character-6"
+            val table=when(status) { 2->7;3->3;4->6;5->2;else->4 }
+            image(batch,actor+if(status==1) "" else "-shade-$table",x,y+13)
+            image(batch,"imenu-106",x+26,y)
+            val values=listOf(bytes[386+offset].toInt() and 255,word(352+offset),word(354+offset),word(356+offset),word(358+offset))
+            values.forEachIndexed { i,value ->
+                number(batch,value,x+61-value.toString().length*4,y+listOf(1,13,27,39,53)[i],false)
+            }
+            val form=bytes[387+offset].toInt() and 255
+            if(form in 1..12) {
+                val current=bytes[447+offset+form].toInt() and 255;val max=bytes[459+offset+form].toInt() and 255
+                val bar=if(max==0)9 else minOf(9,current*10/max)
+                image(batch,"imenu-${109+(form-1)*10+bar}",x+6,y)
+            }
+        }
+        val item=model.items[target.item]
+        image(batch,"common-${item.icon}",44,19);text(batch,item.name,69,19)
+        number(batch,model.quantity(save,item.id,false),269,22)
         batch.end()
     }
     override fun dispose()=atlas.dispose()
