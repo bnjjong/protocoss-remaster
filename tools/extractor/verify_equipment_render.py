@@ -19,15 +19,15 @@ def verify(game_dir,output_root,executable=None,report_name='equipment-render-ve
     font=(game_dir/'HANGUL.FNT').read_bytes();english=(game_dir/'ENGLISH.FNT').read_bytes();tables=code[0x4040:0x4108]
     weapons=records((game_dir/'DATA/WEAPON.LST').read_bytes(),84);items=records((game_dir/'DATA/ITEM.LST').read_bytes(),58)
     for scene in scenes:
-        source=base64.b64decode(scene['save']);ref.prepare(game_dir,source);ref.byte(0x163c,0)
+        source=base64.b64decode(scene['save']);ref.prepare(game_dir,source);ref.byte(0x163c,8 if scene.get('item_target',-1)>=0 else 0)
         images={};index_images={}
-        def source_image(name,muted=False):
-            key=(name,muted)
+        def source_image(name,muted=False,table=4):
+            key=(name,muted,table)
             if key not in images:
                 raw=ref.raw[name];f=decode_img_frame(raw)
                 image=renderer.render(struct.pack('<HH',f.width,f.height)+raw,palette)
                 if muted:
-                    ids=bytes(fxp[1024+c] for c in f.indices)
+                    ids=bytes(fxp[table*256+c] for c in f.indices)
                     image=f.__class__(f.width,f.height,ids,f.alpha).to_image(palette)
                 images[key]=image;index_images[name]=f
             return images[key]
@@ -57,7 +57,14 @@ def verify(game_dir,output_root,executable=None,report_name='equipment-render-ve
             for ch in s:expected.alpha_composite(source_image('imenu-'+str(int(ch)+17),muted),(x,y));x+=8
         def draw(events):
             for e in events:
-                if e['kind']=='image':expected.alpha_composite(source_image(e['image'],e.get('muted',False)),(e['x'],e['y']))
+                if e['kind']=='image':expected.alpha_composite(source_image(e['image'],e.get('muted',False),e.get('table',4)),(e['x'],e['y']))
+                elif e['kind']=='mask':
+                    mask=decode_img_frame(ref.raw[e['image']])
+                    for y in range(mask.height):
+                        for x in range(mask.width):
+                            if mask.alpha[y*mask.width+x]:
+                                px=x+e['x'];py=y+e['y'];c=fxp[e['table']*256+ids[py*320+px]]
+                                expected.putpixel((px,py),tuple(v*4 for v in palette[c*3:c*3+3])+(255,))
                 elif e['kind']=='rect':rect(e['x'],e['y'],e['width'],e['height'])
                 elif e['kind']=='text':text(e['text'],e['x'],e['y'],e['color'])
                 elif e['kind']=='number':number(e['text'],e['x'],e['y'],e['right'],e['color']==1)
@@ -70,6 +77,10 @@ def verify(game_dir,output_root,executable=None,report_name='equipment-render-ve
                     choices=ref.candidates(character,slot)
                     if choices:draw(ref.invoke(0x15808,character,slot,choices[scene['selected']]))
                     draw(ref.invoke(0x15518,scene['scroll'],scene['selected']-scene['scroll']))
+        elif scene.get('item_target',-1)>=0:
+            ref.invoke(0x28408,0)
+            ref.cpu.mem_write(0x7e610,struct.pack('<HHH',scene['item_target'],0,0))
+            draw(ref.invoke(0x1b218,scene['item_target_index'],0))
         else:
             equipment=scene['inventory_equipment'];text('장비' if equipment else '소지품',14,16)
             if not equipment:
@@ -87,7 +98,7 @@ def verify(game_dir,output_root,executable=None,report_name='equipment-render-ve
         actual=Image.open(folder/(scene['name']+'.png')).convert('RGBA').resize((320,200),Image.Resampling.NEAREST)
         diff=[(x,y) for y in range(200) for x in range(320) if expected.getpixel((x,y))!=actual.getpixel((x,y))]
         if diff:raise ValueError(f'메뉴 화면 불일치: {scene["name"]}, {len(diff)}픽셀, 처음 {diff[:5]}')
-        results.append(dict(name=scene['name'],pixels=64000,native_function='0x151B8/0x156F8/0x15808/0x15518' if scene['scene']=='WEAPON' else '0x19930' if not scene['inventory_equipment'] else '소지품 배치·원작 그림 조합'))
+        results.append(dict(name=scene['name'],pixels=64000,native_function='0x151B8/0x156F8/0x15808/0x15518' if scene['scene']=='WEAPON' else '0x1B218' if scene.get('item_target',-1)>=0 else '0x19930' if not scene['inventory_equipment'] else '소지품 배치·원작 그림 조합'))
     report=dict(scenes=results,compared_pixels=len(results)*64000)
     (output_root/'docs'/report_name).write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
     print('장비 메뉴 화면 일치:',len(results),'장,',report['compared_pixels'],'픽셀')

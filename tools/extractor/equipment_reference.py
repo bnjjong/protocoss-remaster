@@ -47,9 +47,13 @@ class EquipmentReference(StoryReference):
                 c.mem_write(c.reg_read(UC_X86_REG_EBP)-8,struct.pack('<I',initial_slot));initialized=True
             elif address in (0x16658,0x166d0):events.append(dict(kind='automatic',action='unequip' if address==0x16658 else 'equip',character=a))
             elif address==0x156f8:events.append(dict(kind='slot',party_index=a,slot=d))
+            elif address==0x67b85:
+                c.reg_write(UC_X86_REG_EAX,len(bytes(c.mem_read(a,4096)).split(b'\0')[0]));self.return_from(c)
+            elif address==0x2d040:
+                events.append(dict(kind='mask',image=self.images[b],x=a-16,y=d-16,table=(struct.unpack('<I',c.mem_read(0x71658,4))[0]-0x7f240)//256));self.return_from(c)
             elif address in (0x2d11a,0x2cf03):
                 if b not in self.images:raise ValueError(f'알 수 없는 메뉴 그림: {b:x}')
-                events.append(dict(kind='image',image=self.images[b],x=a-16,y=d-16,muted=address==0x2cf03));self.return_from(c)
+                events.append(dict(kind='image',image=self.images[b],x=a-16,y=d-16,muted=address==0x2cf03,table=(struct.unpack('<I',c.mem_read(0x71658,4))[0]-0x7f240)//256));self.return_from(c)
             elif address in (0x2ca5e,0x2cb5f):self.return_from(c,8)
             elif address==0x2cd51:self.return_from(c)
             elif address==0x2cf9d:

@@ -20,6 +20,8 @@ import com.protocoss.dialogue.FontManager
 import com.protocoss.map.OriginalMapData
 import com.protocoss.menu.GameMenu
 import com.protocoss.menu.EquipmentRenderer
+import com.protocoss.menu.FieldItems
+import com.protocoss.menu.ItemTargetMenu
 import com.protocoss.menu.EquipmentMenu
 import com.protocoss.save.DosSave
 import com.protocoss.save.SaveRepository
@@ -66,6 +68,7 @@ class ProtocossGame(
     private var equipmentMenu=EquipmentMenu()
     // 원작 0x7E510의 보행 속도. 저장 때 이벤트 변수 297로 옮긴다.
     private var fieldStep=1
+    private var itemTarget:ItemTargetMenu?=null
     private var inventoryEquipment=false
     private var inventorySelection=0
     private var inventoryScroll=0
@@ -580,7 +583,7 @@ class ProtocossGame(
 
     private fun renderMenu() {
         if(scene==Scene.WEAPON) { equipmentRenderer.weapon(batch,session!!,equipmentMenu);return }
-        if(scene==Scene.INVENTORY) { equipmentRenderer.inventory(batch,session!!,inventoryEquipment,inventorySelection,inventoryScroll);return }
+        if(scene==Scene.INVENTORY) { equipmentRenderer.inventory(batch,session!!,inventoryEquipment,inventorySelection,inventoryScroll,itemTarget);return }
         if (scene == Scene.TITLE) {
             menu.title(batch, selected)
             return
@@ -689,15 +692,40 @@ class ProtocossGame(
     }
 
     private fun handleInventoryInput() {
+        val model=equipmentRenderer.model;val use=FieldItems(model);val target=itemTarget
+        if(target!=null) {
+            if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+                equipmentSounds.getValue(8).play();itemTarget=null
+                val count=model.inventory(session!!,false).size
+                if(count==0) { scene=Scene.PAUSE;selected=4 }
+                inventorySelection=inventorySelection.coerceIn(0,(count-1).coerceAtLeast(0))
+                inventoryScroll=inventoryScroll.coerceIn((inventorySelection-5).coerceAtLeast(0),inventorySelection)
+                return
+            }
+            for((key,direction) in listOf(Input.Keys.UP to "up",Input.Keys.DOWN to "down",Input.Keys.LEFT to "left",Input.Keys.RIGHT to "right")) {
+                if(Gdx.input.isKeyJustPressed(key)) { target.navigate(direction,model.party(session!!).size);equipmentSounds.getValue(12).play() }
+            }
+            // 원작 대상 선택은 Enter로 사용한다. Space는 목록 진입 때만 확인 키다.
+            if(Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+                val result=use.use(session!!,target.item,model.party(session!!)[target.index])
+                session=result.save;equipmentSounds.getValue(if(result.blocked)13 else 8).play()
+            }
+            return
+        }
         if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) { scene=Scene.PAUSE;selected=4;return }
         if(Gdx.input.isKeyJustPressed(Input.Keys.LEFT) || Gdx.input.isKeyJustPressed(Input.Keys.RIGHT)) {
             inventoryEquipment=!inventoryEquipment;inventorySelection=0;inventoryScroll=0
         }
-        val count=equipmentRenderer.model.inventory(session!!,inventoryEquipment).size
+        val choices=model.inventory(session!!,inventoryEquipment);val count=choices.size
         if(count==0) return
         if(Gdx.input.isKeyJustPressed(Input.Keys.UP)) inventorySelection=(inventorySelection-1).coerceAtLeast(0)
         if(Gdx.input.isKeyJustPressed(Input.Keys.DOWN)) inventorySelection=(inventorySelection+1).coerceAtMost(count-1)
         inventoryScroll=inventoryScroll.coerceIn((inventorySelection-5).coerceAtLeast(0),inventorySelection)
+        if(menuConfirmed() && !inventoryEquipment) {
+            val id=choices[inventorySelection].id
+            if(use.targetable(id)) { itemTarget=ItemTargetMenu(id);equipmentSounds.getValue(8).play() }
+            else equipmentSounds.getValue(13).play()
+        }
     }
 
     private fun openLoad(returnTo: Scene) {

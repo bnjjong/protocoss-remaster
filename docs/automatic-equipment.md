@@ -64,4 +64,4 @@ python3 tools/extractor/verify_equipment_render.py --game-dir /path/to/Protocoss
   --report-name automatic-equipment-render.json
 ```
 
-아이템 사용·버리기, 거래, 전투 효과와 다른 지역은 후속 작업이다. 진입은 현재 앱의 Esc 메뉴를 유지한다. 마우스·키 반복 속도·커서 전체 애니메이션·팔레트 전환은 이번 범위에 포함하지 않는다.
+이 문서는 자동 장비 복원 시점의 기록이다. 파티원 대상 아이템 사용은 [후속 복원 기록](field-items.md)에서 연결했다. 버리기·거래·전투 효과와 다른 지역은 후속 작업이다. 진입은 현재 앱의 Esc 메뉴를 유지한다. 마우스·키 반복 속도·커서 전체 애니메이션·팔레트 전환은 이번 범위에 포함하지 않는다.

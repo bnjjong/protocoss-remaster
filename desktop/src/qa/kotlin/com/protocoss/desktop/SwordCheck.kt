@@ -19,16 +19,17 @@ import java.nio.file.Path
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import com.protocoss.menu.EquipmentRenderer
+import com.protocoss.menu.ItemTargetMenu
 import com.protocoss.menu.EquipmentMenu
 import java.util.Base64
 
 /** 새 게임부터 검 회수까지 실제 입력으로 진행한다. 원본 폴더와 사용자 저장은 쓰지 않는다. */
 object SwordCheck {
     @JvmStatic fun main(args:Array<String>)=run(false)
-    fun run(equipment:Boolean,party:Boolean=false,automatic:Boolean=false) {
+    fun run(equipment:Boolean,party:Boolean=false,automatic:Boolean=false,items:Boolean=false) {
         val saves=Files.createTempDirectory("protocoss-sword-qa-")
         try {
-            val app=SwordApplication(saves,equipment,party,automatic)
+            val app=SwordApplication(saves,equipment,party,automatic,items)
             Lwjgl3Application(app,Lwjgl3ApplicationConfiguration().apply {
                 setTitle("검 수리 스토리 자동 검사");setWindowedMode(640,400);setInitialVisible(false);useVsync(false);setForegroundFPS(0)
             })
@@ -39,7 +40,8 @@ object SwordCheck {
 object EquipmentCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true) }
 object PartyEquipmentCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true) }
 object AutomaticEquipmentCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true,true) }
-private class SwordApplication(private val saves:Path,private val equipment:Boolean,private val partyEquipment:Boolean,private val automaticEquipment:Boolean):ApplicationAdapter() {
+object FieldItemsCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true,true,true) }
+private class SwordApplication(private val saves:Path,private val equipment:Boolean,private val partyEquipment:Boolean,private val automaticEquipment:Boolean,private val fieldItems:Boolean):ApplicationAdapter() {
     private val game=ProtocossGame(null,saves)
     private val held=mutableSetOf<Int>();private val pressed=mutableSetOf<Int>()
     private lateinit var input:Input;private lateinit var graphics:Graphics;private lateinit var rules:FieldRules
@@ -251,6 +253,8 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
             addChild("save",JsonValue(Base64.getEncoder().encodeToString(session().bytes())))
             addChild("character",JsonValue(weapon.character.toLong()));addChild("slot",JsonValue(weapon.slot.toLong()));
             addChild("tab",JsonValue(weapon.tab.toLong()));addChild("stage",JsonValue(weapon.stage.toString()));addChild("selected",JsonValue(weapon.selected.toLong()));addChild("scroll",JsonValue(weapon.scroll.toLong()))
+            val target=field<ItemTargetMenu?>("itemTarget")
+            addChild("item_target",JsonValue((target?.item ?: -1).toLong()));addChild("item_target_index",JsonValue((target?.index ?: 0).toLong()))
             addChild("inventory_equipment",JsonValue(field<Boolean>("inventoryEquipment")))
             addChild("inventory_selected",JsonValue(field<Int>("inventorySelection").toLong()));addChild("inventory_scroll",JsonValue(field<Int>("inventoryScroll").toLong()))
         })
@@ -428,6 +432,77 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         Gdx.files.local("desktop/build/reports/equipment/scenes.json").writeString(menuCaptures.toJson(JsonWriter.OutputType.json),false,"UTF-8")
         println("자동 장비 검사 완료: 11명·자동 장착/해제·반복·빈 소지품·수량 넘침·양손 무기·방패·탭/파티 순환·저장 재개, ${menuCaptures.size} 화면")
     }
+    private fun checkFieldItems() {
+        val base=session().bytes();val model=field<EquipmentRenderer>("equipmentRenderer").model
+        val report=com.badlogic.gdx.utils.JsonReader().parse(Files.readString(Path.of("docs/field-items-native.json")))
+        fun fixture(index:Int):ByteArray {
+            val bytes=Base64.getDecoder().decode(report.get("fixtures")[index].asString())
+            base.copyInto(bytes,92,92,119);base.copyInto(bytes,2350,2350,2352)
+            return bytes
+        }
+        fun open(item:Int) {
+            check(scene()=="FIELD");press(Input.Keys.ESCAPE);repeat(4) { press(Input.Keys.DOWN) };press(Input.Keys.ENTER)
+            val rows=model.inventory(session(),false);val index=rows.indexOfFirst { it.id==item };check(index>=0)
+            repeat(index) { press(Input.Keys.DOWN) }
+        }
+        fun close() {
+            if(field<ItemTargetMenu?>("itemTarget")!=null) press(Input.Keys.ESCAPE)
+            if(scene()=="INVENTORY") press(Input.Keys.ESCAPE)
+            check(scene()=="PAUSE");press(Input.Keys.ESCAPE);check(scene()=="FIELD")
+        }
+        for((n,item) in report.get("ids").map { it.asInt() }.withIndex()) {
+            val character=n%11;val variant=when(item) { 3->9;9->3;10->4;11,12->5;16->7;else->0 }
+            val index=character*10+variant;val expected=fixture(index)
+            val row=report.get("cases").first { it.getInt("fixture")==index && it.getInt("item")==item }
+            load(DosSave.parse(expected));open(item);press(Input.Keys.SPACE)
+            check(field<ItemTargetMenu?>("itemTarget")!=null)
+            val partyIndex=model.party(session()).indexOf(character)
+            repeat(partyIndex) { press(Input.Keys.RIGHT) }
+            captureMenu("item-$item-target")
+            val before=session().bytes();press(Input.Keys.SPACE);check(before.contentEquals(session().bytes()))
+            val position=movement().x to movement().y
+            val actors=field<FieldNpcs>("fieldNpcs").actors.map { it.x to it.y }
+            held+=Input.Keys.W;idle(10);held.clear()
+            check(position==(movement().x to movement().y));check(actors==field<FieldNpcs>("fieldNpcs").actors.map { it.x to it.y })
+            press(Input.Keys.ENTER);press(Input.Keys.ENTER)
+            row.get("after").forEach { expected[it[0].asInt()]=it[1].asInt().toByte() }
+            check(expected.contentEquals(session().bytes())) { "아이템 상태 불일치: $character/$item" }
+            captureMenu("item-$item-used")
+            press(Input.Keys.ESCAPE)
+            if(item in listOf(0,16,33)) captureMenu("item-$item-list")
+            close();val saved=session().bytes();saveAndReload()
+            for(i in 123 until 2020) check(saved[i]==session().bytes()[i])
+            check(session().variable(297)==2 && movement().baseStep==2)
+        }
+        for((name,index,item) in listOf(Triple("full",2,0),Triple("dead",7,0),Triple("last",1,33))) {
+            val expected=fixture(index)
+            if(name=="last") { expected.fill(0,123,162);expected[123+item]=1 }
+            load(DosSave.parse(expected));open(item);press(Input.Keys.ENTER)
+            val cancel=session().bytes();press(Input.Keys.ESCAPE);check(cancel.contentEquals(session().bytes()))
+            press(Input.Keys.ENTER);press(Input.Keys.ENTER);press(Input.Keys.ENTER)
+            val row=report.get("cases").first { it.getInt("fixture")==index && it.getInt("item")==item }
+            row.get("after").forEach { expected[it[0].asInt()]=it[1].asInt().toByte() }
+            check(expected.contentEquals(session().bytes()));captureMenu("item-$name")
+            press(Input.Keys.ESCAPE)
+            if(name=="last") check(scene()=="PAUSE")
+            close();saveAndReload()
+        }
+        val raw=fixture(0)
+        for(c in 0..10) raw[347+c*153]=if(c in listOf(0,2,5,7,10))1 else 0
+        for((i,c) in listOf(0,2,5,7,10).withIndex()) raw[472+c*153]=(i+1).toByte()
+        load(DosSave.parse(raw));open(0);press(Input.Keys.ENTER)
+        for(key in listOf(Input.Keys.RIGHT,Input.Keys.RIGHT,Input.Keys.DOWN,Input.Keys.LEFT,Input.Keys.UP)) {
+            press(key);captureMenu("item-grid-${field<ItemTargetMenu>("itemTarget").index}")
+        }
+        close()
+        for(item in listOf(17,21,25,26,27,28,34,37,38)) {
+            load(DosSave.parse(fixture(0)));open(item);val bytes=session().bytes();press(Input.Keys.ENTER)
+            check(field<ItemTargetMenu?>("itemTarget")==null && bytes.contentEquals(session().bytes()));close()
+        }
+        load(DosSave.parse(base))
+        Gdx.files.local("desktop/build/reports/equipment/scenes.json").writeString(menuCaptures.toJson(JsonWriter.OutputType.json),false,"UTF-8")
+        println("대상 아이템 실행 검사: 19종·11명·치료/부활/회복 불필요·마지막 한 개·취소·대상 선택·저장 재개, ${menuCaptures.size} 화면")
+    }
     override fun render() {
         if(completed) return
         press(Input.Keys.ENTER);press(Input.Keys.SPACE);finishScene()
@@ -452,6 +527,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         if(equipment) checkEquipment()
         if(partyEquipment) checkPartyEquipment()
         if(automaticEquipment) checkAutomaticEquipment()
+        if(fieldItems) checkFieldItems()
         Gdx.files.local("desktop/build/reports/sword/scenes.json").writeString(captures.toJson(JsonWriter.OutputType.json),false,"UTF-8")
         println("검 수리 스토리 검사 완료: $steps 걸음, 진행 0→1→2→3→4, 합류·쪽지 각 1회, 맡기기·회수·중복 방지·저장 재개, ${captures.size} 화면")
         completed=true;Gdx.app.exit()

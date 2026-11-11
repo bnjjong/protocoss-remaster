@@ -16,6 +16,7 @@ def records(raw,size):
     for i in range(len(raw)//size):
         r=raw[i*size:(i+1)*size]
         result.append(dict(id=i,name=r[:21].split(b'\0')[0].decode('cp1361'),icon=struct.unpack_from('<H',r,21)[0],
+            operation=r[24] if size==58 else 0,amount=struct.unpack_from('<H',r,25)[0] if size==58 else 0,
             category=r[34] if size==84 else r[23],allowed=r[23] if size==84 else 0,
             allowed_by=list(r[23:34]) if size==84 else [],
             stats=list(struct.unpack_from('<6h',r,35)) if size==84 else [],
@@ -35,7 +36,7 @@ def extract(game_dir,output_root,executable=None):
     for name in ('GRP/IMENU.IMG','GRP/COMMON.IMG','GRP/PEOPLE.SPR','GRP/PEOPLE.SDA','HANGUL.FNT','ENGLISH.FNT'):read(name)
     ref=EquipmentReference(exe);ref.prepare(game_dir,start)
     renderer=OriginalSpriteRenderer(exe);verified=0;images={}
-    wanted={'imenu-'+str(i) for i in (70,96,231,232,233,234,235,*range(17,53),*range(236,239))}
+    wanted={'imenu-'+str(i) for i in (70,96,231,232,233,234,235,*range(17,53),*range(236,239),*range(106,229))}
     wanted|={'common-'+str(r['icon']) for r in weapons+items};wanted.add('kaman-6')
     wanted|={f'person-{i}-6' for i in range(1,11)}
     for name in sorted(wanted):
@@ -43,7 +44,12 @@ def extract(game_dir,output_root,executable=None):
         native=renderer.render(struct.pack('<HH',frame.width,frame.height)+raw,palette)
         if image.tobytes()!=native.tobytes():raise ValueError(f'원작 메뉴 그림 불일치: {name}')
         verified+=frame.width*frame.height;images[name]=image
+        if name.endswith('-6') and name.startswith(('kaman-','person-')):
+            for table in (2,3,4,6,7):
+                ids=bytes(fxp[table*256+c] for c in frame.indices)
+                images[f'{name}-shade-{table}']=frame.__class__(frame.width,frame.height,ids,frame.alpha).to_image(palette)
         if name.startswith(('imenu-','common-')):
+
             ids=bytes(fxp[1024+c] for c in frame.indices)
             muted=frame.__class__(frame.width,frame.height,ids,frame.alpha).to_image(palette)
             images[name+'-muted']=muted
@@ -62,6 +68,17 @@ def extract(game_dir,output_root,executable=None):
             c=fxp[1024+lookup[bg.getpixel((x,y))[:3]]]
             bg.putpixel((x,y),tuple(v*4 for v in palette[c*3:c*3+3])+(255,))
     images['item-highlight']=bg
+    # 원작 0x2D040은 IMENU 108의 불투명 부분 아래에 있는 배경 색을 변환한다.
+    target=images['imenu-96'].copy();target.alpha_composite(images['imenu-231'])
+    mask=images['imenu-108'].getchannel('A')
+    for index in range(5):
+        highlighted=target.copy();left=17+index%3*100;top=49+index//3*74
+        for y in range(mask.height):
+            for x in range(mask.width):
+                if mask.getpixel((x,y)):
+                    c=fxp[1024+lookup[target.getpixel((left+x,top+y))[:3]]]
+                    highlighted.putpixel((left+x,top+y),tuple(v*4 for v in palette[c*3:c*3+3])+(255,))
+        images[f'item-target-highlight-{index}']=highlighted
     (_,code),(_,data)=objects(exe);font=read('HANGUL.FNT');english=read('ENGLISH.FNT');tables=code[0x4040:0x4108]
     empty_weapon=bytes(ref.cpu.mem_read(0x704ac,40)).split(b'\0')[0].decode('cp1361')
     empty_items=bytes(ref.cpu.mem_read(0x70544,40)).split(b'\0')[0].decode('cp1361')
@@ -74,7 +91,7 @@ def extract(game_dir,output_root,executable=None):
             bits=reference.glyph(c.encode('cp1361'))
             if im.getchannel('A').tobytes()!=bytes(255 if bits[y*2+x//8]&(128>>(x%8)) else 0 for y in range(16) for x in range(16)):raise ValueError(c)
         images['glyph-'+str(ord(c))]=im
-    atlas=Image.new('RGBA',(1024,4096));rects={};x=y=row=0
+    atlas=Image.new('RGBA',(1024,8192));rects={};x=y=row=0
     for name,im in images.items():
         if x+im.width>1024:x=0;y+=row;row=0
         atlas.alpha_composite(im,(x,y));rects[name]=[x,y,im.width,im.height];x+=im.width;row=max(row,im.height)
