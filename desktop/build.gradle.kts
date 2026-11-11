@@ -120,3 +120,11 @@ tasks.register<JavaExec>("verifySwordStory") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+tasks.register<JavaExec>("verifyEquipment") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.EquipmentCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}

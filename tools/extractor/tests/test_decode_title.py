@@ -4,6 +4,12 @@ from decode_title import parse_img, decode_img_frame
 
 
 class TitleTest(unittest.TestCase):
+    def test_narrow_images_consume_empty_trailing_planes(self):
+        frame=decode_img_frame(bytes([1,1,0,1,7,1,1,0,1,8,0,0]))
+        self.assertEqual((frame.width,frame.height),(2,1))
+        self.assertEqual(frame.indices,bytes([7,8]))
+        self.assertEqual(frame.alpha,bytes([255,255]))
+
     def test_headerless_planes_keep_written_black_separate_from_transparency(self):
         raw = bytes([1, 1, 1, 1, 0, 1, 1, 0, 1, 2, 1, 1, 0, 1, 3, 1, 1, 0, 1, 4])
         frame = decode_img_frame(raw)
