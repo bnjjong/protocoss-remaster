@@ -136,3 +136,12 @@ tasks.register<JavaExec>("verifyPartyEquipment") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 자동 장비·해제의 원작 표본과 실제 입력·저장·화면을 비교한다.
+tasks.register<JavaExec>("verifyAutomaticEquipment") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.AutomaticEquipmentCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}

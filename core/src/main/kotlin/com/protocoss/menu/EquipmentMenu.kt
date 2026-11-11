@@ -7,6 +7,7 @@ class EquipmentMenu(initialSlot:Int=0,initialCharacter:Int=0) {
     private val firstSlot=initialSlot
     enum class Stage { HOME, SLOT, SELECT }
     var stage=Stage.HOME; private set
+    var tab=0; private set
     var selected=0; private set
     var scroll=0; private set
     var slot=initialSlot; private set
@@ -14,7 +15,9 @@ class EquipmentMenu(initialSlot:Int=0,initialCharacter:Int=0) {
     var stepChange:Int?=null; private set
     fun navigate(direction:String,model:Equipment,save:DosSave) {
         when(stage) {
-            Stage.HOME -> if(direction=="up" || direction=="down") {
+            Stage.HOME -> if(direction=="left" || direction=="right") {
+                tab=(tab+if(direction=="left") -1 else 1).coerceIn(0,2)
+            } else if(direction=="up" || direction=="down") {
                 val party=model.party(save);if(party.isEmpty()) return
                 val index=party.indexOf(character).coerceAtLeast(0)
                 character=party[(index+(if(direction=="up") -1 else 1)+party.size)%party.size]
@@ -31,7 +34,11 @@ class EquipmentMenu(initialSlot:Int=0,initialCharacter:Int=0) {
     fun confirm(model:Equipment,save:DosSave):DosSave {
         stepChange=null
         return when(stage) {
-        Stage.HOME -> { slot=firstSlot;stage=Stage.SLOT;save }
+        Stage.HOME -> when(tab) {
+            1 -> model.autoEquip(save,character)
+            2 -> model.autoUnequip(save,character)
+            else -> { slot=firstSlot;stage=Stage.SLOT;save }
+        }
         Stage.SLOT -> {
             stage=Stage.SELECT;selected=0;scroll=0
             if(model.equipped(save,character,slot)==157) stepChange=1

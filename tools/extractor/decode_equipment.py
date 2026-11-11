@@ -35,7 +35,7 @@ def extract(game_dir,output_root,executable=None):
     for name in ('GRP/IMENU.IMG','GRP/COMMON.IMG','GRP/PEOPLE.SPR','GRP/PEOPLE.SDA','HANGUL.FNT','ENGLISH.FNT'):read(name)
     ref=EquipmentReference(exe);ref.prepare(game_dir,start)
     renderer=OriginalSpriteRenderer(exe);verified=0;images={}
-    wanted={'imenu-'+str(i) for i in (70,96,231,232,233,*range(17,53),*range(236,239))}
+    wanted={'imenu-'+str(i) for i in (70,96,231,232,233,234,235,*range(17,53),*range(236,239))}
     wanted|={'common-'+str(r['icon']) for r in weapons+items};wanted.add('kaman-6')
     wanted|={f'person-{i}-6' for i in range(1,11)}
     for name in sorted(wanted):
@@ -89,9 +89,13 @@ def extract(game_dir,output_root,executable=None):
         ref.byte(0x163c,0)
         e=[e for e in ref.invoke(0x156f8,0,slot) if e['kind']=='image'][-1]
         cursors.append([e['x'],e['y']])
+    tabs=[]
+    for tab in range(3):
+        e=[e for e in ref.invoke(0x151b8,tab,0) if e['kind']=='image'][-1]
+        tabs.append([e['x'],e['y']])
     result=dict(weapons=weapons,items=items,rects=rects,palette=[v*4 for v in palette],sources=sources,
         native_sprite_pixels=verified,eligible=eligible,stat_layout=[e for e in trace if e['kind']=='number'],empty_weapon=empty_weapon,empty_items=empty_items,
-        characters=characters,slot_navigation=nav,slot_cursors=cursors)
+        characters=characters,slot_navigation=nav,slot_cursors=cursors,home_tabs=tabs)
     (directory/'equipment.json').write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n')
     cases=[]
     for n,item in enumerate(eligible):

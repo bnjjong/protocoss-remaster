@@ -64,6 +64,30 @@ class Equipment(val data:JsonValue) {
         calculate(bytes,character)
         return DosSave.parse(bytes)
     }
+    /** 원작 0x16658: 머리·몸·무기·방패만 해제하며 장신구·구슬·이동 속도는 유지한다. */
+    fun autoUnequip(save:DosSave,character:Int=0):DosSave {
+        require(character in party(save))
+        val bytes=save.bytes()
+        for(slot in 0..3) {
+            val offset=473+153*character+slot;val old=bytes[offset].toInt() and 255
+            if(old!=255) { require(old in weapons.indices);bytes[162+old]=(bytes[162+old]+1).toByte();bytes[offset]=(-1).toByte() }
+        }
+        calculate(bytes,character)
+        return DosSave.parse(bytes)
+    }
+    /** 원작 0x166D0: 슬롯 순서대로 여섯 보정치 합이 양수인 장비를 고른다. 동점은 작은 ID가 우선이다. */
+    fun autoEquip(save:DosSave,character:Int=0):DosSave {
+        var current=autoUnequip(save,character)
+        for(slot in 0..3) {
+            var best:Item?=null;var score=0
+            for(item in candidates(current,character,slot)) {
+                val value=item.stats.sum()
+                if(value>score && canEquip(current,item.id,character,slot)) { best=item;score=value }
+            }
+            if(best!=null) current=equip(current,best.id,character,slot)
+        }
+        return current
+    }
     fun preview(save:DosSave,id:Int,character:Int=0,slot:Int=2):IntArray {
         require(candidates(save,character,slot).any { it.id==id })
         return calculate(save.bytes(),character,id,slot,true)
