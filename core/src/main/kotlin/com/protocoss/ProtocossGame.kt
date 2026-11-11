@@ -19,6 +19,8 @@ import com.protocoss.dialogue.DialogueRepository
 import com.protocoss.dialogue.FontManager
 import com.protocoss.map.OriginalMapData
 import com.protocoss.menu.GameMenu
+import com.protocoss.menu.EquipmentRenderer
+import com.protocoss.menu.WeaponMenu
 import com.protocoss.save.DosSave
 import com.protocoss.save.SaveRepository
 import com.protocoss.map.FieldBounds
@@ -51,7 +53,7 @@ class ProtocossGame(
     private val originalDirectory: Path? = defaultOriginalDirectory(),
     saveDirectory: Path = Path.of(System.getProperty("user.home"), "Library/Application Support/Protocoss/Saves")
 ) : ApplicationAdapter() {
-    private enum class Scene { TITLE, PROLOGUE, OPENING, CLIP, FIELD, PAUSE, LOAD, SAVE, CONFIRM_SAVE, CONFIRM_TITLE }
+    private enum class Scene { TITLE, PROLOGUE, OPENING, CLIP, FIELD, PAUSE, LOAD, SAVE, CONFIRM_SAVE, CONFIRM_TITLE, WEAPON, INVENTORY }
     private var scene = Scene.TITLE
     private var selected = 0
     private var loadReturn = Scene.TITLE
@@ -59,6 +61,12 @@ class ProtocossGame(
     private var message = "방향키 선택 · Enter 확인 · Esc 뒤로"
     private val saves = SaveRepository(saveDirectory, originalDirectory)
     private lateinit var menu: GameMenu
+    private lateinit var equipmentRenderer:EquipmentRenderer
+    private lateinit var equipmentSounds:Map<Int,com.badlogic.gdx.audio.Sound>
+    private var weaponMenu=WeaponMenu()
+    private var inventoryEquipment=false
+    private var inventorySelection=0
+    private var inventoryScroll=0
     private var session: DosSave? = null
     private var pendingSlot = 0
     private var prologue: ProloguePlayer? = null
@@ -128,6 +136,8 @@ class ProtocossGame(
 
         fontManager = FontManager()
         menu = GameMenu(fontManager)
+        equipmentRenderer=EquipmentRenderer()
+        equipmentSounds=listOf(8,12,13).associateWith { Gdx.audio.newSound(Gdx.files.internal("assets/audio/sfx/e${it.toString().padStart(4,'0')}.wav")) }
         dialogueRepository = DialogueRepository()
         loadDialogueScripts()
         dialogueManager = DialogueManager()
@@ -216,7 +226,9 @@ class ProtocossGame(
                 openingRenderer.update(delta)
                 if (player.isMoving) walkingTime += delta else walkingTime = 0f
             }
-        } else handleMenuInput()
+        } else if(scene==Scene.WEAPON) handleWeaponInput()
+        else if(scene==Scene.INVENTORY) handleInventoryInput()
+        else handleMenuInput()
         if(scene == Scene.TITLE && openingMusic != null) { openingMusic?.dispose();openingMusic=null }
         // 메뉴 확인에 쓴 Enter·Space가 필드의 대화·이동으로 전달되지 않는다.
         if (!wasField && scene == Scene.FIELD) updateFieldView(0f)
@@ -336,6 +348,8 @@ class ProtocossGame(
         openingMusic?.dispose()
         batch.dispose()
         menu.dispose()
+        equipmentRenderer.dispose()
+        equipmentSounds.values.forEach { it.dispose() }
         debugFont.dispose()
         fontManager.dispose()
         dialogueBox.dispose()
@@ -563,12 +577,14 @@ class ProtocossGame(
     private fun fieldDialogueReady()=fieldDialogue?.let { it.npcIndex<0 || fieldNpcs?.talkReady==true } ?: false
 
     private fun renderMenu() {
+        if(scene==Scene.WEAPON) { equipmentRenderer.weapon(batch,session!!,weaponMenu);return }
+        if(scene==Scene.INVENTORY) { equipmentRenderer.inventory(batch,session!!,inventoryEquipment,inventorySelection,inventoryScroll);return }
         if (scene == Scene.TITLE) {
             menu.title(batch, selected)
             return
         }
         val rows = when (scene) {
-            Scene.PAUSE -> listOf("계속하기", "저장하기", "불러오기", "메인 화면")
+            Scene.PAUSE -> listOf("계속하기", "저장하기", "불러오기", "메인 화면", "소지품", "무기 장비")
             Scene.LOAD, Scene.SAVE -> entries.map {
                 "${it.label}  ${it.error ?: it.save?.location?.take(17) ?: "빈 저장 공간"}"
             }
@@ -588,7 +604,7 @@ class ProtocossGame(
     private fun handleMenuInput() {
         val count = when (scene) {
             Scene.TITLE, Scene.CONFIRM_SAVE, Scene.CONFIRM_TITLE -> 2
-            Scene.PAUSE -> 4
+            Scene.PAUSE -> 6
             else -> entries.size
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
@@ -626,6 +642,11 @@ class ProtocossGame(
                 }
                 2 -> openLoad(Scene.PAUSE)
                 3 -> { scene = Scene.CONFIRM_TITLE; selected = 0 }
+                4 -> { scene=Scene.INVENTORY;inventoryEquipment=false;inventorySelection=0;inventoryScroll=0 }
+                5 -> {
+                    if(session!!.bytes()[347].toInt()!=0) { weaponMenu=WeaponMenu();scene=Scene.WEAPON }
+                    else message="카만이 파티에 없습니다."
+                }
             }
             Scene.LOAD -> loadSelected()
             Scene.SAVE -> {
@@ -641,6 +662,36 @@ class ProtocossGame(
             }
             else -> Unit
         }
+    }
+
+    private fun menuConfirmed()=Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isKeyJustPressed(Input.Keys.SPACE)
+
+    private fun handleWeaponInput() {
+        if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            equipmentSounds.getValue(8).play()
+            if(weaponMenu.back()) { scene=Scene.PAUSE;selected=5 }
+            return
+        }
+        val choices=equipmentRenderer.model.candidates(session!!)
+        if(Gdx.input.isKeyJustPressed(Input.Keys.UP)) { weaponMenu.move(-1,choices.size);equipmentSounds.getValue(12).play() }
+        if(Gdx.input.isKeyJustPressed(Input.Keys.DOWN)) { weaponMenu.move(1,choices.size);equipmentSounds.getValue(12).play() }
+        if(menuConfirmed()) {
+            val blocked=weaponMenu.stage==WeaponMenu.Stage.SELECT && choices.isNotEmpty() && !equipmentRenderer.model.canEquip(session!!,choices[weaponMenu.selected].id)
+            equipmentSounds.getValue(if(blocked || (weaponMenu.stage==WeaponMenu.Stage.SELECT && choices.isEmpty()))13 else 8).play()
+            session=weaponMenu.confirm(equipmentRenderer.model,session!!)
+        }
+    }
+
+    private fun handleInventoryInput() {
+        if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) { scene=Scene.PAUSE;selected=4;return }
+        if(Gdx.input.isKeyJustPressed(Input.Keys.LEFT) || Gdx.input.isKeyJustPressed(Input.Keys.RIGHT)) {
+            inventoryEquipment=!inventoryEquipment;inventorySelection=0;inventoryScroll=0
+        }
+        val count=equipmentRenderer.model.inventory(session!!,inventoryEquipment).size
+        if(count==0) return
+        if(Gdx.input.isKeyJustPressed(Input.Keys.UP)) inventorySelection=(inventorySelection-1).coerceAtLeast(0)
+        if(Gdx.input.isKeyJustPressed(Input.Keys.DOWN)) inventorySelection=(inventorySelection+1).coerceAtMost(count-1)
+        inventoryScroll=inventoryScroll.coerceIn((inventorySelection-5).coerceAtLeast(0),inventorySelection)
     }
 
     private fun openLoad(returnTo: Scene) {

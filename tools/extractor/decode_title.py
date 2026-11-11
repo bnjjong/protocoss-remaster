@@ -39,7 +39,7 @@ def decode_img_frame(data):
     for plane in range(4):
         columns = byte()
         if columns == 0:
-            break
+            continue
         width = max(width, plane + (columns - 1) * 4 + 1)
         for column in range(columns):
             spans = byte()
