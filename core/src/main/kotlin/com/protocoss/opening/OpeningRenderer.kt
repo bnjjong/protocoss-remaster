@@ -49,7 +49,20 @@ class OpeningRenderer(timeline: OpeningTimeline) : Disposable {
     private val indoorGlyphs=indoorFontData.getString("characters").mapIndexed { i,c->
         c to TextureRegion(indoorFont,i%16*16,i/16*16,indoorFontData.get("widths").getInt(c.toString()),16)
     }.toMap()
-    private val glyphs = characters.mapIndexed { index, c -> c to TextureRegion(font,index%16*16,index/16*16,
+    private val rewardData=com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/ui/rewards/rewards.json").readString("UTF-8"))
+    private val rewardFont=Texture(Gdx.files.internal("assets/ui/rewards/font.png")).also {
+        it.setFilter(Texture.TextureFilter.Nearest,Texture.TextureFilter.Nearest);textures+=it
+    }
+    private val rewardGlyphs=rewardData.get("font").getString("characters").mapIndexed { i,c ->
+        c to TextureRegion(rewardFont,i%16*16,i/16*16,rewardData.get("font").get("widths").getInt(c.toString()),16)
+    }.toMap()
+    private val equipmentData=com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/ui/equipment/equipment.json").readString("UTF-8"))
+    private val equipmentAtlas=Texture(Gdx.files.internal("assets/ui/equipment/atlas.png")).also {
+        it.setFilter(Texture.TextureFilter.Nearest,Texture.TextureFilter.Nearest);textures+=it
+    }
+    private val equipmentRegions=equipmentData.get("rects").associate { it.name to TextureRegion(equipmentAtlas,it[0].asInt(),it[1].asInt(),it[2].asInt(),it[3].asInt()) }
+    private val equipmentGlyphs=equipmentRegions.filterKeys { it.startsWith("glyph-") }.mapKeys { it.key.substring(6).toInt().toChar() }
+    private val glyphs = equipmentGlyphs+rewardGlyphs+characters.mapIndexed { index, c -> c to TextureRegion(font,index%16*16,index/16*16,
         data.get("font").get("widths").getInt(c.toString()),16) }.toMap()+indoorGlyphs
     private val mapTicks = mutableMapOf<Int, Int>()
     private val cells = mapNumbers.associateWith { number ->
@@ -120,12 +133,19 @@ class OpeningRenderer(timeline: OpeningTimeline) : Disposable {
     }
 
     fun renderFieldDialogue(batch:SpriteBatch,number:Int,sx:Float,sy:Float,npcs:List<FieldNpcs.Actor>,
-                            heroX:Float,heroY:Float,pose:Int,layer:Int,page:JsonValue,visible:Int,rewardX:Float=14f) {
+                            heroX:Float,heroY:Float,pose:Int,layer:Int,page:JsonValue,visible:Int,rewardX:Float=14f,rewardLeaving:Boolean=false) {
         dialoguePass=true;passMap=number
         renderMap(batch,number,sx,sy)
         renderFieldActors(batch,number,sx,sy,heroX,heroY,pose,layer,npcs)
         dialoguePass=false
-        renderDialogueText(batch,page,visible,rewardX)
+        renderDialogueText(batch,page,visible,rewardX,rewardLeaving)
+    }
+
+    fun renderFieldPanel(batch:SpriteBatch,number:Int,sx:Float,sy:Float,npcs:List<FieldNpcs.Actor>,
+                         heroX:Float,heroY:Float,pose:Int,layer:Int,rectangle:IntArray) {
+        dialoguePass=true;passMap=number;clipBottom=(200-rectangle[1]-rectangle[3]).toFloat();clipTop=(200-rectangle[1]).toFloat()
+        renderMap(batch,number,sx,sy);renderFieldActors(batch,number,sx,sy,heroX,heroY,pose,layer,npcs)
+        dialoguePass=false;clipBottom=26f;clipTop=66f
     }
 
     /** 인물을 그린 직후에 해당 인물의 높이에 따른 지형 가림을 적용한다. */
@@ -145,7 +165,19 @@ class OpeningRenderer(timeline: OpeningTimeline) : Disposable {
         }
     }
 
-    private fun renderDialogueText(batch:SpriteBatch,page:JsonValue,visible:Int,rewardX:Float=14f) {
+    private fun renderDialogueText(batch:SpriteBatch,page:JsonValue,visible:Int,rewardX:Float=14f,rewardLeaving:Boolean=false) {
+        if(page.getBoolean("native_reward",false)) {
+            val category=page.getInt("category")
+            if(category<2) {
+                val icon=equipmentRegions.getValue("common-${page.getInt("icon")}")
+                val top=if(rewardLeaving || category==0) 136f else 134f
+                val first=maxOf(0,kotlin.math.ceil((-16f-rewardX-16f)/20f).toInt())
+                val last=minOf(page.getInt("count")-1,kotlin.math.floor((318f-rewardX-16f)/20f).toInt())
+                for(i in first..last) batch.draw(icon,rewardX+16f+i*20f,200f-top-icon.regionHeight,icon.regionWidth.toFloat(),icon.regionHeight.toFloat())
+            }
+            val top=if(category==2)144f else if(rewardLeaving || category==0)155f else 158f
+            text(batch,page.getString("text"),rewardX,top,Color(252f/255f,252f/255f,252f/255f,1f));return
+        }
         if(page.getString("kind","")=="money") {
             text(batch,page.getString("text"),rewardX,144f,Color(252f/255f,252f/255f,252f/255f,1f))
             return

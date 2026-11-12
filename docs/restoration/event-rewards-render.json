@@ -1,0 +1,325 @@
+{
+  "compared_pixels": 5120000,
+  "scenes": [
+    {
+      "name": "reward-280-category-0-item-38-count-1-panel-0",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-280-category-0-item-38-count-1-panel-1",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-280-category-0-item-38-count-1-panel-2",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-280-category-0-item-38-count-1-panel-3",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-280-category-0-item-38-count-1-panel-4",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-280-category-0-item-38-count-1-arrival",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-280-category-0-item-38-count-1-reward",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-280-category-0-item-38-count-1-exit-0",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-280-category-0-item-38-count-1-exit-1",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-280-category-0-item-38-count-1-exit-3",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-280-category-0-item-38-count-1-exit-7",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-280-category-0-item-38-count-1-panel-5",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-280-category-0-item-38-count-1-panel-6",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-280-category-0-item-38-count-1-panel-7",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-280-category-0-item-38-count-1-panel-8",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-280-category-0-item-38-count-1-panel-9",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-289-category-0-item-0-count-99-panel-0",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-289-category-0-item-0-count-99-panel-1",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-289-category-0-item-0-count-99-panel-2",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-289-category-0-item-0-count-99-panel-3",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-289-category-0-item-0-count-99-panel-4",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-289-category-0-item-0-count-99-arrival",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-289-category-0-item-0-count-99-reward",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-289-category-0-item-0-count-99-exit-0",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-289-category-0-item-0-count-99-exit-1",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-289-category-0-item-0-count-99-exit-3",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-289-category-0-item-0-count-99-exit-7",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-289-category-0-item-0-count-99-panel-5",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-289-category-0-item-0-count-99-panel-6",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-289-category-0-item-0-count-99-panel-7",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-289-category-0-item-0-count-99-panel-8",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-289-category-0-item-0-count-99-panel-9",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-511-category-1-item-174-count-1-panel-0",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-511-category-1-item-174-count-1-panel-1",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-511-category-1-item-174-count-1-panel-2",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-511-category-1-item-174-count-1-panel-3",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-511-category-1-item-174-count-1-panel-4",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-511-category-1-item-174-count-1-arrival",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-511-category-1-item-174-count-1-reward",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-511-category-1-item-174-count-1-exit-0",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-511-category-1-item-174-count-1-exit-1",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-511-category-1-item-174-count-1-exit-3",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-511-category-1-item-174-count-1-exit-7",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-511-category-1-item-174-count-1-panel-5",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-511-category-1-item-174-count-1-panel-6",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-511-category-1-item-174-count-1-panel-7",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-511-category-1-item-174-count-1-panel-8",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-511-category-1-item-174-count-1-panel-9",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-520-category-1-item-0-count-99-panel-0",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-520-category-1-item-0-count-99-panel-1",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-520-category-1-item-0-count-99-panel-2",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-520-category-1-item-0-count-99-panel-3",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-520-category-1-item-0-count-99-panel-4",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-520-category-1-item-0-count-99-arrival",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-520-category-1-item-0-count-99-reward",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-520-category-1-item-0-count-99-exit-0",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-520-category-1-item-0-count-99-exit-1",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-520-category-1-item-0-count-99-exit-3",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-520-category-1-item-0-count-99-exit-7",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-520-category-1-item-0-count-99-panel-5",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-520-category-1-item-0-count-99-panel-6",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-520-category-1-item-0-count-99-panel-7",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-520-category-1-item-0-count-99-panel-8",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-520-category-1-item-0-count-99-panel-9",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-588-category-2-item-0-count-50-panel-0",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-588-category-2-item-0-count-50-panel-1",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-588-category-2-item-0-count-50-panel-2",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-588-category-2-item-0-count-50-panel-3",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-588-category-2-item-0-count-50-panel-4",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-588-category-2-item-0-count-50-arrival",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-588-category-2-item-0-count-50-reward",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-588-category-2-item-0-count-50-exit-0",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-588-category-2-item-0-count-50-exit-1",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-588-category-2-item-0-count-50-exit-3",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-588-category-2-item-0-count-50-exit-7",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-588-category-2-item-0-count-50-panel-5",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-588-category-2-item-0-count-50-panel-6",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-588-category-2-item-0-count-50-panel-7",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-588-category-2-item-0-count-50-panel-8",
+      "pixels": 64000
+    },
+    {
+      "name": "reward-588-category-2-item-0-count-50-panel-9",
+      "pixels": 64000
+    }
+  ]
+}

@@ -40,6 +40,8 @@ import com.protocoss.field.IndoorDialogues
 import com.protocoss.field.SwordStory
 import com.protocoss.field.FieldDialogue
 import com.protocoss.field.PlaceBanner
+import com.protocoss.field.FieldPanel
+import com.protocoss.field.FieldRewards
 import com.protocoss.field.FieldScript
 import com.protocoss.script.EventArchive
 import com.protocoss.script.EventMachine
@@ -103,6 +105,9 @@ class ProtocossGame(
     private lateinit var eventCharacters:Set<Char>
     private var fieldScript:FieldScript?=null
     private var fieldScriptNpc=-1
+    private var fieldScriptDialogue:FieldDialogue?=null
+    private var fieldPanel:FieldPanel?=null
+    private lateinit var fieldRewards:FieldRewards
     private lateinit var cabinInteraction:CabinInteraction
     private lateinit var indoorDialogues:IndoorDialogues
     private var indoorConversation:IndoorDialogues.Conversation?=null
@@ -185,7 +190,9 @@ class ProtocossGame(
             Gdx.files.internal("assets/data/field/$it").readBytes()
         }
         eventArchives=(0..5).associateWith { EventArchive(Gdx.files.internal("assets/data/events/area${it.toString().padStart(2,'0')}.gm").readBytes()) }
-        eventCharacters=(opening.data.get("font").getString("characters")+
+        fieldRewards=FieldRewards(equipmentRenderer.model.data,com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/ui/rewards/rewards.json").readString("UTF-8")))
+        eventCharacters=(equipmentRenderer.model.data.get("rects").filter { it.name.startsWith("glyph-") }.map { it.name.substring(6).toInt().toChar() }.joinToString("")+
+            fieldRewards.data.get("font").getString("characters")+opening.data.get("font").getString("characters")+
             com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/data/field/indoor-dialogues.json").readString("UTF-8")).get("font").getString("characters")).toSet()
         doorSound=Gdx.audio.newSound(Gdx.files.internal("assets/audio/sfx/e0000.wav"))
         loadFieldMap()
@@ -244,6 +251,11 @@ class ProtocossGame(
             if(fieldFade>0f) {
                 fieldMovement?.update(delta,0,false,tick={ x,y -> fieldNpcs?.tick(x,y) }) { false }
                 fieldFade=(fieldFade-delta*70f/64f).coerceAtLeast(0f)
+            }
+            else if(fieldPanel!=null) {
+                fieldMovement?.update(delta,0,false,tick={ x,y -> fieldNpcs?.tick(x,y) }) { false }
+                fieldPanel!!.update(delta);openingRenderer.update(delta)
+                if(fieldPanel!!.finished) { fieldPanel=null;fieldScript!!.resumeService();continueFieldScript() }
             }
             else if(placeBanner!=null) {
                 val banner=placeBanner!!
@@ -349,7 +361,13 @@ class ProtocossGame(
             batch.begin()
             openingRenderer.renderFieldDialogue(batch,session!!.map,camera.position.x-160f,mapHeight-camera.position.y-100f,
                 fieldActors(),player.x-12f,mapHeight-player.y-12f,fieldMovement!!.pose,fieldMovement!!.layer,
-                dialogue.page,dialogue.visibleCharacters,dialogue.rewardX)
+                dialogue.page,dialogue.visibleCharacters,dialogue.rewardX,dialogue.rewardLeaving)
+            batch.end()
+        }
+        fieldPanel?.let { panel ->
+            batch.begin()
+            openingRenderer.renderFieldPanel(batch,session!!.map,camera.position.x-160f,mapHeight-camera.position.y-100f,
+                fieldActors(),player.x-12f,mapHeight-player.y-12f,fieldMovement!!.pose,fieldMovement!!.layer,panel.rectangle)
             batch.end()
         }
         placeBanner?.takeIf { fieldFade<=0f }?.let { banner ->
@@ -499,7 +517,7 @@ class ProtocossGame(
                 val town=FieldDialogue.pages(opening.data,event,session!!.variable(8)).takeIf { session!!.area==0 && session!!.map in setOf(4,12) && session!!.variable(0)==3 }
                 val pages=shop ?: indoor?.pages ?: town
                 if(indoor!=null && pages?.size==0) { session=indoor.finish(session!!.calledEvent(event));return }
-                val script=if(shop==null && pages!=null && pages.size>0) prepareFieldScript(session!!,event,false) else null
+                val script=if(pages!=null && pages.size>0) prepareFieldScript(session!!,event,false) else null
                 if(script!=null) {
                     beginFieldScript(script,index)
                 } else if(pages!=null && pages.size>0) {
@@ -525,13 +543,14 @@ class ProtocossGame(
                 }
             }
         } else if(fieldDialogue!=null && fieldDialogueReady() && talkKey) {
+            val wasLeaving=fieldDialogue!!.rewardLeaving
             fieldDialogue!!.advance()
+            if(!wasLeaving && fieldDialogue!!.rewardLeaving) {
+                movement!!.update(delta,0,false,tick={ x,y -> npcs?.tick(x,y) }) { false }
+                player.setMotion(null,false);return
+            }
             if(fieldDialogue!!.finished) {
-                fieldScript?.let { script ->
-                    val previous=fieldDialogue!!;fieldDialogue=null
-                    script.resumeDialogue();continueFieldScript(previous)
-                    return
-                }
+                if(fieldScript!=null) { finishScriptDialogue();return }
                 if(fieldDialogue!!.npcIndex>=0 && !shopTrading) npcs!!.endTalk()
                 if(shopConversation) session=swordStory.finishShop(session!!)
                 indoorConversation?.let { session=it.finish(session!!) }
@@ -547,8 +566,9 @@ class ProtocossGame(
                 return
             }
         }
+        if(fieldPanel!=null) return
         if(fieldDialogue!=null) {
-            if(fieldDialogue!!.isMoneyReward) {
+            if(fieldScript==null && fieldDialogue!!.isMoneyReward) {
                 session=indoorConversation!!.receive(session!!)
             }
             if(shopConversation && fieldDialogue!!.isReward && !swordReceived) {
@@ -556,6 +576,7 @@ class ProtocossGame(
             }
             movement!!.update(delta,0,false,tick={ x,y -> npcs?.tick(x,y) }) { false }
             if(fieldDialogueReady()) fieldDialogue!!.update(delta)
+            if(fieldScript!=null && fieldDialogue!!.finished) { finishScriptDialogue();return }
             player.setMotion(null,false)
             return
         }
@@ -642,7 +663,7 @@ class ProtocossGame(
                 val m=fieldMovement
                 id==0 && allowWarp && m!=null && m.map==save.map &&
                     fieldRules.canOpenDoor(save.map,m.x,m.y,doorDirection(m),m.layer)
-            }) {
+            },rewards=fieldRewards) {
             Gdx.app.debug("Script","${save.area}/${save.variable(0)}/$event @${it.offset}: ${it.reason}")
         }
     }
@@ -651,7 +672,7 @@ class ProtocossGame(
 
     private fun beginFieldScript(script:FieldScript,npc:Int) {
         check(fieldScript==null)
-        fieldScript=script;fieldScriptNpc=npc
+        fieldScript=script;fieldScriptNpc=npc;fieldScriptDialogue=null
         shopConversation=false;shopTrading=false;indoorConversation=null;swordReceived=false
         if(npc>=0) {
             fieldMovement!!.faceForTalk();fieldNpcs!!.beginTalk(npc,fieldMovement!!.pose)
@@ -659,7 +680,13 @@ class ProtocossGame(
         continueFieldScript()
     }
 
-    private fun continueFieldScript(previous:FieldDialogue?=null) {
+    private fun finishScriptDialogue() {
+        val script=checkNotNull(fieldScript);val previous=checkNotNull(fieldDialogue);fieldDialogue=null
+        if(script.machine.pending is EventMachine.Stop.Reward) script.resumeService() else script.resumeDialogue()
+        continueFieldScript(previous)
+    }
+
+    private fun continueFieldScript(previous:FieldDialogue?=fieldScriptDialogue) {
         val script=fieldScript ?: return
         while(true) {
             val request=script.next();session=script.save
@@ -668,13 +695,23 @@ class ProtocossGame(
                     fieldMovement?.faceForTalk()
                     val pages=EventText.pages(request.bytes())
                     fieldDialogue=if(previous!=null) previous.apply { continueWith(pages) } else FieldDialogue(fieldScriptNpc,pages)
+                    fieldScriptDialogue=fieldDialogue
                     player.setMotion(null,false);return
+                }
+                is EventMachine.Stop.Reward -> {
+                    script.receiveReward(request);session=script.save
+                    val pages=script.rewardPages(request)
+                    fieldDialogue=if(previous!=null) previous.apply { continueWith(pages) } else FieldDialogue(fieldScriptNpc,pages)
+                    fieldScriptDialogue=fieldDialogue;player.setMotion(null,false);return
+                }
+                is EventMachine.Stop.Panel -> {
+                    fieldScriptDialogue=previous;fieldPanel=FieldPanel(fieldRewards.data,request.opening);return
                 }
                 is EventMachine.Stop.Warp -> {
                     script.warp(request)
                     val npc=fieldScriptNpc
                     enterField(script.save,false)
-                    fieldScript=script;fieldScriptNpc=npc
+                    fieldScript=script;fieldScriptNpc=npc;fieldScriptDialogue=previous
                     if(openingMusic==null || activeTrack!=request.music) playOpeningMusic(request.music)
                     fieldFade=1f;return
                 }
@@ -694,7 +731,7 @@ class ProtocossGame(
                 is EventMachine.Stop.Effect -> { check(request.id==0);doorSound.play();script.resumeService() }
                 is EventMachine.Stop.Finished -> {
                     if(fieldScriptNpc>=0) fieldNpcs!!.endTalk()
-                    fieldScript=null;fieldScriptNpc=-1;player.setMotion(null,false);return
+                    fieldScript=null;fieldScriptNpc=-1;fieldScriptDialogue=null;player.setMotion(null,false);return
                 }
                 is EventMachine.Stop.Budget -> return
                 is EventMachine.Stop.Unhandled -> error("사전 검사한 이벤트에서 미지원 명령 ${request.opcode} 발생")
@@ -1042,7 +1079,7 @@ class ProtocossGame(
         camera.position.set((save.scrollX * 8 + 160).toFloat(), map.totalPixelHeight - (save.scrollY * 8 + 100), 0f)
         FieldBounds.constrainCamera(camera, map)
         session = save
-        fieldScript=null;fieldScriptNpc=-1
+        fieldScript=null;fieldScriptNpc=-1;fieldScriptDialogue=null;fieldPanel=null
         shopConversation=false;swordReceived=false
         indoorConversation=null
         if(!preserveField) fieldRules.reset(save.map)

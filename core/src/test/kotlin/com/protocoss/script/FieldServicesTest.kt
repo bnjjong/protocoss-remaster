@@ -57,11 +57,12 @@ class FieldServicesTest {
                 }
             }
             val end=machine.run()
-            if(end is EventMachine.Stop.Door) {
+            if(end is EventMachine.Stop.Door || end is EventMachine.Stop.Panel) {
                 // 이 기록은 문 해석을 추가하기 전 명령 직전에서 멈춘 자료다.
-                assertEquals(0xa,case.get("end").getInt("opcode"))
-                assertEquals(case.get("end").getInt("offset"),end.offset)
-                assertEquals(end.offset+3,machine.offset)
+                val offset=if(end is EventMachine.Stop.Door) end.offset else (end as EventMachine.Stop.Panel).offset
+                assertEquals(if(end is EventMachine.Stop.Door)0xa else if((end as EventMachine.Stop.Panel).opening)0x19 else 0x18,case.get("end").getInt("opcode"))
+                assertEquals(case.get("end").getInt("offset"),offset)
+                assertEquals(offset+if(end is EventMachine.Stop.Door)3 else 1,machine.offset)
                 assertEquals(case.get("end").getLong("instructions")+1,machine.executedInstructions)
                 continue
             }
