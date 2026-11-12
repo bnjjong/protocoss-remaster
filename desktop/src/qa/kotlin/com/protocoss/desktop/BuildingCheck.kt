@@ -73,7 +73,7 @@ private class BuildingApplication(private val saves:Path):ApplicationAdapter() {
         val start=Node(mover.x.roundToInt(),mover.y.roundToInt(),mover.layer)
         val queue=ArrayDeque<Node>();queue+=start;val visited=mutableSetOf(start);val previous=mutableMapOf<Node,Pair<Node,Int>>()
         var path:List<Int>?=null
-        val travel=field<BuildingTravel>("buildingTravel")
+        val travel=BuildingTravel(Gdx.files.internal("assets/data/field/buildings.json").readString())
         search@while(queue.isNotEmpty()) {
             val node=queue.removeFirst()
             for(d in listOf(1,2,4,8)) {
@@ -102,7 +102,9 @@ private class BuildingApplication(private val saves:Path):ApplicationAdapter() {
                 idle(16);route(event,goal);return
             }
         }
-        check(scene()=="FIELD");idle()
+        check(scene()=="FIELD")
+        if(session().map!=map) check(field<FieldScript?>("fieldScript")!=null) { "건물 출입이 공통 이벤트 실행기에 연결되지 않았습니다." }
+        idle()
     }
     private fun capture(name:String) {
         val map=session().map;val source=data().get("maps").get(map.toString());val width=source.getInt("width")*8;val height=source.getInt("height")*8

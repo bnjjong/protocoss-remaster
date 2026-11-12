@@ -12,6 +12,11 @@ class FieldDialogue(val npcIndex:Int, private val pages:JsonValue) {
     val isReward get()=page.getString("kind","")=="reward" || isMoneyReward
     var rewardX=334f; private set
     val pageComplete get()=if(isReward) rewardX<=14f else visibleCharacters>=page.getString("text").length
+    fun continueWith(next:JsonValue) {
+        check(finished && next.size>0)
+        for(page in next) pages.addChild(com.badlogic.gdx.utils.JsonReader().parse(page.toJson(com.badlogic.gdx.utils.JsonWriter.OutputType.json)))
+        pageIndex++;visibleCharacters=0;finished=false;accumulator=0f;rewardX=334f
+    }
     private var accumulator=0f
     fun update(delta:Float) {
         accumulator+=delta*70f
