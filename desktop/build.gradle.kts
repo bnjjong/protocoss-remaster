@@ -34,6 +34,14 @@ val qa by sourceSets.creating {
     runtimeClasspath += output + compileClasspath
 }
 
+tasks.register<JavaExec>("verifyActorDepth") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.ActorDepthCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}
+
 tasks.register<JavaExec>("verifyFieldBounds") {
     dependsOn(qa.classesTaskName)
     classpath = qa.runtimeClasspath

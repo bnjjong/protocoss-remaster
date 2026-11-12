@@ -305,28 +305,20 @@ class ProtocossGame(
             )
         }
 
-        // 2. 플레이어 렌더링
+        // 2. 인물 렌더링
         val mapHeight = tileMap?.totalPixelHeight ?: 200f
         val mapNumber = session?.map
-        if (session?.area == 0 && mapNumber in 0..12) {
-            val npcs=fieldNpcs
-            if(npcs!=null) npcs.actors.forEach { npc ->
-                openingRenderer.renderActor(batch,npc.sprite,npc.frame,npc.x.toFloat(),200f-mapHeight+npc.y)
-                openingRenderer.coverActor(batch,mapNumber!!,npc.x.toFloat(),npc.y.toFloat(),0f,mapHeight-200f,npc.mask)
-            } else opening.data.get("maps").get(mapNumber.toString()).get("npcs").forEach { npc ->
-                openingRenderer.renderActor(batch,npc.getInt("sprite"),npc.getInt("frame"),npc.getFloat("x"),200f-mapHeight+npc.getFloat("y"))
-                openingRenderer.coverActor(batch,mapNumber!!,npc.getFloat("x"),npc.getFloat("y"),0f,mapHeight-200f,npc.getInt("mask"))
-            }
-        }
         val base = when(player.direction) {
             com.protocoss.player.Direction.NORTH -> 0
             com.protocoss.player.Direction.NORTH_EAST, com.protocoss.player.Direction.EAST, com.protocoss.player.Direction.SOUTH_EAST -> 4
             com.protocoss.player.Direction.SOUTH -> 8
             else -> 12
         }
-        openingRenderer.renderActor(batch,0,(if(player.isMoving) base+(walkingTime*9).toInt()%4 else fieldMovement?.pose ?: base),player.x-12f,188f-player.y)
-        if (session?.area == 0 && mapNumber in 0..12)
-            openingRenderer.coverActor(batch,mapNumber!!,player.x-12f,mapHeight-player.y-12f,0f,mapHeight-200f,fieldMovement?.layer ?: 0)
+        val pose=if(player.isMoving) base+(walkingTime*9).toInt()%4 else fieldMovement?.pose ?: base
+        if (session?.area == 0 && mapNumber in 0..12) {
+            openingRenderer.renderFieldActors(batch,mapNumber!!,0f,mapHeight-200f,
+                player.x-12f,mapHeight-player.y-12f,pose,fieldMovement?.layer ?: 0,fieldNpcs?.actors)
+        } else openingRenderer.renderActor(batch,0,pose,player.x-12f,188f-player.y)
 
         batch.end()
 

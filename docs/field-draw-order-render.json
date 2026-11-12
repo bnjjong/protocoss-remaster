@@ -1,0 +1,451 @@
+{
+  "compared_pixels": 5696000,
+  "scenes": [
+    {
+      "name": "map-2-npc-0-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 85
+    },
+    {
+      "name": "map-2-npc-0-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 61
+    },
+    {
+      "name": "map-2-npc-0-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-4-npc-0-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 169
+    },
+    {
+      "name": "map-4-npc-0-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 223
+    },
+    {
+      "name": "map-4-npc-1-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 159
+    },
+    {
+      "name": "map-4-npc-1-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 150
+    },
+    {
+      "name": "map-4-npc-1-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-4-npc-2-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 177
+    },
+    {
+      "name": "map-4-npc-2-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-4-npc-2-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-4-npc-3-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 163
+    },
+    {
+      "name": "map-4-npc-3-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 220
+    },
+    {
+      "name": "map-4-npc-3-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-4-npc-4-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 15
+    },
+    {
+      "name": "map-4-npc-4-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-4-npc-4-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-4-npc-5-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 128
+    },
+    {
+      "name": "map-4-npc-5-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 189
+    },
+    {
+      "name": "map-4-npc-5-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-4-npc-6-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 144
+    },
+    {
+      "name": "map-4-npc-6-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 206
+    },
+    {
+      "name": "map-4-npc-6-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-5-npc-0-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 170
+    },
+    {
+      "name": "map-5-npc-0-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 155
+    },
+    {
+      "name": "map-5-npc-0-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-6-npc-0-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 167
+    },
+    {
+      "name": "map-6-npc-0-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 203
+    },
+    {
+      "name": "map-6-npc-0-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-7-npc-0-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 180
+    },
+    {
+      "name": "map-7-npc-0-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 181
+    },
+    {
+      "name": "map-7-npc-0-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-7-npc-1-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 178
+    },
+    {
+      "name": "map-7-npc-1-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 235
+    },
+    {
+      "name": "map-7-npc-1-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-8-npc-0-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 178
+    },
+    {
+      "name": "map-8-npc-0-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-8-npc-0-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-8-npc-1-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 144
+    },
+    {
+      "name": "map-8-npc-1-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-8-npc-1-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-8-npc-2-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 134
+    },
+    {
+      "name": "map-8-npc-2-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 201
+    },
+    {
+      "name": "map-8-npc-2-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-10-npc-0-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 164
+    },
+    {
+      "name": "map-10-npc-0-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 195
+    },
+    {
+      "name": "map-10-npc-0-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-11-npc-0-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 138
+    },
+    {
+      "name": "map-11-npc-0-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 190
+    },
+    {
+      "name": "map-11-npc-0-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-12-npc-0-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 169
+    },
+    {
+      "name": "map-12-npc-0-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 223
+    },
+    {
+      "name": "map-12-npc-1-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 132
+    },
+    {
+      "name": "map-12-npc-1-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-12-npc-1-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-12-npc-2-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 159
+    },
+    {
+      "name": "map-12-npc-2-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-12-npc-2-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-12-npc-3-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 128
+    },
+    {
+      "name": "map-12-npc-3-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 189
+    },
+    {
+      "name": "map-12-npc-3-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "map-12-npc-4-y--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 140
+    },
+    {
+      "name": "map-12-npc-4-y-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 213
+    },
+    {
+      "name": "map-12-npc-4-y-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "empty-cabin",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 0
+    },
+    {
+      "name": "cluster-equal-y-layers",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 270
+    },
+    {
+      "name": "cluster-crossing--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 298
+    },
+    {
+      "name": "cluster-crossing--7",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 277
+    },
+    {
+      "name": "cluster-crossing--6",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 286
+    },
+    {
+      "name": "cluster-crossing--5",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 289
+    },
+    {
+      "name": "cluster-crossing--4",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 288
+    },
+    {
+      "name": "cluster-crossing--3",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 288
+    },
+    {
+      "name": "cluster-crossing--2",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 288
+    },
+    {
+      "name": "cluster-crossing--1",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 288
+    },
+    {
+      "name": "cluster-crossing-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 270
+    },
+    {
+      "name": "cluster-crossing-1",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 53
+    },
+    {
+      "name": "cluster-crossing-2",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 63
+    },
+    {
+      "name": "cluster-crossing-3",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 71
+    },
+    {
+      "name": "cluster-crossing-4",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 79
+    },
+    {
+      "name": "cluster-crossing-5",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 88
+    },
+    {
+      "name": "cluster-crossing-6",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 98
+    },
+    {
+      "name": "cluster-crossing-7",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 108
+    },
+    {
+      "name": "cluster-crossing-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 115
+    },
+    {
+      "name": "dialogue-cluster--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 298
+    },
+    {
+      "name": "dialogue-cluster-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 270
+    },
+    {
+      "name": "dialogue-cluster-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 115
+    },
+    {
+      "name": "banner-cluster--8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 291
+    },
+    {
+      "name": "banner-cluster-0",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 266
+    },
+    {
+      "name": "banner-cluster-8",
+      "pixels": 64000,
+      "legacy_order_different_pixels": 115
+    }
+  ],
+  "legacy_order_different_pixels": 11127
+}

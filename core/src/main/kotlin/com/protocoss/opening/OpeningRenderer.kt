@@ -9,6 +9,7 @@ import com.badlogic.gdx.utils.Disposable
 import com.badlogic.gdx.utils.JsonValue
 import kotlin.math.floor
 import com.protocoss.field.FieldNpcs
+import com.protocoss.field.FieldDrawOrder
 
 /** 위에서 아래로 기록된 원작 좌표를 320×200 화면에 그린다. 필드와 전투 그림을 구분한다. */
 class OpeningRenderer(timeline: OpeningTimeline) : Disposable {
@@ -20,6 +21,9 @@ class OpeningRenderer(timeline: OpeningTimeline) : Disposable {
         it.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest); textures += it
     }
     private val mapNumbers = data.get("maps").map { it.name.toInt() }
+    private val staticNpcs = mapNumbers.associateWith { number ->
+        data.get("maps").get(number.toString()).get("npcs").map { FieldNpcs.Actor(it) }
+    }
     private val people = texture("people.png")
     private val darkPeople = mapNumbers.associateWith { texture("people-dialogue-$it.png") }
     private val darkFronts = mapNumbers.associateWith { texture("fronts-dialogue-$it.png") }
@@ -110,15 +114,7 @@ class OpeningRenderer(timeline: OpeningTimeline) : Disposable {
                           heroX:Float,heroY:Float,pose:Int,layer:Int,npcs:List<FieldNpcs.Actor>?=null) {
         dialoguePass=true;passMap=number;clipBottom=176f;clipTop=196f
         renderMap(batch,number,sx,sy)
-        if(npcs!=null) npcs.forEach { npc ->
-            renderActor(batch,npc.sprite,npc.frame,npc.x-sx,npc.y-sy)
-            coverActor(batch,number,npc.x.toFloat(),npc.y.toFloat(),sx,sy,npc.mask)
-        } else map(number).get("npcs").forEach { npc ->
-            renderActor(batch,npc.getInt("sprite"),npc.getInt("frame"),npc.getFloat("x")-sx,npc.getFloat("y")-sy)
-            coverActor(batch,number,npc.getFloat("x"),npc.getFloat("y"),sx,sy,npc.getInt("mask"))
-        }
-        renderActor(batch,0,pose,heroX-sx,heroY-sy)
-        coverActor(batch,number,heroX,heroY,sx,sy,layer)
+        renderFieldActors(batch,number,sx,sy,heroX,heroY,pose,layer,npcs)
         dialoguePass=false;clipBottom=26f;clipTop=66f
         text(batch,name,x,7f,Color(252f/255f,252f/255f,252f/255f,1f))
     }
@@ -127,14 +123,26 @@ class OpeningRenderer(timeline: OpeningTimeline) : Disposable {
                             heroX:Float,heroY:Float,pose:Int,layer:Int,page:JsonValue,visible:Int,rewardX:Float=14f) {
         dialoguePass=true;passMap=number
         renderMap(batch,number,sx,sy)
-        npcs.forEach { npc ->
-            renderActor(batch,npc.sprite,npc.frame,npc.x-sx,npc.y-sy)
-            coverActor(batch,number,npc.x.toFloat(),npc.y.toFloat(),sx,sy,npc.mask)
-        }
-        renderActor(batch,0,pose,heroX-sx,heroY-sy)
-        coverActor(batch,number,heroX,heroY,sx,sy,layer)
+        renderFieldActors(batch,number,sx,sy,heroX,heroY,pose,layer,npcs)
         dialoguePass=false
         renderDialogueText(batch,page,visible,rewardX)
+    }
+
+    /** 인물을 그린 직후에 해당 인물의 높이에 따른 지형 가림을 적용한다. */
+    fun renderFieldActors(batch:SpriteBatch,number:Int,sx:Float,sy:Float,
+                          heroX:Float,heroY:Float,pose:Int,layer:Int,npcs:List<FieldNpcs.Actor>?=null) {
+        val actors=npcs ?: staticNpcs.getValue(number)
+        val order=FieldDrawOrder.indices(listOf(heroY)+actors.map { it.y.toFloat() })
+        for(index in order) {
+            if(index==0) {
+                renderActor(batch,0,pose,heroX-sx,heroY-sy)
+                coverActor(batch,number,heroX,heroY,sx,sy,layer)
+            } else {
+                val npc=actors[index-1]
+                renderActor(batch,npc.sprite,npc.frame,npc.x-sx,npc.y-sy)
+                coverActor(batch,number,npc.x.toFloat(),npc.y.toFloat(),sx,sy,npc.mask)
+            }
+        }
     }
 
     private fun renderDialogueText(batch:SpriteBatch,page:JsonValue,visible:Int,rewardX:Float=14f) {
