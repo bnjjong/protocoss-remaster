@@ -8,7 +8,8 @@ class FieldDialogue(val npcIndex:Int, private val pages:JsonValue) {
     val page get()=pages[pageIndex]
     var visibleCharacters=0; private set
     var finished=false; private set
-    val isReward get()=page.getString("kind","")=="reward"
+    val isMoneyReward get()=page.getString("kind","")=="money"
+    val isReward get()=page.getString("kind","")=="reward" || isMoneyReward
     var rewardX=334f; private set
     val pageComplete get()=if(isReward) rewardX<=14f else visibleCharacters>=page.getString("text").length
     private var accumulator=0f
