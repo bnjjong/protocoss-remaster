@@ -38,8 +38,15 @@ class OpeningRenderer(timeline: OpeningTimeline) : Disposable {
     private val overlays = mapNumbers.associateWith { texture("overlays-$it.png") }
     private val spriteRows = data.get("sprites").mapIndexed { index, value -> value.asInt() to index }.toMap()
     private val characters = data.get("font").getString("characters")
+    private val indoorFontData=com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/data/field/indoor-dialogues.json").readString("UTF-8")).get("font")
+    private val indoorFont=Texture(Gdx.files.internal("assets/ui/indoor/font.png")).also {
+        it.setFilter(Texture.TextureFilter.Nearest,Texture.TextureFilter.Nearest);textures+=it
+    }
+    private val indoorGlyphs=indoorFontData.getString("characters").mapIndexed { i,c->
+        c to TextureRegion(indoorFont,i%16*16,i/16*16,indoorFontData.get("widths").getInt(c.toString()),16)
+    }.toMap()
     private val glyphs = characters.mapIndexed { index, c -> c to TextureRegion(font,index%16*16,index/16*16,
-        data.get("font").get("widths").getInt(c.toString()),16) }.toMap()
+        data.get("font").get("widths").getInt(c.toString()),16) }.toMap()+indoorGlyphs
     private val mapTicks = mutableMapOf<Int, Int>()
     private val cells = mapNumbers.associateWith { number ->
         data.get("maps").get(number.toString()).get("cells").map { it[0].asInt() }.toIntArray()
@@ -131,6 +138,10 @@ class OpeningRenderer(timeline: OpeningTimeline) : Disposable {
     }
 
     private fun renderDialogueText(batch:SpriteBatch,page:JsonValue,visible:Int,rewardX:Float=14f) {
+        if(page.getString("kind","")=="money") {
+            text(batch,page.getString("text"),rewardX,144f,Color(252f/255f,252f/255f,252f/255f,1f))
+            return
+        }
         if(page.getString("kind","")=="reward") {
             batch.draw(swordReward,rewardX+16f,66f-swordReward.height,swordReward.width.toFloat(),swordReward.height.toFloat())
             text(batch,page.getString("text"),rewardX,158f,Color(252f/255f,252f/255f,252f/255f,1f))

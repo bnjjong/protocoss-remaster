@@ -172,3 +172,13 @@ tasks.register<JavaExec>("verifyShop") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 실내 주민 대화·여비 지급에서 실제 거래와 저장 재개까지 실행한다.
+tasks.register<JavaExec>("verifyIndoor") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.IndoorCheck")
+    if(project.hasProperty("indoorOnly")) args("--only-indoor")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}

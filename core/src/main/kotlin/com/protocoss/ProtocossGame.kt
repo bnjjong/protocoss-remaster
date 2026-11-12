@@ -37,6 +37,7 @@ import com.protocoss.field.FieldRules
 import com.protocoss.field.FieldMovement
 import com.protocoss.field.FieldNpcs
 import com.protocoss.field.BuildingTravel
+import com.protocoss.field.IndoorDialogues
 import com.protocoss.field.SwordStory
 import com.protocoss.field.FieldDialogue
 import com.protocoss.field.PlaceBanner
@@ -96,6 +97,8 @@ class ProtocossGame(
     private lateinit var openingRenderer: OpeningRenderer
     private lateinit var fieldRules: FieldRules
     private lateinit var buildingTravel: BuildingTravel
+    private lateinit var indoorDialogues:IndoorDialogues
+    private var indoorConversation:IndoorDialogues.Conversation?=null
     private lateinit var swordStory:SwordStory
     private lateinit var shopRenderer:ShopRenderer
     private var shopMenu=ShopMenu()
@@ -169,6 +172,7 @@ class ProtocossGame(
         opening = OpeningTimeline.parse(Gdx.files.internal("assets/opening/opening.json").readString("UTF-8"))
         openingRenderer = OpeningRenderer(opening)
         swordStory=SwordStory(opening.data.get("sword_story"))
+        indoorDialogues=IndoorDialogues(com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/data/field/indoor-dialogues.json").readString("UTF-8")))
         fieldRules = FieldRules(Gdx.files.internal("assets/data/field/field.json").readString()) {
             Gdx.files.internal("assets/data/field/$it").readBytes()
         }
@@ -483,11 +487,15 @@ class ProtocossGame(
             if(index!=null) {
                 val event=npcs.actors[index].event
                 val shop=swordStory.shopPages(session!!,event)
-                val pages=shop ?: FieldDialogue.pages(opening.data,event,session!!.variable(8))
+                val indoor=indoorDialogues.begin(session!!,event)
+                val town=FieldDialogue.pages(opening.data,event,session!!.variable(8)).takeIf { session!!.area==0 && session!!.map in setOf(4,12) && session!!.variable(0)==3 }
+                val pages=shop ?: indoor?.pages ?: town
+                if(indoor!=null && pages?.size==0) { session=indoor.finish(session!!.calledEvent(event));return }
                 if(pages!=null && pages.size>0) {
                     movement.faceForTalk()
                     npcs.beginTalk(index,movement.pose)
                     fieldDialogue=FieldDialogue(index,pages)
+                    indoorConversation=indoor
                     shopConversation=shop!=null;shopTrading=shop!=null && session!!.variable(8)>=4;swordReceived=false
                     session=session!!.calledEvent(event)
                 }
@@ -497,6 +505,8 @@ class ProtocossGame(
             if(fieldDialogue!!.finished) {
                 if(fieldDialogue!!.npcIndex>=0 && !shopTrading) npcs!!.endTalk()
                 if(shopConversation) session=swordStory.finishShop(session!!)
+                indoorConversation?.let { session=it.finish(session!!) }
+                indoorConversation=null
                 shopConversation=false;swordReceived=false
                 fieldDialogue=null
                 if(shopTrading) {
@@ -509,6 +519,9 @@ class ProtocossGame(
             }
         }
         if(fieldDialogue!=null) {
+            if(fieldDialogue!!.isMoneyReward) {
+                session=indoorConversation!!.receive(session!!)
+            }
             if(shopConversation && fieldDialogue!!.isReward && !swordReceived) {
                 session=session!!.receiveRepairedSword();swordReceived=true
             }
@@ -953,6 +966,7 @@ class ProtocossGame(
         FieldBounds.constrainCamera(camera, map)
         session = save
         shopConversation=false;swordReceived=false
+        indoorConversation=null
         if(!preserveField) fieldRules.reset(save.map)
         fieldDialogue=null
         if(!preserveField) fieldNpcs=if(save.area==0 && save.map in 4..12) FieldNpcs(opening.data.get("maps").get(save.map.toString()),npcClock) else null

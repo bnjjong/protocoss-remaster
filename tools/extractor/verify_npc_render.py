@@ -42,7 +42,8 @@ def verify(game_dir, output_root, executable=None, folder=None, report_name='npc
         for sprite,x,y,frame,mask in scene['actors']:
             x-=sx;y-=sy
             if x+24<=0 or y+24<=0 or x>=320 or y>=200:continue
-            if not (0<=x<=296 and 0<=y<=176):raise ValueError(f'비교 장면에 잘린 인물이 있습니다: {scene["name"]} {x,y}')
+            # 원작 352×232 VGA 작업 화면의 16픽셀 여백 안에서는 잘린 인물도 직접 그린다.
+            if not (-16<=x<=312 and -16<=y<=192):raise ValueError(f'원작 작업 화면 밖의 인물: {scene["name"]} {x,y}')
             visible.append(dict(sprite=sprite,x=x,y=y,frame=frame,mask=mask))
         expected,indices=scene_reference(renderer,bytes(cropped),block,dict(actors=visible),blocks,list(data[0x1588:0x1598]),pal)
         if 'page' in scene:
@@ -58,7 +59,7 @@ def verify(game_dir, output_root, executable=None, folder=None, report_name='npc
             elif portrait>=0:
                 decoded=decode_img_frame(common[portrait])
                 expected.alpha_composite(renderer.render(struct.pack('<HH',decoded.width,decoded.height)+common[portrait],palette),(14,62))
-            text_rows=[(page['text'],14,158,(252,252,252))] if page.get('kind')=='reward' else [(page['speaker'],94 if portrait>=0 else 14,118,(252,252,0)),(page['text'][:scene['visible']],14,139,(252,252,252))]
+            text_rows=[(page['text'],14,144 if page.get('kind')=='money' else 158,(252,252,252))] if page.get('kind') in ('reward','money') else [(page['speaker'],94 if portrait>=0 else 14,118,(252,252,0)),(page['text'][:scene['visible']],14,139,(252,252,252))]
             for text,x,y,color in text_rows:
                 left=x
                 for ch in text:
@@ -84,5 +85,6 @@ def verify(game_dir, output_root, executable=None, folder=None, report_name='npc
 
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--game-dir',type=Path,required=True)
-    p.add_argument('--output-root',type=Path,default=Path(__file__).resolve().parents[2]);a=p.parse_args()
-    verify(a.game_dir,a.output_root)
+    p.add_argument('--output-root',type=Path,default=Path(__file__).resolve().parents[2])
+    p.add_argument('--folder',type=Path);p.add_argument('--report-name',default='npc-render-verification.json');a=p.parse_args()
+    verify(a.game_dir,a.output_root,folder=a.folder,report_name=a.report_name)
