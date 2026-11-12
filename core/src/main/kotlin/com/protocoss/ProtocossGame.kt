@@ -618,27 +618,9 @@ class ProtocossGame(
             beginFieldScript(checkNotNull(prepareFieldScript(current,event,true)),-1)
             return true
         }
-        if(current.map==0 && event==0 && current.variable(0)==1 && !movement.doorOpen) {
-            movement.doorOpen=true
-            session=current.calledEvent(0)
-            openingRenderer.openCabinDoor(fieldRules.data.get("door_changes"))
-        }
         if(current.map==2 && event==16 && current.variable(6)==0) {
             startFieldEvent(2,current.travel(1,0,0,72,56,10,0,mapOf(1 to 17,4 to 25,6 to 1)))
             return true
-        }
-        if(current.map in setOf(4,12) && current.variable(0)==3 && (event==0 || event==9)) {
-            val direction=if(movement.direction and 1!=0) 1 else movement.direction
-            val changes=fieldRules.openDoor(current.map,movement.x,movement.y,direction)
-            if(changes!=null) {
-                openingRenderer.changeCells(current.map,changes)
-                fieldNpcs?.changeCells(changes)
-                session=current.calledEvent(event)
-                movement.face(direction)
-                player.setMotion(Direction.NORTH,false)
-                doorSound.play()
-                return true
-            }
         }
         if(current.map==3 && event==2 && current.variable(7)==0) {
             startFieldEvent(4,current.travel(3,0,0,232,120,8,0,mapOf(1 to 3,7 to 1)))
@@ -650,15 +632,22 @@ class ProtocossGame(
         }
         val script=prepareFieldScript(current,event,true) ?: return false
         beginFieldScript(script,-1)
-        return fieldScript!=null
+        return fieldScript!=null || script.openedDoor
     }
 
     private fun prepareFieldScript(save:DosSave,event:Int,allowWarp:Boolean):FieldScript? {
         if(save.area!=0 || save.map !in 0..12) return null
-        return FieldScript.prepare(eventArchives.getValue(save.area),save,event,opening.data.get("maps"),eventCharacters,allowWarp) {
+        return FieldScript.prepare(eventArchives.getValue(save.area),save,event,opening.data.get("maps"),eventCharacters,allowWarp,
+            canOpenDoor={ id ->
+                val m=fieldMovement
+                id==0 && allowWarp && m!=null && m.map==save.map &&
+                    fieldRules.canOpenDoor(save.map,m.x,m.y,doorDirection(m),m.layer)
+            }) {
             Gdx.app.debug("Script","${save.area}/${save.variable(0)}/$event @${it.offset}: ${it.reason}")
         }
     }
+
+    private fun doorDirection(movement:FieldMovement)=if(movement.direction and 1!=0) 1 else movement.direction
 
     private fun beginFieldScript(script:FieldScript,npc:Int) {
         check(fieldScript==null)
@@ -688,6 +677,15 @@ class ProtocossGame(
                     fieldScript=script;fieldScriptNpc=npc
                     if(openingMusic==null || activeTrack!=request.music) playOpeningMusic(request.music)
                     fieldFade=1f;return
+                }
+                is EventMachine.Stop.Door -> {
+                    check(request.id==0)
+                    val m=checkNotNull(fieldMovement);val direction=doorDirection(m)
+                    val changes=checkNotNull(fieldRules.openDoor(m.map,m.x,m.y,direction,m.layer))
+                    openingRenderer.changeCells(m.map,changes);fieldNpcs?.changeCells(changes)
+                    if(m.map==0) m.doorOpen=true
+                    m.finishDoor(direction);player.setMotion(if(direction==1) Direction.NORTH else Direction.SOUTH,false)
+                    doorSound.play();script.resumeDoor(m.pose,m.layer)
                 }
                 is EventMachine.Stop.Place -> {
                     script.place(request);session=script.save

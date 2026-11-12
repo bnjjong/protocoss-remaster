@@ -56,7 +56,16 @@ class FieldServicesTest {
                     else -> fail("외부 명령 종류 불일치: ${context(case)}")
                 }
             }
-            val end=machine.run();snapshot(machine,case.get("end"))
+            val end=machine.run()
+            if(end is EventMachine.Stop.Door) {
+                // 이 기록은 문 해석을 추가하기 전 명령 직전에서 멈춘 자료다.
+                assertEquals(0xa,case.get("end").getInt("opcode"))
+                assertEquals(case.get("end").getInt("offset"),end.offset)
+                assertEquals(end.offset+3,machine.offset)
+                assertEquals(case.get("end").getLong("instructions")+1,machine.executedInstructions)
+                continue
+            }
+            snapshot(machine,case.get("end"))
             if(case.get("end").getString("kind")=="finished") assertIs<EventMachine.Stop.Finished>(end)
             else assertEquals(case.get("end").getInt("opcode"),assertIs<EventMachine.Stop.Unhandled>(end).opcode)
         }

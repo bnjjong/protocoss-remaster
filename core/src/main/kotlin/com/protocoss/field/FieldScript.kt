@@ -15,6 +15,11 @@ class FieldScript(archive:EventArchive,source:DosSave,argument:Int) {
     fun next(maxInstructions:Int=10000)=machine.run(maxInstructions)
     fun resumeDialogue()=machine.resumeDialogue()
     fun resumeService()=machine.resumeService()
+    var openedDoor=false;private set
+    fun resumeDoor(pose:Int=0,layer:Int=save.layer) {
+        require(pose in listOf(0,8))
+        machine.resumeDoor();state=save.withFieldState(layer,pose);openedDoor=true
+    }
     fun warp(request:EventMachine.Stop.Warp) {
         state=save.travel(request.map,request.scrollX,request.scrollY,request.x,request.y,request.pose,request.layer,mapOf(4 to request.music))
         machine.resumeService()
@@ -24,7 +29,7 @@ class FieldScript(archive:EventArchive,source:DosSave,argument:Int) {
     companion object {
         /** 사전 검사는 변수와 저장 사본만 사용한다. 미지원 시 게임·음량·인물 상태를 바꾸지 않는다. */
         fun prepare(archive:EventArchive,source:DosSave,argument:Int,maps:JsonValue,characters:Set<Char>,
-                    allowWarp:Boolean,blocked:(Blocked)->Unit = {}):FieldScript? {
+                    allowWarp:Boolean,canOpenDoor:(Int)->Boolean = { false },blocked:(Blocked)->Unit = {}):FieldScript? {
             val trial=FieldScript(archive,source,argument)
             var warps=0
             fun text(pages:JsonValue) {
@@ -38,13 +43,17 @@ class FieldScript(archive:EventArchive,source:DosSave,argument:Int) {
                     when(val request=trial.next(10000-trial.machine.executedInstructions.toInt())) {
                         is EventMachine.Stop.Dialogue -> { text(EventText.pages(request.bytes()));trial.resumeDialogue() }
                         is EventMachine.Stop.Warp -> {
-                            require(allowWarp && ++warps==1) { "이 호출에서는 이동을 연결하지 않았습니다." }
+                            require(allowWarp && !trial.openedDoor && ++warps==1) { "이 호출에서는 이동을 연결하지 않았습니다." }
                             require(source.area==0) { "이 지역의 필드를 연결하지 않았습니다." }
                             val map=maps.get(request.map.toString()) ?: error("목적지 맵 자산이 없습니다.")
                             require(request.scrollX*8+request.x-16 in 0..map.getInt("width")*8-24 &&
                                 request.scrollY*8+request.y-16 in 0..map.getInt("height")*8-24) { "목적지 인물 좌표가 맵 밖입니다." }
                             require(request.music in setOf(10,24,25)) { "목적지 음악을 연결하지 않았습니다." }
                             trial.warp(request)
+                        }
+                        is EventMachine.Stop.Door -> {
+                            require(request.id==0 && warps==0 && !trial.openedDoor && canOpenDoor(request.id)) { "이 위치의 문 명령을 연결하지 않았습니다." }
+                            trial.resumeDoor()
                         }
                         is EventMachine.Stop.Place -> {
                             val name=EventText.decode(request.bytes())

@@ -25,11 +25,24 @@ class FieldRules(json: String, read: (String) -> ByteArray) {
         m.opened.clear()
     }
 
+    private fun doorIndex(m:MapData,x:Float,y:Float,direction:Int,layer:Int):Int =
+        m.source.get("doors")?.indexOfFirst {
+            it.getInt("x")==floor(x/8).toInt()*8 && it.getInt("y")==floor(y/8).toInt()*8 &&
+                it.getInt("direction")==direction && it.getInt("layer",0)==layer
+        } ?: -1
+
+    /** 사전 확인에서는 문 타일·충돌·열림 기록을 바꾸지 않는다. */
+    fun canOpenDoor(map:Int,x:Float,y:Float,direction:Int,layer:Int):Boolean {
+        val m=maps[map.toString()] ?: return false
+        val index=doorIndex(m,x,y,direction,layer)
+        return index>=0 && index !in m.opened
+    }
+
     /** 문 하나의 원작 타일 변경과 이동 판정만 적용한다. 다른 문은 그대로 둔다. */
-    fun openDoor(map:Int,x:Float,y:Float,direction:Int):JsonValue? {
+    fun openDoor(map:Int,x:Float,y:Float,direction:Int,layer:Int=0):JsonValue? {
         val m=maps[map.toString()] ?: return null
         val doors=m.source.get("doors") ?: return null
-        val selected=doors.indexOfFirst { it.getInt("x")==floor(x/8).toInt()*8 && it.getInt("y")==floor(y/8).toInt()*8 && it.getInt("direction")==direction }
+        val selected=doorIndex(m,x,y,direction,layer)
         if(selected<0 || !m.opened.add(selected)) return null
         val door=doors[selected]
         door.get("movement").forEach { m.movement[it[0].asInt()]=it[1].asInt().toByte() }

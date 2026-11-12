@@ -199,3 +199,12 @@ tasks.register<JavaExec>("verifyCabinInteraction") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 원본 문 명령의 실제 입력·저장·타일·통과 상태를 대조한다.
+tasks.register<JavaExec>("verifyEventDoors") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.EventDoorsCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}

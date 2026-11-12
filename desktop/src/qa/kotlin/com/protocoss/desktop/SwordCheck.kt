@@ -124,7 +124,12 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         for((index,d) in path.withIndex()) {
             val beforeMap=session().map;val beforeX=movement().x;val beforeY=movement().y
             held+=when(d) { 1->Input.Keys.W;2->Input.Keys.D;4->Input.Keys.S;else->Input.Keys.A }
-            if(index==path.lastIndex) tick() else repeat(8) { tick() }
+            if(index==path.lastIndex) tick() else {
+                repeat(8) { tick() }
+                // 문 열기 틱에는 걷지 않으므로 남은 보행을 끝낸 뒤 다음 방향을 입력한다.
+                repeat(8) { if(scene()=="FIELD" && session().map==beforeMap && !movement().atRest) tick() }
+                check(scene()!="FIELD" || session().map!=beforeMap || movement().atRest) { "한 걸음이 끝나지 않았습니다." }
+            }
             held.clear();steps++
             if(index!=path.lastIndex && beforeMap==session().map && movement().x==beforeX && movement().y==beforeY) {
                 idle(16);route(event,goal);return
@@ -858,7 +863,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         check(session().variable(8)==2 && session().bytes()[500].toInt()==1);saveAndReload()
         shopEntry();shopTalk(2,"not-ready-2");check(session().bytes()[162].toInt()==0);route(1)
         route(1);check(session().map==0);banner()
-        route(1);check(scene()=="OPENING");letters++;check(field<Int>("activeTrack")==27);finishScene()
+        route(1);check(scene()=="OPENING") { "쪽지 진입: map=${session().map}, x=${movement().x}, y=${movement().y}, rest=${movement().atRest}, event=${session().variable(1)}, stage=${session().variable(8)}" };letters++;check(field<Int>("activeTrack")==27);finishScene()
         check(session().map==1 && session().variable(8)==3 && session().bytes()[500].toInt()==0)
         check(field<Int>("activeTrack")==25);saveAndReload()
         route(1);check(session().map==0);route(2);check(session().map==12);banner()
