@@ -61,6 +61,7 @@ class EventMachineTest {
                         assertEquals(end.getInt("opcode"),stop.opcode,context);assertSame(stop,machine.run(),context)
                         assertFailsWith<IllegalStateException> { machine.resumeDialogue() };break
                     }
+                    else -> error("필드 명령을 끈 검사에서 외부 요청이 발생했습니다: $context")
                 }
             }
             assertTrue(end.getString("kind") !in setOf("fault","guard"),context)

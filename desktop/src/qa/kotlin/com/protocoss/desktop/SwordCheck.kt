@@ -100,7 +100,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         val start=Node(mover.x.roundToInt(),mover.y.roundToInt(),mover.layer,mover.doorOpen)
         val queue=ArrayDeque<Node>();queue+=start;val visited=mutableSetOf(start);val previous=mutableMapOf<Node,Pair<Node,Int>>()
         var path:List<Int>?=null
-        val travel=field<BuildingTravel>("buildingTravel")
+        val travel=BuildingTravel(Gdx.files.internal("assets/data/field/buildings.json").readString())
         search@while(queue.isNotEmpty()) {
             val node=queue.removeFirst()
             for(d in listOf(1,2,4,8)) {
@@ -211,7 +211,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         route(0) { n,d -> n.x==304 && n.y==144 && d==1 };route(2)
         check(session().map==5);idle()
     }
-    private fun approachShop(target:Int=0) {
+    private fun approachShop(target:Int=0):Boolean {
         val mover=movement();val npcs=field<FieldNpcs>("fieldNpcs");val map=session().map
         val start=Node(mover.x.roundToInt(),mover.y.roundToInt(),mover.layer)
         val queue=ArrayDeque<Node>();queue+=start;val visited=mutableSetOf(start);val prev=mutableMapOf<Node,Pair<Node,Int>>()
@@ -232,11 +232,12 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
                 if(visited.add(next)) { prev[next]=n to d;queue+=next }
             }
         }
-        check(path!=null)
+        if(path==null) return false
         for((index,d) in path.withIndex()) {
             held+=when(d) { 1->Input.Keys.W;2->Input.Keys.D;4->Input.Keys.S;else->Input.Keys.A }
             repeat(if(index==path.lastIndex) 1 else 8) { tick() };held.clear();steps++
         }
+        return true
     }
     private fun shopTalk(stage:Int,label:String) {
         approachShop();val before=movement().x to movement().y;val inventory=session().bytes()[162]
@@ -705,7 +706,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
             var ready=false
             repeat(12) {
                 if(!ready) {
-                    approachShop(target);idle(8)
+                    if(approachShop(target)) idle(8) else idle(16)
                     val m=movement()
                     ready=m.atRest && field<FieldNpcs>("fieldNpcs").talkTarget(m.x,m.y,m.pose,m.layer)==target
                 }
@@ -743,7 +744,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         saveAndReload();check(shop.money(session())==money+35 && session().variable(50)==1)
         route(1);route(5);talk(0,"rondo-repeat",true);check(shop.money(session())==money+35)
         val photographed=mutableSetOf<String>()
-        val travel=field<BuildingTravel>("buildingTravel")
+        val travel=BuildingTravel(Gdx.files.internal("assets/data/field/buildings.json").readString())
         for(row in report.get("cases")) {
             val raw=Base64.getDecoder().decode(row.getString("before"))
             val start=DosSave.parse(raw).travel(12,0,0,88,24,8,0,mapOf(0 to 3))

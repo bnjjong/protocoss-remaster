@@ -90,6 +90,7 @@ private class NpcApplication(private val saves:Path):ApplicationAdapter() {
         load(base.travel(map,sx,sy,spot.first-sx*8+16,spot.second-sy*8+16,spot.third,0,mapOf(0 to 3,4 to 24,7 to 1,8 to stage,99 to 123)))
         val before=position();press(Input.Keys.E)
         check(field<FieldDialogue?>("fieldDialogue")!=null) { "대화 시작 실패: $map $index" }
+        check(field<FieldScript?>("fieldScript")!=null) { "주민 대화가 공통 이벤트 실행기에 연결되지 않았습니다." }
         repeat(100) { if(!field<FieldNpcs>("fieldNpcs").talkReady) tick() }
         check(field<FieldNpcs>("fieldNpcs").talkReady)
         val npcs=field<FieldNpcs>("fieldNpcs");val target=npcs.actors[index]
