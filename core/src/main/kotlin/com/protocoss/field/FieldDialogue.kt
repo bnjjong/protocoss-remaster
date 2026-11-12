@@ -10,21 +10,37 @@ class FieldDialogue(val npcIndex:Int, private val pages:JsonValue) {
     var finished=false; private set
     val isMoneyReward get()=page.getString("kind","")=="money"
     val isReward get()=page.getString("kind","")=="reward" || isMoneyReward
-    var rewardX=334f; private set
+    private val nativeReward get()=page.getBoolean("native_reward",false)
+    var rewardLeaving=false;private set
+    private var exitStep=0
+    private var exitSteps=0
+    var rewardX=if(nativeReward)318f else 334f; private set
     val pageComplete get()=if(isReward) rewardX<=14f else visibleCharacters>=page.getString("text").length
     fun continueWith(next:JsonValue) {
         check(finished && next.size>0)
         for(page in next) pages.addChild(com.badlogic.gdx.utils.JsonReader().parse(page.toJson(com.badlogic.gdx.utils.JsonWriter.OutputType.json)))
-        pageIndex++;visibleCharacters=0;finished=false;accumulator=0f;rewardX=334f
+        pageIndex++;visibleCharacters=0;finished=false;accumulator=0f;rewardX=if(nativeReward)318f else 334f;rewardLeaving=false;exitStep=0
     }
     private var accumulator=0f
     fun update(delta:Float) {
         accumulator+=delta*70f
         val count=accumulator.toInt();accumulator-=count
+        if(nativeReward && rewardLeaving) {
+            exitStep=minOf(exitSteps,exitStep+count);rewardX=14f-16f*minOf(exitStep,exitSteps-1)
+            if(exitStep==exitSteps) finished=true
+            return
+        }
         if(isReward) { rewardX=(rewardX-count*16).coerceAtLeast(14f);visibleCharacters=page.getString("text").length;return }
         visibleCharacters=(visibleCharacters+count).coerceAtMost(page.getString("text").length)
     }
     fun advance() {
+        if(nativeReward) {
+            if(!rewardLeaving) {
+                rewardLeaving=true;rewardX=14f;accumulator=0f;exitStep=0
+                exitSteps=page.getString("text").toByteArray(java.nio.charset.Charset.forName("x-Johab")).size/2+1
+            }
+            return
+        }
         if(!pageComplete) { if(isReward) rewardX=14f;visibleCharacters=page.getString("text").length;return }
         if(pageIndex+1==pages.size) { finished=true;return }
         val previous=page;pageIndex++

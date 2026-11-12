@@ -208,3 +208,12 @@ tasks.register<JavaExec>("verifyEventDoors") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 원작 보상의 모든 품목·수량/소지금 경계와 안내창을 실제 앱에서 확인한다.
+tasks.register<JavaExec>("verifyEventRewards") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.EventRewardsCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}

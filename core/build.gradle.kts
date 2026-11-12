@@ -21,6 +21,8 @@ tasks.test {
     inputs.file(rootProject.file("docs/restoration/event-machine-native.json"))
     inputs.file(rootProject.file("docs/restoration/field-services-native.json"))
     inputs.file(rootProject.file("docs/restoration/event-doors-native.json"))
+    inputs.file(rootProject.file("docs/restoration/event-rewards-native.json"))
+    inputs.dir(rootProject.file("assets/ui/rewards"))
     inputs.file(rootProject.file("docs/field-draw-order-native.json"))
     inputs.file(rootProject.file("docs/npc-native-verification.json"))
     inputs.file(rootProject.file("docs/buildings-native-verification.json"))

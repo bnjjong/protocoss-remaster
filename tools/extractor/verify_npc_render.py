@@ -56,22 +56,32 @@ def verify(game_dir, output_root, executable=None, folder=None, report_name='npc
                 if x-sx+24>0 and y-sy+24>0 and x-sx<320 and y-sy<200]
             _,legacy_indices=scene_reference(renderer,bytes(cropped),block,dict(actors=legacy_visible),blocks,list(data[0x1588:0x1598]),pal)
             legacy_difference=sum(a!=b for a,b in zip(indices,legacy_indices))
-        if 'page' in scene or 'banner' in scene:
+        if 'page' in scene or 'banner' in scene or 'panel' in scene:
             remap=block[68770+4*256:68770+5*256]
-            for y in (range(134,174) if 'page' in scene else range(4,24)):
+            for y in (range(scene['panel'][1],scene['panel'][1]+scene['panel'][3]) if 'panel' in scene else range(134,174) if 'page' in scene else range(4,24)):
                 for x in range(320):
                     index=remap[indices[y*320+x]]
                     expected.putpixel((x,y),tuple(v*4 for v in pal[index*3:index*3+3])+(255,))
             if 'page' in scene:
                 page=scene['page'];portrait=page['portrait']
+                reward_x=scene.get('reward_x',14);leaving=scene.get('reward_leaving',False)
                 if page.get('kind')=='reward':
                     decoded=decode_img_frame(common[page['icon']])
-                    expected.alpha_composite(renderer.render(struct.pack('<HH',decoded.width,decoded.height)+common[page['icon']],palette),(30,134))
+                    icon=renderer.render(struct.pack('<HH',decoded.width,decoded.height)+common[page['icon']],palette)
+                    count=page.get('count',1) if page.get('native_reward') else 1
+                    for i in range(count):
+                        x=reward_x+16+i*20
+                        if page.get('native_reward') and ((leaving and x< -16) or (not leaving and x>318)):continue
+                        if x>=320 or x+icon.width<=0:continue
+                        top=136 if page.get('native_reward') and (leaving or page['category']==0) else 134
+                        expected.alpha_composite(icon,(x,top))
                 elif portrait>=0:
                     decoded=decode_img_frame(common[portrait])
                     expected.alpha_composite(renderer.render(struct.pack('<HH',decoded.width,decoded.height)+common[portrait],palette),(14,62))
-                text_rows=[(page['text'],14,144 if page.get('kind')=='money' else 158,(252,252,252))] if page.get('kind') in ('reward','money') else [(page['speaker'],94 if portrait>=0 else 14,118,(252,252,0)),(page['text'][:scene['visible']],14,139,(252,252,252))]
-            else:text_rows=[(scene['banner']['text'],scene['banner']['x'],7,(252,252,252))]
+                top=144 if page.get('kind')=='money' else 155 if page.get('native_reward') and (leaving or page['category']==0) else 158
+                text_rows=[(page['text'],reward_x,top,(252,252,252))] if page.get('kind') in ('reward','money') else [(page['speaker'],94 if portrait>=0 else 14,118,(252,252,0)),(page['text'][:scene['visible']],14,139,(252,252,252))]
+            elif 'banner' in scene:text_rows=[(scene['banner']['text'],scene['banner']['x'],7,(252,252,252))]
+            else:text_rows=[]
             for text,x,y,color in text_rows:
                 left=x
                 for ch in text:

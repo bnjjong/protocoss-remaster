@@ -8,6 +8,8 @@ class EventMachine(private val archive:EventArchive, initialVariables:IntArray, 
         data class Unhandled(val offset:Int,val opcode:Int):Stop
         data class Warp internal constructor(val offset:Int,val map:Int,val scrollX:Int,val scrollY:Int,
             val x:Int,val y:Int,val pose:Int,val layer:Int,val music:Int,internal val nextOffset:Int):Stop
+        data class Reward internal constructor(val offset:Int,val item:Int,val count:Int,val category:Int,internal val nextOffset:Int):Stop
+        data class Panel internal constructor(val offset:Int,val opening:Boolean,internal val nextOffset:Int):Stop
         data class Door internal constructor(val offset:Int,val id:Int,internal val nextOffset:Int):Stop
         data class Effect internal constructor(val offset:Int,val id:Int,internal val nextOffset:Int):Stop
         class Place internal constructor(val offset:Int,private val encoded:ByteArray,internal val nextOffset:Int):Stop {
@@ -24,6 +26,7 @@ class EventMachine(private val archive:EventArchive, initialVariables:IntArray, 
     private val values=initialVariables.copyOf()
     private val returns=mutableListOf<Int>()
     private var stopped:Stop?=null
+    val pending:Stop? get()=stopped
     var offset:Int;private set
     var executedInstructions=0L;private set
 
@@ -51,6 +54,8 @@ class EventMachine(private val archive:EventArchive, initialVariables:IntArray, 
     fun resumeService() {
         offset=when(val request=stopped) {
             is Stop.Warp -> { values[4]=request.music;request.nextOffset }
+            is Stop.Reward -> request.nextOffset
+            is Stop.Panel -> request.nextOffset
             is Stop.Door -> request.nextOffset
             is Stop.Effect -> request.nextOffset
             is Stop.Place -> request.nextOffset
@@ -75,13 +80,15 @@ class EventMachine(private val archive:EventArchive, initialVariables:IntArray, 
             fun target(value:Int):Int = value.also { archive.byte(it) }
             try {
                 when(opcode) {
-                    2,0xa,0x15,0x17 -> {
+                    2,0xa,0x11,0x15,0x17,0x18,0x19 -> {
                         if(!fieldServices) { stopped=Stop.Unhandled(start,opcode);return stopped!! }
                         when(opcode) {
                             2 -> {
                                 val args=List(8) { word() }
                                 stopped=Stop.Warp(start,args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],cursor)
                             }
+                            0x11 -> { val item=word();val count=word();val category=word();stopped=Stop.Reward(start,item,count,category,cursor) }
+                            0x18,0x19 -> stopped=Stop.Panel(start,opcode==0x19,cursor)
                             0xa -> { val id=word();stopped=Stop.Door(start,id,cursor) }
                             0x15 -> { val id=word();stopped=Stop.Effect(start,id,cursor) }
                             else -> {

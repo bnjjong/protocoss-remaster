@@ -29,12 +29,12 @@ import java.util.Base64
 /** 새 게임부터 검 회수까지 실제 입력으로 진행한다. 원본 폴더와 사용자 저장은 쓰지 않는다. */
 object SwordCheck {
     @JvmStatic fun main(args:Array<String>)=run(false)
-    fun run(equipment:Boolean,party:Boolean=false,automatic:Boolean=false,items:Boolean=false,tent:Boolean=false,shop:Boolean=false,indoor:Boolean=false,cabin:Boolean=false) {
+    fun run(equipment:Boolean,party:Boolean=false,automatic:Boolean=false,items:Boolean=false,tent:Boolean=false,shop:Boolean=false,indoor:Boolean=false,cabin:Boolean=false,rewards:Boolean=false) {
         val saves=Files.createTempDirectory("protocoss-sword-qa-")
         try {
-            val app=SwordApplication(saves,equipment,party,automatic,items,tent,shop,indoor,cabin)
+            val app=SwordApplication(saves,equipment,party,automatic,items,tent,shop,indoor,cabin,rewards)
             Lwjgl3Application(app,Lwjgl3ApplicationConfiguration().apply {
-                setTitle("검 수리 스토리 자동 검사");setWindowedMode(640,400);setInitialVisible(false);useVsync(false);setForegroundFPS(0)
+                setTitle("검 수리 스토리 자동 검사");setWindowPosition(0,0);setWindowedMode(640,400);setInitialVisible(false);useVsync(false);setForegroundFPS(0)
             })
             check(app.completed)
         } finally { Files.walk(saves).use { paths -> paths.sorted(Comparator.reverseOrder()).forEach(Files::delete) } }
@@ -46,11 +46,12 @@ object AutomaticEquipmentCheck { @JvmStatic fun main(args:Array<String>)=SwordCh
 object FieldItemsCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true,true,true) }
 object TentCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true,true,true,true) }
 object ShopCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true,true,true,true,true) }
+object EventRewardsCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(false,rewards=true) }
 object IndoorCheck { @JvmStatic fun main(args:Array<String>) {
     if("--only-indoor" in args) SwordCheck.run(false,indoor=true) else SwordCheck.run(true,true,true,true,true,true,true)
 } }
 object CabinInteractionCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(false,cabin=true) }
-private class SwordApplication(private val saves:Path,private val equipment:Boolean,private val partyEquipment:Boolean,private val automaticEquipment:Boolean,private val fieldItems:Boolean,private val tentEnabled:Boolean,private val shopEnabled:Boolean,private val indoorEnabled:Boolean,private val cabinEnabled:Boolean):ApplicationAdapter() {
+private class SwordApplication(private val saves:Path,private val equipment:Boolean,private val partyEquipment:Boolean,private val automaticEquipment:Boolean,private val fieldItems:Boolean,private val tentEnabled:Boolean,private val shopEnabled:Boolean,private val indoorEnabled:Boolean,private val cabinEnabled:Boolean,private val rewardsEnabled:Boolean):ApplicationAdapter() {
     private val game=ProtocossGame(null,saves)
     private val held=mutableSetOf<Int>();private val pressed=mutableSetOf<Int>()
     private lateinit var input:Input;private lateinit var graphics:Graphics;private lateinit var rules:FieldRules
@@ -64,7 +65,12 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         Gdx.input=input;Gdx.graphics=graphics;game.render();pressed.clear()
         check(music.count { it.isPlaying }<=1) { "실내·마을 음악이 겹쳐 재생됩니다." }
     }
-    private fun press(key:Int) { pressed+=key;tick() }
+    private fun press(key:Int) {
+        pressed+=key;tick()
+        // 원본 안내창·보상의 퇴장 연출이 끝나야 다음 대화나 완료 상태를 확인한다.
+        repeat(128) { if(field<com.protocoss.field.FieldPanel?>("fieldPanel")!=null || field<FieldDialogue?>("fieldDialogue")?.rewardLeaving==true) tick() }
+        check(field<com.protocoss.field.FieldPanel?>("fieldPanel")==null && field<FieldDialogue?>("fieldDialogue")?.rewardLeaving!=true)
+    }
     private fun idle(frames:Int=80) { repeat(frames) { tick() } }
     private fun session()=field<DosSave>("session")
     private fun scene()=field<Any>("scene").toString()
@@ -168,7 +174,11 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
             if(page!=null) {
                 addChild("page",com.badlogic.gdx.utils.JsonReader().parse(page.toJson(JsonWriter.OutputType.json)))
                 addChild("visible",JsonValue((if(cinematic) timeline.visibleCharacters else talk!!.visibleCharacters).toLong()))
+                if(talk?.page?.getBoolean("native_reward",false)==true) {
+                    addChild("reward_x",JsonValue(talk.rewardX.toLong()));addChild("reward_leaving",JsonValue(talk.rewardLeaving))
+                }
             }
+            field<com.protocoss.field.FieldPanel?>("fieldPanel")?.let { panel -> addChild("panel",array(panel.rectangle.toList())) }
         })
     }
     private fun saveAndReload() {
@@ -247,6 +257,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
     private fun shopTalk(stage:Int,label:String) {
         approachShop();val before=movement().x to movement().y;val inventory=session().bytes()[162]
         press(Input.Keys.E);check(field<FieldDialogue?>("fieldDialogue")!=null)
+        if(stage<4) check(field<FieldScript?>("fieldScript")!=null) { "검 수리 대화가 원본 명령을 사용하지 않습니다." }
         var pages=0
         while(field<FieldDialogue?>("fieldDialogue")!=null) {
             val dialogue=field<FieldDialogue>("fieldDialogue");idle(80)
@@ -726,6 +737,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
                 check(scene()=="FIELD" && position==(movement().x to movement().y))
                 if(show) capture("$label-page-$pages","indoor",shots)
                 if(d.isMoneyReward) {
+                    check(field<FieldScript?>("fieldScript")?.machine?.pending is com.protocoss.script.EventMachine.Stop.Reward)
                     gold=true;val money=shop.money(session());check(session().variable(50)==0)
                     idle(140);check(shop.money(session())==money && session().variable(50)==0)
                 }
@@ -771,6 +783,61 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         Gdx.files.local("desktop/build/reports/indoor/scenes.json").writeString(shots.toJson(JsonWriter.OutputType.json),false,"UTF-8")
         load(DosSave.parse(base))
         println("실내 대화 실행 검사: 주민 8명·224분기·첫 여비 50→구입 후 35·저장 재개·반복 무지급·대화 중 필드 잠금, ${shots.size} 화면")
+    }
+    private fun checkEventRewards() {
+        val report=com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.local("docs/restoration/event-rewards-native.json"))
+        val shots=JsonValue(JsonValue.ValueType.array)
+        val archives=field<MutableMap<Int,com.protocoss.script.EventArchive>>("eventArchives");val original=archives.getValue(0)
+        val prepare=ProtocossGame::class.java.getDeclaredMethod("prepareFieldScript",DosSave::class.java,Int::class.javaPrimitiveType,Boolean::class.javaPrimitiveType).apply { isAccessible=true }
+        val begin=ProtocossGame::class.java.getDeclaredMethod("beginFieldScript",FieldScript::class.java,Int::class.javaPrimitiveType).apply { isAccessible=true }
+        var cases=0
+        fun converted(raw:String)=DosSave.parse(Base64.getDecoder().decode(raw)).travel(5,0,0,152,176,0,0,emptyMap())
+        try {
+            for(row in report.get("cases").filter { it.has("raw") }) {
+                val source=converted(row.getString("before"));load(source)
+                archives[0]=com.protocoss.script.EventArchive(Base64.getDecoder().decode(row.getString("raw")))
+                val script=prepare.invoke(game,source,row.getInt("argument"),false) as? FieldScript
+                check(script!=null) { "보상 사전 확인 거부: ${row.getString("name")}" }
+                val request=row.get("requests").first { it.getString("kind")=="reward" }
+                val category=request.getInt("category");val item=request.getInt("item");val count=request.getInt("count")
+                val money=java.nio.ByteBuffer.wrap(source.bytes()).order(java.nio.ByteOrder.LITTLE_ENDIAN).getInt(119)
+                val photograph=(category<2 && item==0 && count==99 && (source.bytes()[if(category==0)123 else 162].toInt() and 255)==0) ||
+                    (category==2 && count==50 && money==0) || (category==0 && item==38 && count==1 && (source.bytes()[123+item].toInt() and 255)==17) || (category==1 && item==174 && count==1 && (source.bytes()[162+item].toInt() and 255)==17)
+                val label="${row.getString("name")}-category-$category-item-$item-count-$count";val position=movement().x to movement().y
+                begin.invoke(game,script,-1)
+                var ticks=0;var panelFrames=0;var exitFrames=0;var arrival=false;var departure=false
+                while(field<FieldScript?>("fieldScript")!=null) {
+                    check(ticks++<200) { "보상 안내가 끝나지 않습니다: $label" }
+                    val panel=field<com.protocoss.field.FieldPanel?>("fieldPanel")
+                    val talk=field<FieldDialogue?>("fieldDialogue")
+                    check(session().variable(99)==123)
+                    if(panel!=null) {
+                        if(photograph) capture("$label-panel-${panelFrames++}","event-rewards",shots)
+                    } else if(talk!=null) {
+                        check(script.machine.pending is com.protocoss.script.EventMachine.Stop.Reward)
+                        check(converted(request.getString("credited")).bytes().contentEquals(session().bytes())) { "보상 지급 불일치: $label" }
+                        if(!talk.rewardLeaving && !arrival && photograph) { capture("$label-arrival","event-rewards",shots);arrival=true }
+                        if(talk.rewardLeaving) {
+                            if(photograph && exitFrames++ in listOf(0,1,3,7)) capture("$label-exit-${exitFrames-1}","event-rewards",shots)
+                        } else if(talk.pageComplete) {
+                            if(!departure) {
+                                if(photograph) capture("$label-reward","event-rewards",shots)
+                                val credited=session().bytes();idle(20);check(credited.contentEquals(session().bytes()));departure=true
+                                pressed+=Input.Keys.ENTER;tick();check(talk.rewardLeaving && talk.rewardX==14f)
+                                continue
+                            }
+                        }
+                    }
+                    held+=Input.Keys.D;pressed+=Input.Keys.ESCAPE;tick();held.clear()
+                    check(scene()=="FIELD" && position==(movement().x to movement().y))
+                }
+                check(departure && converted(row.getString("after")).bytes().contentEquals(session().bytes())) { "보상 종료 불일치: $label" }
+                check(field<FieldDialogue?>("fieldDialogue")==null && field<com.protocoss.field.FieldPanel?>("fieldPanel")==null)
+                cases++
+            }
+        } finally { archives[0]=original }
+        Gdx.files.local("desktop/build/reports/event-rewards/scenes.json").writeString(shots.toJson(JsonWriter.OutputType.json),false,"UTF-8")
+        println("보상 명령 실행 검사: $cases 조합·아이템 39종·장비 175종·수량/소지금 경계·지급/완료 시점·입력 잠금·안내창·퇴장, ${shots.size} 화면")
     }
     private fun checkCabinInteraction() {
         val original=session().bytes();val shots=JsonValue(JsonValue.ValueType.array)
@@ -878,6 +945,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         if(shopEnabled) checkShop()
         if(indoorEnabled) checkIndoor()
         if(cabinEnabled) checkCabinInteraction()
+        if(rewardsEnabled) checkEventRewards()
         Gdx.files.local("desktop/build/reports/sword/scenes.json").writeString(captures.toJson(JsonWriter.OutputType.json),false,"UTF-8")
         println("검 수리 스토리 검사 완료: $steps 걸음, 진행 0→1→2→3→4, 합류·쪽지 각 1회, 맡기기·회수·중복 방지·저장 재개, ${captures.size} 화면")
         completed=true;Gdx.app.exit()

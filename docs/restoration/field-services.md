@@ -84,4 +84,4 @@ python3 tools/extractor/verify_field_services.py --game-dir /path/to/Protocoss_G
 ./gradlew test
 ```
 
-후속 [문 처리](event-doors.md)를 연결했다. 다음은 남은 외부 명령인 **아이템/소지금·연출·파티·시설 처리**를 같은 방식으로 연결하는 단계다. 기존 초반 예외 처리를 줄인 뒤 다음 지역과 첫 전투 진행을 연결한다.
+후속 [문 처리](event-doors.md)를 연결했다. [아이템/소지금 보상과 안내창](event-rewards.md)도 연결했다. 다음은 남은 외부 명령인 **연출·파티·시설 처리**를 같은 방식으로 연결하는 단계다. 기존 초반 예외 처리를 줄인 뒤 다음 지역과 첫 전투 진행을 연결한다.
