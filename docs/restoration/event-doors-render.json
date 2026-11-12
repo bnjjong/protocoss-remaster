@@ -1,0 +1,93 @@
+{
+  "compared_pixels": 1408000,
+  "scenes": [
+    {
+      "name": "map-0-336-216-closed",
+      "pixels": 64000
+    },
+    {
+      "name": "map-0-336-216-opened",
+      "pixels": 64000
+    },
+    {
+      "name": "map-4-304-144-closed",
+      "pixels": 64000
+    },
+    {
+      "name": "map-4-304-144-opened",
+      "pixels": 64000
+    },
+    {
+      "name": "map-4-664-200-closed",
+      "pixels": 64000
+    },
+    {
+      "name": "map-4-664-200-locked",
+      "pixels": 64000
+    },
+    {
+      "name": "map-4-576-432-closed",
+      "pixels": 64000
+    },
+    {
+      "name": "map-4-576-432-opened",
+      "pixels": 64000
+    },
+    {
+      "name": "map-4-192-536-closed",
+      "pixels": 64000
+    },
+    {
+      "name": "map-4-192-536-opened",
+      "pixels": 64000
+    },
+    {
+      "name": "map-4-224-296-closed",
+      "pixels": 64000
+    },
+    {
+      "name": "map-4-224-296-opened",
+      "pixels": 64000
+    },
+    {
+      "name": "map-12-304-144-closed",
+      "pixels": 64000
+    },
+    {
+      "name": "map-12-304-144-opened",
+      "pixels": 64000
+    },
+    {
+      "name": "map-12-224-296-closed",
+      "pixels": 64000
+    },
+    {
+      "name": "map-12-224-296-opened",
+      "pixels": 64000
+    },
+    {
+      "name": "map-12-192-536-closed",
+      "pixels": 64000
+    },
+    {
+      "name": "map-12-192-536-opened",
+      "pixels": 64000
+    },
+    {
+      "name": "map-12-576-432-closed",
+      "pixels": 64000
+    },
+    {
+      "name": "map-12-576-432-opened",
+      "pixels": 64000
+    },
+    {
+      "name": "map-12-664-200-closed",
+      "pixels": 64000
+    },
+    {
+      "name": "map-12-664-200-opened",
+      "pixels": 64000
+    }
+  ]
+}

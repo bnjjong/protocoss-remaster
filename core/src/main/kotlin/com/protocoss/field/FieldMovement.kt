@@ -24,6 +24,12 @@ class FieldMovement(private val rules: FieldRules, val map: Int, var layer: Int,
         pose=when(direction) { 1->0;2->4;4->8;else->12 };moving=false
     }
 
+    /** 원작 0x11CDC는 문 앞 자세를 고정하고 현재 이동 방향을 해제한다. */
+    fun finishDoor(direction:Int) {
+        require(direction in listOf(1,4))
+        face(direction);this.direction=0
+    }
+
     /** 이벤트가 맵을 교체하면 true를 반환하여 남은 프레임의 보행을 중단한다. */
     fun update(delta: Float, input: Int, dash: Boolean, tick: ((Float,Float)->Unit)? = null, event: (Int) -> Boolean): Boolean {
         require(delta.isFinite() && delta >= 0)

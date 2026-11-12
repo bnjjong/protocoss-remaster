@@ -225,6 +225,11 @@ def extract_field(game_directory, output_root, executable=None):
         if changed:
             metadata['door_changes']=[dict(index=i,tid=t,attr=a) for i,((t,a),before) in enumerate(zip(struct.iter_unpack('<HH',changed),struct.iter_unpack('<HH',source[48:48+width*height*4]))) if (t,a)!=before]
         print('원작 이동 판정 추출:',key,len(results),flush=True)
+    # 오두막 문도 마을 문과 같은 명령 실행 경로에서 선택할 수 있게 보존한다.
+    before=(output/metadata['maps']['0']['file']).read_bytes()
+    after=(output/metadata['maps']['0-open']['file']).read_bytes()
+    metadata['maps']['0']['doors']=[dict(x=336,y=216,direction=1,layer=1,
+        changes=metadata['door_changes'],movement=[[i,v] for i,v in enumerate(after) if before[i]!=v])]
     (output/'field.json').write_text(json.dumps(metadata,ensure_ascii=False,separators=(',',':'))+'\n')
     return metadata
 
