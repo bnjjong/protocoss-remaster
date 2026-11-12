@@ -64,7 +64,7 @@ class EquipmentReference(StoryReference):
                 self.return_from(c,4)
             elif address==0x679da:
                 sp=c.reg_read(UC_X86_REG_ESP);dest,fmt=struct.unpack('<II',c.mem_read(sp+4,8));f=string(fmt)
-                values=struct.unpack('<'+'I'*f.count('%'),c.mem_read(sp+12,4*f.count('%')))
+                values=struct.unpack('<'+('i' if getattr(self,'signed_numbers',False) and f=='%d' else 'I')*f.count('%'),c.mem_read(sp+12,4*f.count('%')))
                 c.mem_write(dest,(f%values).encode('cp1361')+b'\0');self.return_from(c)
             elif address==0x148b4:c.reg_write(UC_X86_REG_EAX,next(keys,1));self.return_from(c)
             elif address==0x2b6f0:events.append(dict(kind='effect',id=a));self.return_from(c)
