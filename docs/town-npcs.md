@@ -1,5 +1,7 @@
 # 엘가임 주민의 이동과 대화
 
+인물이 겹칠 때의 앞뒤 표시와 원작 정렬 검증은 후속 [NPC와 카만의 앞뒤 표시](field-draw-order.md)에 기록했다.
+
 엘가임 마을의 주민이 원작에 기록된 범위·속도로 움직이고, 앞에서 Space·Enter·E를 누르면 진행 상태에 맞는 대화를 한다. 대화 상대가 카만 쪽으로 다가와 바라보고, 대화가 끝나면 원래 방향과 동작으로 돌아간다. [Issue #15](https://github.com/bnjjong/protocoss-remaster/issues/15)의 작업이며 [마을 진입 복원](town-travel.md)에서 이어진다.
 
 ![초상화가 있는 카만의 응답](images/npcs/kaman.png)

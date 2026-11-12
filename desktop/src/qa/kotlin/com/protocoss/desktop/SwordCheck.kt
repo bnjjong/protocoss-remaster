@@ -153,6 +153,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         val tiles=(0 until 25).flatMap { y -> (0 until 40).map { x -> cells.getValue(map)[(sy/8+y)*(width/8)+sx/8+x] } }
         record.addChild(JsonValue(JsonValue.ValueType.`object`).apply {
             addChild("name",JsonValue(name));addChild("map",JsonValue(map.toLong()));addChild("scroll",array(listOf(sx,sy)))
+            addChild("cinematic",JsonValue(cinematic))
             addChild("actors",JsonValue(JsonValue.ValueType.array).apply { rows.forEach { addChild(array(it)) } });addChild("tiles",array(tiles))
             val talk=field<FieldDialogue?>("fieldDialogue")
             val page=if(cinematic) timeline.page else talk?.page
