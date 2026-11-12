@@ -182,3 +182,12 @@ tasks.register<JavaExec>("verifyIndoor") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 오두막 물체의 실제 조사 입력·벽난로 반응·저장 재개를 실행한다.
+tasks.register<JavaExec>("verifyCabinInteraction") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.CabinInteractionCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}

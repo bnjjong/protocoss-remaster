@@ -1,0 +1,141 @@
+{
+  "compared_pixels": 2176000,
+  "scenes": [
+    {
+      "name": "map-1-object-5-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "map-1-object-6-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "map-1-object-7-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "map-1-object-9-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "map-1-object-10-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "map-1-fire-1-13-32",
+      "pixels": 64000
+    },
+    {
+      "name": "map-1-fire-1-14-32",
+      "pixels": 64000
+    },
+    {
+      "name": "map-1-fire-0-8-32",
+      "pixels": 64000
+    },
+    {
+      "name": "map-1-fire-0-8-34",
+      "pixels": 64000
+    },
+    {
+      "name": "map-1-fire-0-8-36",
+      "pixels": 64000
+    },
+    {
+      "name": "map-1-fire-0-8-38",
+      "pixels": 64000
+    },
+    {
+      "name": "map-1-fire-0-8-40",
+      "pixels": 64000
+    },
+    {
+      "name": "map-1-fire-0-8-42",
+      "pixels": 64000
+    },
+    {
+      "name": "map-1-fire-0-8-44",
+      "pixels": 64000
+    },
+    {
+      "name": "map-1-fire-0-8-46",
+      "pixels": 64000
+    },
+    {
+      "name": "map-1-fire-0-8-48",
+      "pixels": 64000
+    },
+    {
+      "name": "map-1-fire-dialogue",
+      "pixels": 64000
+    },
+    {
+      "name": "map-2-object-5-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "map-2-object-6-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "map-2-object-7-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "map-2-object-9-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "map-2-object-10-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "map-2-fire-1-13-32",
+      "pixels": 64000
+    },
+    {
+      "name": "map-2-fire-1-14-32",
+      "pixels": 64000
+    },
+    {
+      "name": "map-2-fire-0-8-32",
+      "pixels": 64000
+    },
+    {
+      "name": "map-2-fire-0-8-34",
+      "pixels": 64000
+    },
+    {
+      "name": "map-2-fire-0-8-36",
+      "pixels": 64000
+    },
+    {
+      "name": "map-2-fire-0-8-38",
+      "pixels": 64000
+    },
+    {
+      "name": "map-2-fire-0-8-40",
+      "pixels": 64000
+    },
+    {
+      "name": "map-2-fire-0-8-42",
+      "pixels": 64000
+    },
+    {
+      "name": "map-2-fire-0-8-44",
+      "pixels": 64000
+    },
+    {
+      "name": "map-2-fire-0-8-46",
+      "pixels": 64000
+    },
+    {
+      "name": "map-2-fire-0-8-48",
+      "pixels": 64000
+    },
+    {
+      "name": "map-2-fire-dialogue",
+      "pixels": 64000
+    }
+  ]
+}

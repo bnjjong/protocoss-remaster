@@ -29,10 +29,10 @@ import java.util.Base64
 /** 새 게임부터 검 회수까지 실제 입력으로 진행한다. 원본 폴더와 사용자 저장은 쓰지 않는다. */
 object SwordCheck {
     @JvmStatic fun main(args:Array<String>)=run(false)
-    fun run(equipment:Boolean,party:Boolean=false,automatic:Boolean=false,items:Boolean=false,tent:Boolean=false,shop:Boolean=false,indoor:Boolean=false) {
+    fun run(equipment:Boolean,party:Boolean=false,automatic:Boolean=false,items:Boolean=false,tent:Boolean=false,shop:Boolean=false,indoor:Boolean=false,cabin:Boolean=false) {
         val saves=Files.createTempDirectory("protocoss-sword-qa-")
         try {
-            val app=SwordApplication(saves,equipment,party,automatic,items,tent,shop,indoor)
+            val app=SwordApplication(saves,equipment,party,automatic,items,tent,shop,indoor,cabin)
             Lwjgl3Application(app,Lwjgl3ApplicationConfiguration().apply {
                 setTitle("검 수리 스토리 자동 검사");setWindowedMode(640,400);setInitialVisible(false);useVsync(false);setForegroundFPS(0)
             })
@@ -49,7 +49,8 @@ object ShopCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,t
 object IndoorCheck { @JvmStatic fun main(args:Array<String>) {
     if("--only-indoor" in args) SwordCheck.run(false,indoor=true) else SwordCheck.run(true,true,true,true,true,true,true)
 } }
-private class SwordApplication(private val saves:Path,private val equipment:Boolean,private val partyEquipment:Boolean,private val automaticEquipment:Boolean,private val fieldItems:Boolean,private val tentEnabled:Boolean,private val shopEnabled:Boolean,private val indoorEnabled:Boolean):ApplicationAdapter() {
+object CabinInteractionCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(false,cabin=true) }
+private class SwordApplication(private val saves:Path,private val equipment:Boolean,private val partyEquipment:Boolean,private val automaticEquipment:Boolean,private val fieldItems:Boolean,private val tentEnabled:Boolean,private val shopEnabled:Boolean,private val indoorEnabled:Boolean,private val cabinEnabled:Boolean):ApplicationAdapter() {
     private val game=ProtocossGame(null,saves)
     private val held=mutableSetOf<Int>();private val pressed=mutableSetOf<Int>()
     private lateinit var input:Input;private lateinit var graphics:Graphics;private lateinit var rules:FieldRules
@@ -136,11 +137,13 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         val map=if(cinematic) timeline.map else session().map
         val source=data().get("maps").get(map.toString());val width=source.getInt("width")*8;val height=source.getInt("height")*8
         val mover=movement();val camera=field<OrthographicCamera>("camera")
+        val npcRows=field<FieldNpcs?>("fieldNpcs")?.actors?.map { listOf(it.sprite,it.x,it.y,it.frame,it.mask) }
+            ?: source.get("npcs").map { listOf(it.getInt("sprite"),it.getInt("x"),it.getInt("y"),it.getInt("frame"),it.getInt("mask")) }
         val rows=if(cinematic) {
             val sprites=timeline.data.get("programs")[timeline.program].get("sprites")
-            (if(timeline.continuesField) field<FieldNpcs>("fieldNpcs").actors.map { listOf(it.sprite,it.x,it.y,it.frame,it.mask) } else emptyList())+
+            (if(timeline.continuesField) npcRows else emptyList())+
                 timeline.actors.map { listOf(sprites[it.sprite].asInt(),it.x.toInt(),it.y.toInt(),it.frame,it.mask) }
-        } else field<FieldNpcs>("fieldNpcs").actors.map { listOf(it.sprite,it.x,it.y,it.frame,it.mask) }+listOf(listOf(0,mover.x.toInt(),mover.y.toInt(),mover.pose,mover.layer))
+        } else npcRows+listOf(listOf(0,mover.x.toInt(),mover.y.toInt(),mover.pose,mover.layer))
         var sx=if(cinematic) timeline.scrollX.toInt() else ((camera.position.x-160)/8).roundToInt()*8
         var sy=if(cinematic) timeline.scrollY.toInt() else ((height-camera.position.y-100)/8).roundToInt()*8
         sx=sx.coerceIn(0,width-320);sy=sy.coerceIn(0,height-200)
@@ -762,6 +765,83 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         load(DosSave.parse(base))
         println("실내 대화 실행 검사: 주민 8명·224분기·첫 여비 50→구입 후 35·저장 재개·반복 무지급·대화 중 필드 잠금, ${shots.size} 화면")
     }
+    private fun checkCabinInteraction() {
+        val original=session().bytes();val shots=JsonValue(JsonValue.ValueType.array)
+        val base=DosSave.afterOpening(Gdx.files.internal("assets/data/original/start.dat").readBytes())
+        fun fixture(map:Int,x:Int=160,y:Int=128,pose:Int=8)=base.travel(map,0,0,x+16,y+16,pose,0,mapOf(0 to 0,4 to 25,6 to if(map==1)1 else 0,8 to if(map==1)3 else 0))
+        fun approach(event:Int) {
+            val start=Node(movement().x.toInt(),movement().y.toInt(),movement().layer)
+            val queue=ArrayDeque<Node>();queue+=start;val seen=mutableSetOf(start);val previous=mutableMapOf<Node,Pair<Node,Int>>()
+            var path:List<Int>?=null
+            search@while(queue.isNotEmpty()) {
+                val n=queue.removeFirst()
+                for(d in listOf(1,2,4,8)) {
+                    val pose=mapOf(1 to 0,2 to 4,4 to 8,8 to 12).getValue(d)
+                    val step=rules.step(session().map,n.x.toFloat(),n.y.toFloat(),d,n.layer)
+                    if(rules.interaction(session().map,n.x.toFloat(),n.y.toFloat(),pose)==event && step.direction==0) {
+                        val result=mutableListOf(d);var cursor=n
+                        while(cursor!=start) { val (parent,direction)=previous.getValue(cursor);result+=direction;cursor=parent }
+                        path=result.reversed();break@search
+                    }
+                    if(step.direction==0 || rules.event(session().map,n.x.toFloat(),n.y.toFloat(),d)!=null) continue
+                    val next=Node(n.x+FieldRules.dx(step.direction)*8,n.y+FieldRules.dy(step.direction)*8,step.layer)
+                    if(seen.add(next)) { previous[next]=n to d;queue+=next }
+                }
+            }
+            check(path!=null) { "오두막 조사 접근 실패: ${session().map}/$event" }
+            for((i,d) in path.withIndex()) {
+                held+=mapOf(1 to Input.Keys.W,2 to Input.Keys.D,4 to Input.Keys.S,8 to Input.Keys.A).getValue(d)
+                repeat(if(i==path.lastIndex)1 else 8) { tick() };held.clear()
+            }
+            check(movement().atRest && rules.interaction(session().map,movement().x,movement().y,movement().pose)==event)
+        }
+        val native=com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.local("docs/cabin-interaction-native.json"))
+        var dialogues=0
+        for(map in 1..2) for((which,key) in listOf(Input.Keys.SPACE,Input.Keys.ENTER,Input.Keys.E).withIndex()) {
+            for(event in listOf(5,6,7,9,10)) {
+                load(fixture(map));tick();approach(event)
+                val before=session().bytes();val position=movement().x to movement().y
+                press(key);check(field<FieldDialogue?>("fieldDialogue")!=null)
+                val expected=data().get("dialogues").get(event.toString())
+                var page=0
+                while(field<FieldDialogue?>("fieldDialogue")!=null) {
+                    val d=field<FieldDialogue>("fieldDialogue");idle(100)
+                    check(d.page.getString("text")==expected[page].getString("text"))
+                    held+=Input.Keys.D;tick();held.clear();press(Input.Keys.ESCAPE)
+                    check(scene()=="FIELD" && position==(movement().x to movement().y))
+                    if(which==0) capture("map-$map-object-$event-page-$page","cabin-interaction",shots)
+                    press(key);page++
+                }
+                check(DosSave.parse(before).calledEvent(event).bytes().contentEquals(session().bytes()));dialogues++
+            }
+            // 잘못된 방향과 한 칸 먼 위치에서는 같은 키로 조사하지 않는다.
+            load(fixture(map,272,32,8));tick();val unchanged=session().bytes();press(key)
+            check(field<FieldDialogue?>("fieldDialogue")==null && unchanged.contentEquals(session().bytes()))
+            load(fixture(map,272,40,0));tick();press(key);check(field<FieldDialogue?>("fieldDialogue")==null)
+            load(fixture(map));tick();approach(15)
+            val before=session();val renderer=field<OpeningRenderer>("openingRenderer")
+            press(key);check(scene()=="OPENING" && field<OpeningTimeline>("opening").program==6)
+            var talked=false;val frames=mutableSetOf<String>()
+            repeat(1000) {
+                if(scene()=="OPENING") {
+                    val t=field<OpeningTimeline>("opening");check(t.map==map && t.fadeAlpha==0f)
+                    check(field<OpeningRenderer>("openingRenderer")===renderer)
+                    val a=t.actors[0];val label="${a.sprite}-${a.frame}-${a.y.toInt()}"
+                    if(which==0 && frames.add(label)) capture("map-$map-fire-$label","cabin-interaction",shots)
+                    if(t.page!=null) { idle(80);if(which==0) capture("map-$map-fire-dialogue","cabin-interaction",shots);talked=true;press(key) }
+                    else { held+=Input.Keys.D;tick();held.clear() }
+                }
+            }
+            check(talked && scene()=="FIELD" && session().map==map) { "벽난로 종료: $map/$which, scene=${scene()}, talked=$talked, destination=${session().map}" }
+            val hero=native.get("fire_checkpoints").last().get("actors")[0]
+            check(movement().x==hero.getFloat("x") && movement().y==hero.getFloat("y") && movement().pose==hero.getInt("frame"))
+            check(session().variable(6)==before.variable(6) && session().variable(8)==before.variable(8) && session().variable(1)==8)
+            saveAndReload();check(session().map==map && session().variable(1)==8)
+        }
+        Gdx.files.local("desktop/build/reports/cabin-interaction/scenes.json").writeString(shots.toJson(JsonWriter.OutputType.json),false,"UTF-8")
+        load(DosSave.parse(original))
+        println("오두막 조사 실행 검사: 물통·삽·빗자루·꽃·책 $dialogues 대화, 두 맵·Space/Enter/E·방향/거리 거부·이동 잠금·화상 연출·저장 재개, ${shots.size} 화면")
+    }
     override fun render() {
         if(completed) return
         press(Input.Keys.ENTER);press(Input.Keys.SPACE);finishScene()
@@ -790,6 +870,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         if(tentEnabled) checkTent()
         if(shopEnabled) checkShop()
         if(indoorEnabled) checkIndoor()
+        if(cabinEnabled) checkCabinInteraction()
         Gdx.files.local("desktop/build/reports/sword/scenes.json").writeString(captures.toJson(JsonWriter.OutputType.json),false,"UTF-8")
         println("검 수리 스토리 검사 완료: $steps 걸음, 진행 0→1→2→3→4, 합류·쪽지 각 1회, 맡기기·회수·중복 방지·저장 재개, ${captures.size} 화면")
         completed=true;Gdx.app.exit()

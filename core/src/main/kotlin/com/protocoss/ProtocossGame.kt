@@ -42,6 +42,7 @@ import com.protocoss.field.SwordStory
 import com.protocoss.field.FieldDialogue
 import com.protocoss.field.PlaceBanner
 import com.protocoss.field.TownTravel
+import com.protocoss.field.CabinInteraction
 import com.protocoss.field.CabinDoors
 import com.protocoss.player.Direction
 import com.protocoss.player.Player
@@ -97,6 +98,7 @@ class ProtocossGame(
     private lateinit var openingRenderer: OpeningRenderer
     private lateinit var fieldRules: FieldRules
     private lateinit var buildingTravel: BuildingTravel
+    private lateinit var cabinInteraction:CabinInteraction
     private lateinit var indoorDialogues:IndoorDialogues
     private var indoorConversation:IndoorDialogues.Conversation?=null
     private lateinit var swordStory:SwordStory
@@ -172,6 +174,7 @@ class ProtocossGame(
         opening = OpeningTimeline.parse(Gdx.files.internal("assets/opening/opening.json").readString("UTF-8"))
         openingRenderer = OpeningRenderer(opening)
         swordStory=SwordStory(opening.data.get("sword_story"))
+        cabinInteraction=CabinInteraction(opening.data)
         indoorDialogues=IndoorDialogues(com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/data/field/indoor-dialogues.json").readString("UTF-8")))
         fieldRules = FieldRules(Gdx.files.internal("assets/data/field/field.json").readString()) {
             Gdx.files.internal("assets/data/field/$it").readBytes()
@@ -215,7 +218,8 @@ class ProtocossGame(
             if(opening.continuesField) fieldMovement?.update(delta,0,false,tick={ x,y -> fieldNpcs?.tick(x,y) }) { false }
             opening.update(delta)
             openingRenderer.update(delta)
-            if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) opening.advance()
+            if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.isKeyJustPressed(Input.Keys.ENTER) ||
+                (fieldEvent==6 && Gdx.input.isKeyJustPressed(Input.Keys.E))) opening.advance()
             if(opening.videoId!=null) {
                 encounterClip=ProloguePlayer("assets/encounter/encounter.pvid","assets/opening/music-27/music.ogg")
                 clipFade=0f;clipStarted=false;clipReturning=false;scene=Scene.CLIP
@@ -275,7 +279,7 @@ class ProtocossGame(
             batch.projectionMatrix = uiCamera.combined
             if(scene==Scene.REST) tentRenderer.render(batch,requireNotNull(tentRest))
             else if (scene == Scene.PROLOGUE) prologue!!.render(batch)
-            else if (scene == Scene.OPENING) { batch.begin(); openingRenderer.render(batch,if(opening.continuesField) fieldNpcs?.actors.orEmpty() else emptyList()); batch.end() }
+            else if (scene == Scene.OPENING) { batch.begin(); openingRenderer.render(batch,if(opening.continuesField) fieldActors() else emptyList()); batch.end() }
             else if (scene == Scene.CLIP) {
                 if(clipStarted && !clipReturning) encounterClip!!.render(batch)
                 else { batch.begin();openingRenderer.render(batch);openingRenderer.fade(batch,clipFade);batch.end() }
@@ -340,7 +344,7 @@ class ProtocossGame(
         fieldDialogue?.takeIf { fieldDialogueReady() }?.let { dialogue ->
             batch.begin()
             openingRenderer.renderFieldDialogue(batch,session!!.map,camera.position.x-160f,mapHeight-camera.position.y-100f,
-                fieldNpcs!!.actors,player.x-12f,mapHeight-player.y-12f,fieldMovement!!.pose,fieldMovement!!.layer,
+                fieldActors(),player.x-12f,mapHeight-player.y-12f,fieldMovement!!.pose,fieldMovement!!.layer,
                 dialogue.page,dialogue.visibleCharacters,dialogue.rewardX)
             batch.end()
         }
@@ -482,9 +486,9 @@ class ProtocossGame(
         val npcs=fieldNpcs
         val movement=fieldMovement.takeIf { isTileMapMode }
         val talkKey=Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isKeyJustPressed(Input.Keys.E)
-        if(fieldDialogue==null && npcs!=null && movement?.atRest==true && talkKey) {
-            val index=npcs.talkTarget(movement.x,movement.y,movement.pose,movement.layer)
-            if(index!=null) {
+        if(fieldDialogue==null && movement?.atRest==true && talkKey) {
+            val index=npcs?.talkTarget(movement.x,movement.y,movement.pose,movement.layer)
+            if(index!=null && npcs!=null) {
                 val event=npcs.actors[index].event
                 val shop=swordStory.shopPages(session!!,event)
                 val indoor=indoorDialogues.begin(session!!,event)
@@ -498,6 +502,19 @@ class ProtocossGame(
                     indoorConversation=indoor
                     shopConversation=shop!=null;shopTrading=shop!=null && session!!.variable(8)>=4;swordReceived=false
                     session=session!!.calledEvent(event)
+                }
+            } else if(session?.let { it.area==0 && it.map in 1..2 && it.variable(0)==0 }==true) {
+                val current=session!!
+                val event=fieldRules.interaction(current.map,movement.x,movement.y,movement.pose)
+                if(event==15) {
+                    startFieldEvent(6,cabinInteraction.fireDestination(current,event)!!)
+                    return
+                }
+                val pages=event?.let { cabinInteraction.pages(current,it) }
+                if(pages!=null && pages.size>0) {
+                    movement.faceForTalk()
+                    fieldDialogue=FieldDialogue(-1,pages)
+                    session=current.calledEvent(event!!)
                 }
             }
         } else if(fieldDialogue!=null && fieldDialogueReady() && talkKey) {
@@ -525,7 +542,7 @@ class ProtocossGame(
             if(shopConversation && fieldDialogue!!.isReward && !swordReceived) {
                 session=session!!.receiveRepairedSword();swordReceived=true
             }
-            movement!!.update(delta,0,false,tick={ x,y -> npcs!!.tick(x,y) }) { false }
+            movement!!.update(delta,0,false,tick={ x,y -> npcs?.tick(x,y) }) { false }
             if(fieldDialogueReady()) fieldDialogue!!.update(delta)
             player.setMotion(null,false)
             return
@@ -635,6 +652,12 @@ class ProtocossGame(
         if (Gdx.graphics.isFullscreen) Gdx.graphics.setWindowedMode(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT)
         else Gdx.graphics.setFullscreenMode(Gdx.graphics.displayMode)
     }
+
+    /** AI 없이 표시하던 오두막의 인물도 조사·현재 필드 연출에서 유지한다. */
+    private fun fieldActors():List<FieldNpcs.Actor> = fieldNpcs?.actors
+        ?: session?.takeIf { it.area==0 && it.map in 0..12 }?.let { save ->
+            opening.data.get("maps").get(save.map.toString()).get("npcs").map { FieldNpcs.Actor(it) }
+        }.orEmpty()
 
     private fun fieldDialogueReady()=fieldDialogue?.let { it.npcIndex<0 || fieldNpcs?.talkReady==true } ?: false
 
@@ -897,7 +920,7 @@ class ProtocossGame(
 
     private fun startFieldEvent(program: Int, destination: DosSave) {
         val data=opening.data
-        opening=OpeningTimeline(data,program,program)
+        opening=OpeningTimeline(data,program,program,session?.map)
         if(opening.continuesField) openingRenderer.continueField(opening)
         else { openingRenderer.dispose();openingRenderer=OpeningRenderer(opening) }
         val track=when(program) { 3->27;5->24;else->25 }

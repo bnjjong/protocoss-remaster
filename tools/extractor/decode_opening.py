@@ -105,9 +105,10 @@ def extract(game_dir, output_root, executable=None):
     sources = {}
     def read(name):
         raw = (game_dir/name).read_bytes(); sources[name]=hashlib.sha256(raw).hexdigest(); return raw
-    programs = [animation(read(f'DATA/AUTOANI.{i:03}')) for i in (0,1,3,6,4,5)]
+    programs = [animation(read(f'DATA/AUTOANI.{i:03}')) for i in (0,1,3,6,4,5,2)]
     # 0x10A54의 mode=0은 현재 맵·주민을 유지하고 화면 전환 없이 실행한다.
     programs[5]['continues_field']=True
+    programs[6]['continues_field']=True
     for command in programs[3]['commands']:
         if command['op']=='C':command['value']+=100
     for command in programs[4]['commands']:
@@ -145,7 +146,7 @@ def extract(game_dir, output_root, executable=None):
             variants[str(stage)]=[page for e in trace['events'] for page in dialogue(e['text'].encode('cp1361'))]
         npc_dialogues[str(number)]=variants
     group_offsets=struct.unpack_from(f'<{count}H',read('DATA/AREA00.G&M'),6)
-    for group,numbers in [(0,(2,3,14,17)),(1,(4,5,6,7)),(2,(3,)),(3,(16,17))]:
+    for group,numbers in [(0,(2,3,4,5,6,7,8,9,10,14,17)),(1,(4,5,6,7)),(2,(3,)),(3,(16,17))]:
         p=group_offsets[group];entries={}
         while script[p]==0xf0:
             argument,destination=struct.unpack_from('<HH',script,p+3)
@@ -259,7 +260,7 @@ def extract(game_dir, output_root, executable=None):
     font=read('HANGUL.FNT');english=read('ENGLISH.FNT');tables=code[0x4040:0x4108]
     reference=OpeningReference(code,data,font)
     checkpoints=reference.motions(programs[1])
-    field_checkpoints={str(i):OriginalFieldMachine(executable).animation_checkpoints(programs[i]) for i in (2,3,4,5)}
+    field_checkpoints={str(i):OriginalFieldMachine(executable).animation_checkpoints(programs[i]) for i in (2,3,4,5,6)}
     sword_story['join']['hero']=[field_checkpoints['5'][-1]['actors'][0][key] for key in ('x','y','frame')]
     glyphs=Image.new('RGBA',(256,((len(chars)+15)//16)*16)); widths={}
     for i,c in enumerate(chars):

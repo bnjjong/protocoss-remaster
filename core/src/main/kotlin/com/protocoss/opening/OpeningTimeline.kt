@@ -4,7 +4,7 @@ import com.badlogic.gdx.utils.JsonReader
 import com.badlogic.gdx.utils.JsonValue
 
 /** AUTOANI의 이동·그리기·대화 대기를 순서대로 실행한다. 입력을 받을 때까지 다음 명령을 실행하지 않는다. */
-class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val lastProgram: Int = 1) {
+class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val lastProgram: Int = 1, private val fieldMap:Int?=null) {
     data class Actor(var sprite: Int, var x: Float, var y: Float, var frame: Int,
                      var direction: Int = 0, var animate: Boolean = false, var speed: Int = 0, var mask: Int = 0)
     val actors = mutableListOf<Actor>()
@@ -35,7 +35,7 @@ class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val la
 
     private fun loadProgram() {
         val current = data.get("programs")[program]
-        map = current.getInt("map")
+        map = if(continuesField && fieldMap!=null) fieldMap else current.getInt("map")
         scrollX = current.get("scroll")[0].asFloat(); scrollY = current.get("scroll")[1].asFloat()
         actors.clear(); cursor = 0; cameraDirection = 0; remainingTicks = 0
     }
