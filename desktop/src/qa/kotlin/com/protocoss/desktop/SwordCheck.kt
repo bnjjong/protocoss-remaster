@@ -18,6 +18,8 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import com.protocoss.menu.ShopMenu
+import com.protocoss.menu.ShopRenderer
 import com.protocoss.menu.EquipmentRenderer
 import com.protocoss.menu.TentRest
 import com.protocoss.menu.ItemTargetMenu
@@ -27,10 +29,10 @@ import java.util.Base64
 /** 새 게임부터 검 회수까지 실제 입력으로 진행한다. 원본 폴더와 사용자 저장은 쓰지 않는다. */
 object SwordCheck {
     @JvmStatic fun main(args:Array<String>)=run(false)
-    fun run(equipment:Boolean,party:Boolean=false,automatic:Boolean=false,items:Boolean=false,tent:Boolean=false) {
+    fun run(equipment:Boolean,party:Boolean=false,automatic:Boolean=false,items:Boolean=false,tent:Boolean=false,shop:Boolean=false) {
         val saves=Files.createTempDirectory("protocoss-sword-qa-")
         try {
-            val app=SwordApplication(saves,equipment,party,automatic,items,tent)
+            val app=SwordApplication(saves,equipment,party,automatic,items,tent,shop)
             Lwjgl3Application(app,Lwjgl3ApplicationConfiguration().apply {
                 setTitle("검 수리 스토리 자동 검사");setWindowedMode(640,400);setInitialVisible(false);useVsync(false);setForegroundFPS(0)
             })
@@ -43,7 +45,8 @@ object PartyEquipmentCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.
 object AutomaticEquipmentCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true,true) }
 object FieldItemsCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true,true,true) }
 object TentCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true,true,true,true) }
-private class SwordApplication(private val saves:Path,private val equipment:Boolean,private val partyEquipment:Boolean,private val automaticEquipment:Boolean,private val fieldItems:Boolean,private val tentEnabled:Boolean):ApplicationAdapter() {
+object ShopCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true,true,true,true,true) }
+private class SwordApplication(private val saves:Path,private val equipment:Boolean,private val partyEquipment:Boolean,private val automaticEquipment:Boolean,private val fieldItems:Boolean,private val tentEnabled:Boolean,private val shopEnabled:Boolean):ApplicationAdapter() {
     private val game=ProtocossGame(null,saves)
     private val held=mutableSetOf<Int>();private val pressed=mutableSetOf<Int>()
     private lateinit var input:Input;private lateinit var graphics:Graphics;private lateinit var rules:FieldRules
@@ -243,6 +246,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
             } else if(pages==0 || (stage==0 && pages==12)) capture("$label-page-$pages")
             press(Input.Keys.ENTER);pages++;check(pages<20)
         }
+        if(stage>=4) { check(scene()=="SHOP");press(Input.Keys.ESCAPE);check(scene()=="FIELD") }
         check(session().variable(8)==when(stage) { 0->1;3->4;else->stage })
         check(session().bytes()[473].toInt()==-1)
     }
@@ -591,6 +595,100 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         Gdx.files.local("desktop/build/reports/equipment/scenes.json").writeString(menuCaptures.toJson(JsonWriter.OutputType.json),false,"UTF-8")
         println("텐트 실행 검사: 조건 거부·취소·회복·새 키 대기·120초 유지·일시정지·필드 정지·완료 후 수량·음악 10/24/25 복귀·반복·저장 재개, ${shots.size} 화면")
     }
+    private fun checkShop() {
+        val folder="desktop/build/reports/shop"
+        val shots=JsonValue(JsonValue.ValueType.array)
+        val model=field<ShopRenderer>("shopRenderer").model
+        val base=session().bytes();val position=movement().x to movement().y
+        val report=com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.local("docs/shop-native.json"))
+        fun state()=field<ShopMenu>("shopMenu")
+        fun png(name:String) {
+            val p=Pixmap.createFromFrameBuffer(0,0,Gdx.graphics.backBufferWidth,Gdx.graphics.backBufferHeight)
+            try { PixmapIO.writePNG(Gdx.files.local("$folder/$name.png"),p,-1,true) } finally { p.dispose() }
+        }
+        fun capture(name:String) {
+            png(name)
+            val renderer=field<ShopRenderer>("shopRenderer")
+            val p=ShopRenderer::class.java.getDeclaredField("field").apply { isAccessible=true }.get(renderer) as Pixmap
+            PixmapIO.writePNG(Gdx.files.local("$folder/$name-field.png"),p,-1,false)
+            shots.addChild(JsonValue(JsonValue.ValueType.`object`).apply {
+                addChild("name",JsonValue(name));addChild("stage",JsonValue(state().stage.toString()))
+                addChild("choice",JsonValue(state().choice.toLong()));addChild("selected",JsonValue(state().selected.toLong()))
+                addChild("blink",JsonValue(state().blink));addChild("quantity",JsonValue(state().quantity.toLong()));addChild("animation",JsonValue(state().animation.toLong()))
+                addChild("save",JsonValue(Base64.getEncoder().encodeToString(session().bytes())))
+            })
+        }
+        fun open() {
+            approachShop();press(Input.Keys.E)
+            while(field<FieldDialogue?>("fieldDialogue")!=null) { idle(80);press(Input.Keys.ENTER) }
+            check(scene()=="SHOP" && state().stage==ShopMenu.Stage.HOME)
+        }
+        fun close() { repeat(4) { if(scene()=="SHOP") press(Input.Keys.ESCAPE) };check(scene()=="FIELD") }
+        fun fixture(bytes:ByteArray):DosSave {
+            base.copyInto(bytes,92,92,119)
+            base.copyInto(bytes,2342,2342,2346)
+            bytes[2350]=10;bytes[2351]=0;bytes[2358]=4;bytes[2359]=0
+            return DosSave.parse(bytes)
+        }
+        open();capture("home-buy")
+        val frozen=session().bytes();val npcs=field<FieldNpcs>("fieldNpcs").actors.map { listOf(it.x,it.y,it.frame) }
+        held+=Input.Keys.D;idle(140);held.clear()
+        check(frozen.contentEquals(session().bytes()) && position==(movement().x to movement().y))
+        check(npcs==field<FieldNpcs>("fieldNpcs").actors.map { listOf(it.x,it.y,it.frame) })
+        val sound=field<com.badlogic.gdx.audio.Music>("openingMusic");check(kotlin.math.abs(sound.volume-101f/127f)<0.001f)
+        game.pause();check(!sound.isPlaying);game.resume();check(sound.isPlaying)
+        press(Input.Keys.UP);capture("home-sell");press(Input.Keys.UP);capture("home-exit");press(Input.Keys.ENTER)
+        check(scene()=="FIELD" && sound.volume==1f)
+        val keys=mapOf(1 to Input.Keys.ESCAPE,28 to Input.Keys.ENTER,57 to Input.Keys.SPACE,72 to Input.Keys.UP,80 to Input.Keys.DOWN,75 to Input.Keys.LEFT,77 to Input.Keys.RIGHT)
+        for(row in report.get("cases")) {
+            val name=row.getString("name");val before=fixture(Base64.getDecoder().decode(row.getString("before")))
+            load(before);tick();open()
+            if(row.getBoolean("sell")) press(Input.Keys.UP)
+            press(Input.Keys.ENTER)
+            while(state().item(model,session())!=row.getInt("item")) press(Input.Keys.RIGHT)
+            val record=session().bytes()
+            val nativeAfter=Base64.getDecoder().decode(row.getString("after"));nativeAfter.copyInto(record,119,119,162)
+            val show=name.endsWith("-one") || name.endsWith("-255") || name in listOf("buy-0-poor","buy-0-exact","buy-0-cap","sell-zero","sell-cancel")
+            if(show) capture("$name-catalog")
+            press(Input.Keys.ENTER)
+            if(show) capture("$name-amount")
+            for(key in row.get("keys")) {
+                press(keys.getValue(key.asInt()))
+                repeat(12) { if(state().stage==ShopMenu.Stage.TRADE) {
+                    if(show) capture("$name-coin-${state().animation}")
+                    // 거래 연출 중 입력으로 중복 구입하거나 취소하지 못한다.
+                    press(Input.Keys.ENTER)
+                } }
+            }
+            check(record.contentEquals(session().bytes())) { "실행 거래 불일치: $name" }
+            close()
+            if(name in listOf("buy-0-one","buy-37-one","sell-31-1","buy-0-native-overdraft")) {
+                val money=model.money(session());val count=model.owned(session(),row.getInt("item"))
+                saveAndReload();check(money==model.money(session()) && count==model.owned(session(),row.getInt("item")))
+            }
+        }
+        val all=fixture(base.copyOf()).bytes();all.fill(2,123,162)
+        load(DosSave.parse(all));tick();open();press(Input.Keys.UP);press(Input.Keys.SPACE)
+        check(state().stage==ShopMenu.Stage.CATALOG)
+        repeat(39) { i->capture("sell-list-$i");press(Input.Keys.RIGHT) }
+        check(state().selected==38);close()
+        val empty=fixture(base.copyOf()).bytes();empty.fill(0,123,162)
+        load(DosSave.parse(empty));tick();open();press(Input.Keys.UP);press(Input.Keys.ENTER)
+        check(state().stage==ShopMenu.Stage.HOME);close()
+        // 실제로 구입한 빵 한 개를 사용하고, 그 결과를 저장해 다시 불러온다.
+        val use=fixture(base.copyOf()).bytes();use.fill(0,123,162)
+        java.nio.ByteBuffer.wrap(use).order(java.nio.ByteOrder.LITTLE_ENDIAN).putInt(119,100)
+        use[352]=1;use[353]=0
+        load(DosSave.parse(use));tick();open();press(Input.Keys.ENTER);press(Input.Keys.ENTER);press(Input.Keys.ENTER);idle(12);close()
+        check(model.money(session())==85 && model.owned(session(),0)==1)
+        press(Input.Keys.ESCAPE);repeat(4) { press(Input.Keys.DOWN) };press(Input.Keys.ENTER);press(Input.Keys.ENTER);press(Input.Keys.ENTER)
+        check(model.owned(session(),0)==0)
+        repeat(3) { if(scene()!="FIELD") press(Input.Keys.ESCAPE) }
+        saveAndReload();check(model.money(session())==85 && model.owned(session(),0)==0)
+        Gdx.files.local("$folder/scenes.json").writeString(shots.toJson(JsonWriter.OutputType.json),false,"UTF-8")
+        load(DosSave.parse(base))
+        println("잡화점 실행 검사: 193 거래·구입 7종·판매 39종·수량/소지금 경계·취소·필드 정지·음량 복귀·저장 재개·구입품 사용, ${shots.size} 화면")
+    }
     override fun render() {
         if(completed) return
         press(Input.Keys.ENTER);press(Input.Keys.SPACE);finishScene()
@@ -617,6 +715,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         if(automaticEquipment) checkAutomaticEquipment()
         if(fieldItems) checkFieldItems()
         if(tentEnabled) checkTent()
+        if(shopEnabled) checkShop()
         Gdx.files.local("desktop/build/reports/sword/scenes.json").writeString(captures.toJson(JsonWriter.OutputType.json),false,"UTF-8")
         println("검 수리 스토리 검사 완료: $steps 걸음, 진행 0→1→2→3→4, 합류·쪽지 각 1회, 맡기기·회수·중복 방지·저장 재개, ${captures.size} 화면")
         completed=true;Gdx.app.exit()

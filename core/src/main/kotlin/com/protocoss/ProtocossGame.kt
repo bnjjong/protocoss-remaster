@@ -18,6 +18,8 @@ import com.protocoss.dialogue.DialogueManager
 import com.protocoss.dialogue.DialogueRepository
 import com.protocoss.dialogue.FontManager
 import com.protocoss.map.OriginalMapData
+import com.protocoss.menu.ShopMenu
+import com.protocoss.menu.ShopRenderer
 import com.protocoss.menu.GameMenu
 import com.protocoss.menu.EquipmentRenderer
 import com.protocoss.menu.TentRest
@@ -58,7 +60,7 @@ class ProtocossGame(
     private val originalDirectory: Path? = defaultOriginalDirectory(),
     saveDirectory: Path = Path.of(System.getProperty("user.home"), "Library/Application Support/Protocoss/Saves")
 ) : ApplicationAdapter() {
-    private enum class Scene { TITLE, PROLOGUE, OPENING, CLIP, FIELD, PAUSE, LOAD, SAVE, CONFIRM_SAVE, CONFIRM_TITLE, WEAPON, INVENTORY, REST }
+    private enum class Scene { TITLE, PROLOGUE, OPENING, CLIP, FIELD, PAUSE, LOAD, SAVE, CONFIRM_SAVE, CONFIRM_TITLE, WEAPON, INVENTORY, REST, SHOP }
     private var scene = Scene.TITLE
     private var selected = 0
     private var loadReturn = Scene.TITLE
@@ -95,6 +97,10 @@ class ProtocossGame(
     private lateinit var fieldRules: FieldRules
     private lateinit var buildingTravel: BuildingTravel
     private lateinit var swordStory:SwordStory
+    private lateinit var shopRenderer:ShopRenderer
+    private var shopMenu=ShopMenu()
+    private var shopTrading=false
+    private var shopBaseVolume=1f
     private var shopConversation=false
     private var swordReceived=false
     private lateinit var doorSound: com.badlogic.gdx.audio.Sound
@@ -152,7 +158,8 @@ class ProtocossGame(
         menu = GameMenu(fontManager)
         equipmentRenderer=EquipmentRenderer()
         tentRenderer=TentRenderer()
-        equipmentSounds=listOf(8,12,13).associateWith { Gdx.audio.newSound(Gdx.files.internal("assets/audio/sfx/e${it.toString().padStart(4,'0')}.wav")) }
+        shopRenderer=ShopRenderer()
+        equipmentSounds=listOf(7,8,11,12,13).associateWith { Gdx.audio.newSound(Gdx.files.internal("assets/audio/sfx/e${it.toString().padStart(4,'0')}.wav")) }
         dialogueRepository = DialogueRepository()
         loadDialogueScripts()
         dialogueManager = DialogueManager()
@@ -244,19 +251,22 @@ class ProtocossGame(
             }
         } else if(scene==Scene.WEAPON) handleWeaponInput()
         else if(scene==Scene.INVENTORY) handleInventoryInput()
+        else if(scene==Scene.SHOP) handleShopInput(delta)
         else handleMenuInput()
         if(scene == Scene.TITLE && openingMusic != null) { openingMusic?.dispose();openingMusic=null }
         // 메뉴 확인에 쓴 Enter·Space가 필드의 대화·이동으로 전달되지 않는다.
         if (!wasField && scene == Scene.FIELD) updateFieldView(0f)
 
         val renderingTentField=scene==Scene.REST && tentRest?.phase==TentRest.Phase.RETURN_IN
+        val renderingShopField=scene==Scene.SHOP && shopRenderer.needsCapture
         if(renderingTentField) tentRenderer.beginField()
+        if(renderingShopField) shopRenderer.beginField()
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
 
         // 창 크기·전체화면 전환이 화면 영역을 바꿔도 매 프레임 원래 표시 영역을 복구한다.
-        if(!renderingTentField) viewport.apply()
-        if (scene != Scene.FIELD && !renderingTentField) {
+        if(!renderingTentField && !renderingShopField) viewport.apply()
+        if (scene != Scene.FIELD && !renderingTentField && !renderingShopField) {
             uiCamera.update()
             batch.projectionMatrix = uiCamera.combined
             if(scene==Scene.REST) tentRenderer.render(batch,requireNotNull(tentRest))
@@ -338,6 +348,10 @@ class ProtocossGame(
             batch.end()
         }
         if(fieldFade>0f) { batch.begin();openingRenderer.fade(batch,fieldFade);batch.end() }
+        if(renderingShopField) {
+            shopRenderer.endField();viewport.apply()
+            shopRenderer.render(batch,session!!,shopMenu)
+        }
         if(renderingTentField) {
             tentRenderer.endField();viewport.apply()
             tentRenderer.render(batch,requireNotNull(tentRest))
@@ -378,6 +392,7 @@ class ProtocossGame(
         batch.dispose()
         menu.dispose()
         equipmentRenderer.dispose()
+        shopRenderer.dispose()
         equipmentSounds.values.forEach { it.dispose() }
         debugFont.dispose()
         fontManager.dispose()
@@ -473,17 +488,22 @@ class ProtocossGame(
                     movement.faceForTalk()
                     npcs.beginTalk(index,movement.pose)
                     fieldDialogue=FieldDialogue(index,pages)
-                    shopConversation=shop!=null;swordReceived=false
+                    shopConversation=shop!=null;shopTrading=shop!=null && session!!.variable(8)>=4;swordReceived=false
                     session=session!!.calledEvent(event)
                 }
             }
         } else if(fieldDialogue!=null && fieldDialogueReady() && talkKey) {
             fieldDialogue!!.advance()
             if(fieldDialogue!!.finished) {
-                if(fieldDialogue!!.npcIndex>=0) npcs!!.endTalk()
+                if(fieldDialogue!!.npcIndex>=0 && !shopTrading) npcs!!.endTalk()
                 if(shopConversation) session=swordStory.finishShop(session!!)
                 shopConversation=false;swordReceived=false
                 fieldDialogue=null
+                if(shopTrading) {
+                    shopMenu=ShopMenu();shopRenderer.begin();scene=Scene.SHOP
+                    shopBaseVolume=openingMusic?.volume ?: 1f;openingMusic?.volume=shopBaseVolume*101/127
+                }
+                shopTrading=false
                 player.setMotion(null,false)
                 return
             }
@@ -605,7 +625,28 @@ class ProtocossGame(
 
     private fun fieldDialogueReady()=fieldDialogue?.let { it.npcIndex<0 || fieldNpcs?.talkReady==true } ?: false
 
+    private fun handleShopInput(delta:Float) {
+        shopMenu.tick(delta)
+        if(shopMenu.stage==ShopMenu.Stage.TRADE) {
+            session=shopMenu.update(delta,shopRenderer.model,session!!)
+            shopMenu.effect?.let { equipmentSounds[it]?.play() };return
+        }
+        fun pressed(key:Int)=Gdx.input.isKeyJustPressed(key)
+        when {
+            pressed(Input.Keys.ESCAPE)->shopMenu.back()
+            pressed(Input.Keys.ENTER) || pressed(Input.Keys.SPACE)->session=shopMenu.confirm(shopRenderer.model,session!!,pressed(Input.Keys.SPACE))
+            else->for((key,direction) in listOf(Input.Keys.UP to "up",Input.Keys.DOWN to "down",Input.Keys.LEFT to "left",Input.Keys.RIGHT to "right")) {
+                if(pressed(key)) { shopMenu.navigate(direction,shopRenderer.model,session!!);break }
+            }
+        }
+        if(Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY)) shopMenu.effect?.let { equipmentSounds[it]?.play() }
+        if(shopMenu.closed) {
+            fieldNpcs?.endTalk();openingMusic?.volume=shopBaseVolume;scene=Scene.FIELD
+        }
+    }
+
     private fun renderMenu() {
+        if(scene==Scene.SHOP) { shopRenderer.render(batch,session!!,shopMenu);return }
         if(scene==Scene.WEAPON) { equipmentRenderer.weapon(batch,session!!,equipmentMenu);return }
         if(scene==Scene.INVENTORY) { equipmentRenderer.inventory(batch,session!!,inventoryEquipment,inventorySelection,inventoryScroll,itemTarget);return }
         if (scene == Scene.TITLE) {

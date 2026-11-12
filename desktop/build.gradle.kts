@@ -163,3 +163,12 @@ tasks.register<JavaExec>("verifyTent") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 잡화점의 원작 거래 표본과 실제 입력·저장·그림을 비교한다.
+tasks.register<JavaExec>("verifyShop") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.ShopCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}

@@ -1,0 +1,2124 @@
+{
+  "scenes": [
+    {
+      "name": "home-buy",
+      "pixels": 64000
+    },
+    {
+      "name": "home-sell",
+      "pixels": 64000
+    },
+    {
+      "name": "home-exit",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-one-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-one-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-one-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-one-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-one-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-one-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-one-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-one-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-one-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-one-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-poor-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-poor-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-exact-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-exact-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-exact-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-exact-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-exact-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-exact-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-exact-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-exact-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-exact-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-exact-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-cap-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-cap-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-cap-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-cap-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-cap-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-cap-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-cap-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-cap-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-cap-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-0-cap-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-0-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-0-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-0-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-0-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-0-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-0-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-0-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-0-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-0-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-0-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-1-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-1-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-1-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-1-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-1-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-1-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-1-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-1-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-1-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-1-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-2-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-2-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-2-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-2-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-2-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-2-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-2-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-2-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-2-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-2-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-3-one-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-3-one-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-3-one-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-3-one-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-3-one-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-3-one-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-3-one-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-3-one-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-3-one-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-3-one-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-3-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-3-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-3-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-3-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-3-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-3-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-3-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-3-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-3-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-3-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-4-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-4-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-4-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-4-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-4-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-4-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-4-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-4-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-4-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-4-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-5-one-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-5-one-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-5-one-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-5-one-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-5-one-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-5-one-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-5-one-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-5-one-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-5-one-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-5-one-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-5-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-5-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-5-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-5-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-5-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-5-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-5-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-5-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-5-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-5-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-6-one-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-6-one-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-6-one-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-6-one-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-6-one-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-6-one-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-6-one-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-6-one-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-6-one-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-6-one-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-6-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-6-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-6-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-6-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-6-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-6-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-6-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-6-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-6-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-6-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-7-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-7-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-7-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-7-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-7-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-7-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-7-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-7-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-7-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-7-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-8-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-8-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-8-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-8-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-8-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-8-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-8-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-8-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-8-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-8-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-9-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-9-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-9-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-9-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-9-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-9-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-9-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-9-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-9-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-9-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-10-one-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-10-one-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-10-one-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-10-one-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-10-one-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-10-one-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-10-one-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-10-one-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-10-one-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-10-one-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-10-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-10-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-10-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-10-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-10-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-10-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-10-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-10-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-10-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-10-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-11-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-11-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-11-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-11-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-11-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-11-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-11-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-11-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-11-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-11-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-12-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-12-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-12-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-12-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-12-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-12-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-12-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-12-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-12-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-12-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-13-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-13-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-13-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-13-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-13-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-13-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-13-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-13-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-13-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-13-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-14-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-14-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-14-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-14-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-14-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-14-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-14-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-14-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-14-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-14-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-15-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-15-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-15-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-15-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-15-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-15-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-15-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-15-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-15-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-15-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-16-one-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-16-one-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-16-one-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-16-one-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-16-one-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-16-one-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-16-one-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-16-one-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-16-one-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-16-one-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-16-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-16-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-16-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-16-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-16-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-16-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-16-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-16-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-16-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-16-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-17-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-17-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-17-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-17-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-17-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-17-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-17-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-17-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-17-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-17-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-18-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-18-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-18-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-18-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-18-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-18-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-18-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-18-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-18-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-18-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-19-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-19-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-19-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-19-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-19-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-19-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-19-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-19-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-19-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-19-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-20-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-20-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-20-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-20-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-20-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-20-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-20-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-20-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-20-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-20-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-21-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-21-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-21-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-21-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-21-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-21-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-21-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-21-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-21-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-21-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-22-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-22-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-22-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-22-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-22-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-22-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-22-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-22-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-22-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-22-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-23-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-23-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-23-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-23-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-23-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-23-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-23-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-23-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-23-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-23-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-24-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-24-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-24-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-24-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-24-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-24-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-24-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-24-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-24-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-24-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-25-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-25-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-25-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-25-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-25-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-25-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-25-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-25-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-25-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-25-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-26-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-26-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-26-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-26-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-26-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-26-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-26-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-26-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-26-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-26-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-27-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-27-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-27-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-27-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-27-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-27-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-27-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-27-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-27-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-27-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-28-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-28-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-28-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-28-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-28-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-28-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-28-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-28-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-28-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-28-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-29-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-29-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-29-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-29-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-29-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-29-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-29-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-29-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-29-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-29-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-30-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-30-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-30-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-30-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-30-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-30-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-30-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-30-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-30-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-30-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-31-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-31-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-31-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-31-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-31-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-31-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-31-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-31-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-31-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-31-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-32-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-32-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-32-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-32-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-32-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-32-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-32-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-32-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-32-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-32-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-33-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-33-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-33-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-33-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-33-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-33-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-33-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-33-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-33-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-33-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-34-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-34-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-34-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-34-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-34-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-34-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-34-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-34-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-34-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-34-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-35-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-35-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-35-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-35-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-35-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-35-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-35-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-35-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-35-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-35-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-36-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-36-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-36-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-36-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-36-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-36-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-36-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-36-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-36-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-36-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-37-one-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-37-one-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-37-one-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-37-one-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-37-one-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-37-one-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-37-one-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-37-one-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-37-one-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "buy-37-one-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-37-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-37-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-37-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-37-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-37-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-37-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-37-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-37-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-37-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-37-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-38-255-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-38-255-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-38-255-coin-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-38-255-coin-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-38-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-38-255-coin-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-38-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-38-255-coin-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-38-255-coin-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-38-255-coin-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-zero-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-zero-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-cancel-catalog",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-cancel-amount",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-0",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-1",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-2",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-3",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-4",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-5",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-6",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-7",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-8",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-9",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-10",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-11",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-12",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-13",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-14",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-15",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-16",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-17",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-18",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-19",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-20",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-21",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-22",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-23",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-24",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-25",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-26",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-27",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-28",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-29",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-30",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-31",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-32",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-33",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-34",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-35",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-36",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-37",
+      "pixels": 64000
+    },
+    {
+      "name": "sell-list-38",
+      "pixels": 64000
+    }
+  ],
+  "compared_pixels": 33792000,
+  "field_source": "앱에서 상점 진입 시 정지한 필드",
+  "native_functions": [
+    "0x28A68",
+    "0x29BB4",
+    "0x28F0C",
+    "0x29590"
+  ]
+}
