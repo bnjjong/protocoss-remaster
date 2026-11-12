@@ -1,6 +1,6 @@
 package com.protocoss.script
 
-/** 전 지역 G&M의 그룹·인자 진입 주소. 본문 명령의 실행은 다음 단계에서 연결한다. */
+/** 전 지역 G&M의 그룹·인자 진입 주소와 원본 명령 바이트를 보존한다. */
 class EventArchive(raw:ByteArray) {
     data class Route(val argument:Int,val destination:Int)
     data class Group(val offset:Int,val routes:List<Route>,val fallback:Int)
@@ -38,7 +38,7 @@ class EventArchive(raw:ByteArray) {
         require(offset in code.indices) { "이벤트 주소가 파일 범위를 벗어났습니다." }
         return code[offset].toInt() and 255
     }
-    private fun word(offset:Int)=byte(offset) or (byte(offset+1) shl 8)
+    internal fun word(offset:Int)=byte(offset) or (byte(offset+1) shl 8)
 
     fun resolve(group:Int,argument:Int):Int {
         require(group in groups.indices && argument in 0..65535) { "이벤트 그룹·인자 범위 오류" }
