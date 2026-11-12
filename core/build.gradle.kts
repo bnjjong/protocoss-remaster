@@ -16,6 +16,8 @@ kotlin {
 }
 
 tasks.test {
+    inputs.dir(rootProject.file("assets/data/events"))
+    inputs.file(rootProject.file("docs/restoration/event-entry-native.json"))
     inputs.file(rootProject.file("docs/field-draw-order-native.json"))
     inputs.file(rootProject.file("docs/npc-native-verification.json"))
     inputs.file(rootProject.file("docs/buildings-native-verification.json"))

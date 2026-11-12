@@ -1,0 +1,53 @@
+{
+  "format": "original-gm-xor7f",
+  "archives": [
+    {
+      "area": 0,
+      "file": "area00.gm",
+      "source": "DATA/AREA00.G&M",
+      "sha256": "a2617a92bc0a13c8007506d3707e09a7a9234442fb847f96ab33b3d660314775",
+      "groups": 47,
+      "routes": 344
+    },
+    {
+      "area": 1,
+      "file": "area01.gm",
+      "source": "DATA/AREA01.G&M",
+      "sha256": "fcdbc957e5d6c2bda71f783ec8d549d22f70b269825630b2e2439b340988ffc5",
+      "groups": 11,
+      "routes": 336
+    },
+    {
+      "area": 2,
+      "file": "area02.gm",
+      "source": "DATA/AREA02.G&M",
+      "sha256": "35ab0d340a044ae04414719fb9bf59bab0c2ac30f840bbba676a2f0e9f834084",
+      "groups": 7,
+      "routes": 234
+    },
+    {
+      "area": 3,
+      "file": "area03.gm",
+      "source": "DATA/AREA03.G&M",
+      "sha256": "05c883beebb624cd03210a22d7d1edde85cd9e184fd6666f8aa7c564d0960f17",
+      "groups": 4,
+      "routes": 243
+    },
+    {
+      "area": 4,
+      "file": "area04.gm",
+      "source": "DATA/AREA04.G&M",
+      "sha256": "1a7a80ea40e63628a81c424542ea23b59947d8b03f7adfcfc60819d69f39695a",
+      "groups": 14,
+      "routes": 425
+    },
+    {
+      "area": 5,
+      "file": "area05.gm",
+      "source": "DATA/AREA05.G&M",
+      "sha256": "ac40560fa9ee0f82c2b7412203d2c2880f193cb06390ba1d29c21edfcfb96107",
+      "groups": 3,
+      "routes": 145
+    }
+  ]
+}
