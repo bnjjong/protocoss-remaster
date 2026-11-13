@@ -217,3 +217,12 @@ tasks.register<JavaExec>("verifyEventRewards") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 합류·쪽지의 원본 명령·중첩 대화·상태 변경 시점과 저장 재개를 확인한다.
+tasks.register<JavaExec>("verifyEventStory") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.EventStoryCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}
