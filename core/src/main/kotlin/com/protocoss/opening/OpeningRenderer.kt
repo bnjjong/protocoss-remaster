@@ -68,7 +68,12 @@ class OpeningRenderer(timeline: OpeningTimeline) : Disposable {
     private val objectGlyphs=objectFontData.getString("characters").mapIndexed { i,c ->
         c to TextureRegion(objectFont,i%16*16,i/16*16,objectFontData.get("widths").getInt(c.toString()),16)
     }.toMap()
-    private val glyphs = objectGlyphs+equipmentGlyphs+rewardGlyphs+characters.mapIndexed { index, c -> c to TextureRegion(font,index%16*16,index/16*16,
+    private val departureFontData=com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/data/events/departure.json").readString("UTF-8")).get("font")
+    private val departureFont=Texture(Gdx.files.internal("assets/departure/font.png")).also { textures+=it;it.setFilter(Texture.TextureFilter.Nearest,Texture.TextureFilter.Nearest) }
+    private val departureGlyphs=departureFontData.getString("characters").mapIndexed { i,c ->
+        c to TextureRegion(departureFont,i%16*16,i/16*16,departureFontData.get("widths").getInt(c.toString()),16)
+    }.toMap()
+    private val glyphs = departureGlyphs+objectGlyphs+equipmentGlyphs+rewardGlyphs+characters.mapIndexed { index, c -> c to TextureRegion(font,index%16*16,index/16*16,
         data.get("font").get("widths").getInt(c.toString()),16) }.toMap()+indoorGlyphs
     private val mapTicks = mutableMapOf<Int, Int>()
     private val cells = mapNumbers.associateWith { number ->

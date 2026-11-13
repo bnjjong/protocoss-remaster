@@ -253,3 +253,12 @@ tasks.register<JavaExec>("verifyTownObjects") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 검 회수 이후 재합류·출발 영상·북마겔 진입과 왕복을 원작 상태로 대조한다.
+tasks.register<JavaExec>("verifyTownDeparture") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.TownDepartureCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}

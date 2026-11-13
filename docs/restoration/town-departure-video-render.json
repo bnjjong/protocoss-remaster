@@ -1,0 +1,51 @@
+{
+  "scenes": [
+    {
+      "name": "continuous-leave-video-0",
+      "frame": 0,
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-leave-video-232",
+      "frame": 232,
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-leave-video-463",
+      "frame": 463,
+      "pixels": 64000
+    },
+    {
+      "name": "5-0-0-video-0",
+      "frame": 0,
+      "pixels": 64000
+    },
+    {
+      "name": "5-0-0-video-232",
+      "frame": 232,
+      "pixels": 64000
+    },
+    {
+      "name": "5-0-0-video-463",
+      "frame": 463,
+      "pixels": 64000
+    },
+    {
+      "name": "65535-0-0-video-0",
+      "frame": 0,
+      "pixels": 64000
+    },
+    {
+      "name": "65535-0-0-video-232",
+      "frame": 232,
+      "pixels": 64000
+    },
+    {
+      "name": "65535-0-0-video-463",
+      "frame": 463,
+      "pixels": 64000
+    }
+  ],
+  "compared_pixels": 576000,
+  "source": "실제 앱 compareVideo에서 원작 디코더로 대조한 기준 프레임과 전 화면을 비교한 결과"
+}

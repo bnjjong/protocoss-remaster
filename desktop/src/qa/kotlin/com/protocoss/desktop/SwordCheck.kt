@@ -30,10 +30,10 @@ import java.util.Base64
 /** 새 게임부터 검 회수까지 실제 입력으로 진행한다. 원본 폴더와 사용자 저장은 쓰지 않는다. */
 object SwordCheck {
     @JvmStatic fun main(args:Array<String>)=run(false)
-    fun run(equipment:Boolean,party:Boolean=false,automatic:Boolean=false,items:Boolean=false,tent:Boolean=false,shop:Boolean=false,indoor:Boolean=false,cabin:Boolean=false,rewards:Boolean=false,story:Boolean=false,cabinStory:Boolean=false,encounter:Boolean=false,objects:Boolean=false) {
+    fun run(equipment:Boolean,party:Boolean=false,automatic:Boolean=false,items:Boolean=false,tent:Boolean=false,shop:Boolean=false,indoor:Boolean=false,cabin:Boolean=false,rewards:Boolean=false,story:Boolean=false,cabinStory:Boolean=false,encounter:Boolean=false,objects:Boolean=false,departure:Boolean=false) {
         val saves=Files.createTempDirectory("protocoss-sword-qa-")
         try {
-            val app=SwordApplication(saves,equipment,party,automatic,items,tent,shop,indoor,cabin,rewards,story,cabinStory,encounter,objects)
+            val app=SwordApplication(saves,equipment,party,automatic,items,tent,shop,indoor,cabin,rewards,story,cabinStory,encounter,objects,departure)
             Lwjgl3Application(app,Lwjgl3ApplicationConfiguration().apply {
                 setTitle("검 수리 스토리 자동 검사");setWindowPosition(0,0);setWindowedMode(640,400);setInitialVisible(false);useVsync(false);setForegroundFPS(0)
             })
@@ -47,6 +47,7 @@ object AutomaticEquipmentCheck { @JvmStatic fun main(args:Array<String>)=SwordCh
 object FieldItemsCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true,true,true) }
 object TentCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true,true,true,true) }
 object ShopCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true,true,true,true,true) }
+object TownDepartureCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(false,departure=true) }
 object TownObjectsCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(false,objects=true) }
 object EncounterEventCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(false,encounter=true) }
 object CabinStoryCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(false,cabinStory=true) }
@@ -56,7 +57,7 @@ object IndoorCheck { @JvmStatic fun main(args:Array<String>) {
     if("--only-indoor" in args) SwordCheck.run(false,indoor=true) else SwordCheck.run(true,true,true,true,true,true,true)
 } }
 object CabinInteractionCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(false,cabin=true) }
-private class SwordApplication(private val saves:Path,private val equipment:Boolean,private val partyEquipment:Boolean,private val automaticEquipment:Boolean,private val fieldItems:Boolean,private val tentEnabled:Boolean,private val shopEnabled:Boolean,private val indoorEnabled:Boolean,private val cabinEnabled:Boolean,private val rewardsEnabled:Boolean,private val storyEnabled:Boolean,private val cabinStoryEnabled:Boolean,private val encounterEnabled:Boolean,private val objectsEnabled:Boolean):ApplicationAdapter() {
+private class SwordApplication(private val saves:Path,private val equipment:Boolean,private val partyEquipment:Boolean,private val automaticEquipment:Boolean,private val fieldItems:Boolean,private val tentEnabled:Boolean,private val shopEnabled:Boolean,private val indoorEnabled:Boolean,private val cabinEnabled:Boolean,private val rewardsEnabled:Boolean,private val storyEnabled:Boolean,private val cabinStoryEnabled:Boolean,private val encounterEnabled:Boolean,private val objectsEnabled:Boolean,private val departureEnabled:Boolean):ApplicationAdapter() {
     private val game=ProtocossGame(null,saves)
     private val held=mutableSetOf<Int>();private val pressed=mutableSetOf<Int>()
     private lateinit var input:Input;private lateinit var graphics:Graphics;private lateinit var rules:FieldRules
@@ -88,7 +89,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         Gdx.audio=object:Audio by audio {
             override fun newMusic(file:com.badlogic.gdx.files.FileHandle):com.badlogic.gdx.audio.Music {
                 val source=audio.newMusic(file).apply { volume=0f }
-                val result=if(!tentEnabled && !encounterEnabled)source else object:com.badlogic.gdx.audio.Music by source {
+                val result=if(!tentEnabled && !encounterEnabled && !departureEnabled)source else object:com.badlogic.gdx.audio.Music by source {
                     private var requested=1f
                     override fun setVolume(value:Float) { requested=value;source.volume=0f }
                     override fun getVolume()=requested
@@ -150,7 +151,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
     }
     private fun capture(name:String,directory:String="sword",record:JsonValue=captures) {
         val walk=field<com.protocoss.field.FieldApproach?>("fieldApproach")
-        val cinematic=scene() in setOf("OPENING","CLIP");val timeline=field<OpeningTimeline>("opening")
+        val cinematic=scene()=="OPENING" || (scene()=="CLIP" && field<Boolean>("scriptVideoNested"));val timeline=field<OpeningTimeline>("opening")
         val map=if(cinematic) timeline.map else session().map
         val source=data().get("maps").get(map.toString());val width=source.getInt("width")*8;val height=source.getInt("height")*8
         val mover=movement();val camera=field<OrthographicCamera>("camera")
@@ -185,6 +186,9 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
                     addChild("reward_x",JsonValue(talk.rewardX.toLong()));addChild("reward_leaving",JsonValue(talk.rewardLeaving))
                 }
             }
+            field<PlaceBanner?>("placeBanner")?.let { banner -> addChild("banner",JsonValue(JsonValue.ValueType.`object`).apply {
+                addChild("text",JsonValue(banner.name));addChild("x",JsonValue(banner.x.toLong()))
+            }) }
             field<com.protocoss.field.FieldPanel?>("fieldPanel")?.let { panel -> addChild("panel",array(panel.rectangle.toList())) }
         })
     }
@@ -1029,8 +1033,8 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         Gdx.files.local("desktop/build/reports/encounter-event/video.json").writeString(videoShots.toJson(JsonWriter.OutputType.json),false,"UTF-8")
         println("조우 명령 실행 검사: $states 상태·$clips 영상·$approachTicks 접근 틱·$checkedFrames 원작 영상 프레임·입력/연출 잠금·음악 감쇠/복귀·저장 재개, ${shots.size} 필드/${videoShots.size} 영상 화면")
     }
-    private fun compareVideo(frame:Int) {
-        val expected=Pixmap(Gdx.files.internal("assets/encounter/reference-$frame.png"))
+    private fun compareVideo(frame:Int,directory:String="assets/encounter") {
+        val expected=Pixmap(Gdx.files.internal("$directory/reference-$frame.png"))
         val actual=com.badlogic.gdx.utils.ScreenUtils.getFrameBufferPixels(0,0,Gdx.graphics.backBufferWidth,Gdx.graphics.backBufferHeight,true)
         try {
             val sx=Gdx.graphics.backBufferWidth/320f;val sy=Gdx.graphics.backBufferHeight/200f
@@ -1231,6 +1235,106 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         load(base)
         println("엘가임 사물 실행: 25 위치·225 상태·${animations}회 연출·세 조작 키·보상/빈 상자·방향/거리 거부·입력 잠금·저장 재개, ${shots.size} 화면")
     }
+    private fun checkTownDeparture() {
+        val base=session();val report=com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.local("docs/restoration/town-departure-native.json"))
+        val manifest=com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/departure/manifest.json"))
+        val shots=JsonValue(JsonValue.ValueType.array);val videoShots=JsonValue(JsonValue.ValueType.array)
+        val invoke=ProtocossGame::class.java.getDeclaredMethod("handleFieldEvent",FieldMovement::class.java,Int::class.javaPrimitiveType).apply { isAccessible=true }
+        val musicMethod=ProtocossGame::class.java.getDeclaredMethod("playOpeningMusic",Int::class.javaPrimitiveType,Float::class.javaObjectType).apply { isAccessible=true }
+        var clips=0;var frames=0;var animations=0
+        fun drive(name:String,show:Boolean,videoBefore:ByteArray?=null) {
+            var ticks=0;var announced=false;var request:EventMachine.Stop.Video?=null
+            val seen=mutableSetOf<String>();val seenFrames=mutableSetOf<Int>()
+            while(scene()!="FIELD" || field<FieldScript?>("fieldScript")!=null || field<Float>("fieldFade")>0f) {
+                check(ticks++<10000) { "출발 종료 실패: $name, ${scene()}" }
+                when {
+                    scene()=="CLIP" -> {
+                        val script=checkNotNull(field<FieldScript?>("fieldScript"));val pending=script.machine.pending as EventMachine.Stop.Video
+                        if(request==null) {
+                            request=pending;clips++;check(!field<Boolean>("scriptVideoNested"))
+                            if(show) capture("$name-before-video","town-departure",shots)
+                        }
+                        check(request===pending && script.next()===pending && session().map==12 && session().variable(10)==0 && session().variable(4)==24)
+                        if(videoBefore!=null) check(videoBefore.contentEquals(session().bytes())) { "출발 영상 전 저장 불일치: $name" }
+                        val clip=field<com.protocoss.prologue.ProloguePlayer>("encounterClip")
+                        val main=field<com.badlogic.gdx.audio.Music>("openingMusic")
+                        if(field<Boolean>("clipStarted")) {
+                            check(!main.isPlaying)
+                            val frame=clip.timeline.stream.frameIndex
+                            if(frame in 0..463 && seenFrames.add(frame)) {
+                                check(clip.timeline.stream.frameHash()==manifest.get("frame_state_sha256")[frame].asString());frames++
+                                if(frame==232) { game.pause();game.resume();check(!main.isPlaying) }
+                                if(show && frame in setOf(0,232,463)) {
+                                    compareVideo(frame,"assets/departure")
+                                    val label="$name-video-$frame";val p=Pixmap.createFromFrameBuffer(0,0,Gdx.graphics.backBufferWidth,Gdx.graphics.backBufferHeight)
+                                    try { PixmapIO.writePNG(Gdx.files.local("desktop/build/reports/town-departure/$label.png"),p,-1,true) } finally { p.dispose() }
+                                    videoShots.addChild(JsonValue(JsonValue.ValueType.`object`).apply { addChild("name",JsonValue(label));addChild("frame",JsonValue(frame.toLong()));addChild("pixels",JsonValue(64000L)) })
+                                }
+                            }
+                            if(frame>=464) check(kotlin.math.abs(clip.volume-.6f*(64-(frame-464)).coerceAtLeast(0)/64f)<.0001f)
+                        } else check(kotlin.math.abs(main.volume-.6f*(1f-field<Float>("clipFade")))<.0001f)
+                        held+=Input.Keys.D;pressed+=listOf(Input.Keys.SPACE,Input.Keys.ENTER,Input.Keys.ESCAPE);tick();held.clear()
+                    }
+                    scene()=="OPENING" -> {
+                        val t=field<OpeningTimeline>("opening")
+                        if(!announced) { animations++;announced=true }
+                        check(t.continuesField && t.map==12 && session().variable(8)==4 && session().bytes()[500].toInt()==0)
+                        if(t.page!=null) {
+                            idle(100)
+                            if(show) capture("$name-dialogue-${t.eventArgument}-${t.pageIndex}","town-departure",shots)
+                            press(Input.Keys.ENTER)
+                        } else {
+                            if(show && t.totalTicks in setOf(8,40,80,120,160,200,240,280) && seen.add("tick-${t.totalTicks}")) capture("$name-animation-${t.totalTicks}","town-departure",shots)
+                            held+=Input.Keys.D;pressed+=Input.Keys.ESCAPE;tick();held.clear()
+                        }
+                    }
+                    field<FieldDialogue?>("fieldDialogue")!=null -> {
+                        idle(100);val d=field<FieldDialogue>("fieldDialogue")
+                        if(show && seen.add("page-${d.pageIndex}")) capture("$name-page-${d.pageIndex}","town-departure",shots)
+                        val position=movement().x to movement().y
+                        held+=Input.Keys.D;tick();held.clear();press(Input.Keys.ESCAPE)
+                        check(position==(movement().x to movement().y) && scene()=="FIELD")
+                        press(Input.Keys.ENTER)
+                    }
+                    field<PlaceBanner?>("placeBanner")!=null && field<Float>("fieldFade")==0f -> {
+                        idle(40)
+                        if(show) capture("$name-place-${session().map}","town-departure",shots)
+                        press(Input.Keys.ENTER);idle(40)
+                    }
+                    else -> tick()
+                }
+            }
+            if(request!=null) check(seenFrames==(0..463).toSet())
+            if(show) capture("$name-finished","town-departure",shots)
+        }
+        // 새 게임에서 검 회수까지 진행한 상태를 이어 남쪽 출구를 실제로 밟는다.
+        route(1);banner();musicMethod.invoke(game,24,.6f);route(22);drive("continuous-rejoin",true)
+        check(session().map==12 && session().variable(8)==5 && session().bytes()[500].toInt()==1);saveAndReload()
+        musicMethod.invoke(game,24,.6f);route(22);drive("continuous-leave",true)
+        check(session().map==13 && session().variable(0)==11 && session().variable(10)==1 && field<Int>("activeTrack")==15)
+        saveAndReload();val beforeClips=clips
+        route(0);drive("continuous-return",true);check(session().map==12)
+        musicMethod.invoke(game,24,.6f);route(22);drive("continuous-repeat",true)
+        check(session().map==13 && clips==beforeClips && session().variable(10)==1)
+        for(row in report.get("cases")) {
+            val name=row.getString("name");val source=DosSave.parse(Base64.getDecoder().decode(row.getString("before")))
+            load(source);musicMethod.invoke(game,24,.6f)
+            invoke.invoke(game,movement(),22)
+            val expectedVideo=row.get("requests").firstOrNull { it.getString("kind")=="video" }?.getString("before")?.let { Base64.getDecoder().decode(it) }
+            val show=row.getInt("profile")==0 && row.getInt("variant")==0
+            drive(name,show,expectedVideo)
+            val expected=Base64.getDecoder().decode(row.getString("after"))
+            check(expected.contentEquals(session().bytes())) { "출발 저장 불일치: $name, ${expected.indices.filter { expected[it]!=session().bytes()[it] }}" }
+            if(source.variable(8)>=5) {
+                check(session().map==13 && field<Int>("activeTrack")==15 && kotlin.math.abs(field<com.badlogic.gdx.audio.Music>("openingMusic").volume-.6f)<.0001f)
+                if(show) saveAndReload()
+            }
+        }
+        Gdx.files.local("desktop/build/reports/town-departure/scenes.json").writeString(shots.toJson(JsonWriter.OutputType.json),false,"UTF-8")
+        Gdx.files.local("desktop/build/reports/town-departure/video.json").writeString(videoShots.toJson(JsonWriter.OutputType.json),false,"UTF-8")
+        load(base)
+        println("마을 출발 실행: 42 상태·${animations} 재합류·${clips} 영상·${frames} 프레임 상태·연속 출발/왕복/반복·진행 시점·입력 잠금·음악 복귀·저장 재개, ${shots.size} 필드/${videoShots.size} 영상 화면")
+    }
     override fun render() {
         if(completed) return
         press(Input.Keys.ENTER);press(Input.Keys.SPACE);finishScene()
@@ -1265,6 +1369,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         if(cabinStoryEnabled) checkCabinStory()
         if(encounterEnabled) checkEncounterEvent()
         if(objectsEnabled) checkTownObjects()
+        if(departureEnabled) checkTownDeparture()
         Gdx.files.local("desktop/build/reports/sword/scenes.json").writeString(captures.toJson(JsonWriter.OutputType.json),false,"UTF-8")
         println("검 수리 스토리 검사 완료: $steps 걸음, 진행 0→1→2→3→4, 합류·쪽지 각 1회, 맡기기·회수·중복 방지·저장 재개, ${captures.size} 화면")
         completed=true;Gdx.app.exit()

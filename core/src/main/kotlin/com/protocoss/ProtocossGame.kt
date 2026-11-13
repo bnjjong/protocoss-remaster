@@ -116,6 +116,9 @@ class ProtocossGame(
     private var clipReturnTrack=25
     private var clipReturnVolume=1f
     private var clipMusicVolume=1f
+    private var scriptVideoOwner:FieldScript?=null
+    private var scriptVideoNested=true
+    private var clipFrameCount=25
     private var scriptAnimation:EventMachine.Stop.Animation?=null
     private var fieldApproach:FieldApproach?=null
     private var animationPlan:FieldStory.Plan?=null
@@ -201,6 +204,7 @@ class ProtocossGame(
         fieldRewards=FieldRewards(equipmentRenderer.model.data,com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/ui/rewards/rewards.json").readString("UTF-8")))
         eventCharacters=(equipmentRenderer.model.data.get("rects").filter { it.name.startsWith("glyph-") }.map { it.name.substring(6).toInt().toChar() }.joinToString("")+
             com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/data/field/objects.json").readString("UTF-8")).get("font").getString("characters")+
+            com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/data/events/departure.json").readString("UTF-8")).get("font").getString("characters")+
             fieldRewards.data.get("font").getString("characters")+opening.data.get("font").getString("characters")+
             com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/data/field/indoor-dialogues.json").readString("UTF-8")).get("font").getString("characters")).toSet()
         doorSound=Gdx.audio.newSound(Gdx.files.internal("assets/audio/sfx/e0000.wav"))
@@ -335,7 +339,17 @@ class ProtocossGame(
             else if (scene == Scene.OPENING) { batch.begin(); openingRenderer.render(batch,if(opening.continuesField) fieldActors() else emptyList()); batch.end() }
             else if (scene == Scene.CLIP) {
                 if(clipStarted && !clipReturning) encounterClip!!.render(batch)
-                else { batch.begin();openingRenderer.render(batch);openingRenderer.fade(batch,clipFade);batch.end() }
+                else {
+                    batch.begin()
+                    if(scriptVideoNested) openingRenderer.render(batch)
+                    else {
+                        val map=session!!.map;val height=tileMap!!.totalPixelHeight
+                        val sx=camera.position.x-160f;val sy=height-camera.position.y-100f
+                        openingRenderer.renderMap(batch,map,sx,sy)
+                        openingRenderer.renderFieldActors(batch,map,sx,sy,fieldMovement!!.x,fieldMovement!!.y,fieldMovement!!.pose,fieldMovement!!.layer,fieldNpcs?.actors)
+                    }
+                    openingRenderer.fade(batch,clipFade);batch.end()
+                }
             }
             else renderMenu()
             return
@@ -348,7 +362,7 @@ class ProtocossGame(
 
         if (isTileMapMode && tileMapRenderer != null) {
             // 1-A. 필드 타일맵 렌더링
-            if(session?.area==0 && session?.map in 0..12) openingRenderer.renderMap(batch,session!!.map,0f,tileMap!!.totalPixelHeight-200f,true)
+            if(session?.area==0 && session?.map in 0..13) openingRenderer.renderMap(batch,session!!.map,0f,tileMap!!.totalPixelHeight-200f,true)
             else tileMapRenderer!!.render(batch, camera)
         } else if (backgroundTextures.isNotEmpty()) {
             // 1-B. 단일 배경 갤러리 렌더링
@@ -372,7 +386,7 @@ class ProtocossGame(
             else -> 12
         }
         val pose=if(player.isMoving) base+(walkingTime*9).toInt()%4 else fieldMovement?.pose ?: base
-        if (session?.area == 0 && mapNumber in 0..12) {
+        if (session?.area == 0 && mapNumber in 0..13) {
             openingRenderer.renderFieldActors(batch,mapNumber!!,0f,mapHeight-200f,
                 player.x-12f,mapHeight-player.y-12f,pose,fieldMovement?.layer ?: 0,fieldNpcs?.actors)
         } else openingRenderer.renderActor(batch,0,pose,player.x-12f,188f-player.y)
@@ -556,7 +570,7 @@ class ProtocossGame(
                     indoorConversation=indoor
                     session=session!!.calledEvent(event)
                 }
-            } else if(session?.let { it.area==0 && it.map in 0..12 }==true) {
+            } else if(session?.let { it.area==0 && it.map in 0..13 }==true) {
                 val current=session!!
                 val event=fieldRules.interaction(current.map,movement.x,movement.y,movement.pose,movement.doorOpen)
                 if(event!=null) prepareFieldScript(current,event,true)?.let { beginFieldScript(it,-1) }
@@ -649,7 +663,7 @@ class ProtocossGame(
     }
 
     private fun prepareFieldScript(save:DosSave,event:Int,allowWarp:Boolean):FieldScript? {
-        if(save.area!=0 || save.map !in 0..12) return null
+        if(save.area!=0 || save.map !in 0..13) return null
         return FieldScript.prepare(eventArchives.getValue(save.area),save,event,opening.data.get("maps"),eventCharacters,allowWarp,
             canOpenDoor={ id ->
                 val m=fieldMovement
@@ -694,7 +708,7 @@ class ProtocossGame(
                     player.setMotion(null,false);return
                 }
                 is EventMachine.Stop.Animation -> { startScriptAnimation(script,request);return }
-                is EventMachine.Stop.Video -> error("연출 밖 영상 요청은 사전 검사에서 거부해야 합니다.")
+                is EventMachine.Stop.Video -> { startScriptVideo(script,request,false);return }
                 is EventMachine.Stop.Chest -> {
                     val m=checkNotNull(fieldMovement)
                     val changes=openingRenderer.chestChanges(m.map,m.x.toInt(),m.y.toInt())
@@ -723,7 +737,7 @@ class ProtocossGame(
                     val npc=fieldScriptNpc
                     enterField(script.save,false)
                     fieldScript=script;fieldScriptNpc=npc;fieldScriptDialogue=previous
-                    if(openingMusic==null || activeTrack!=request.music) playOpeningMusic(request.music)
+                    if(openingMusic==null || activeTrack!=request.music) playOpeningMusic(request.music,openingMusic?.volume)
                     fieldFade=1f;return
                 }
                 is EventMachine.Stop.Door -> {
@@ -823,7 +837,7 @@ class ProtocossGame(
 
     /** AI 없이 표시하던 오두막의 인물도 조사·현재 필드 연출에서 유지한다. */
     private fun fieldActors():List<FieldNpcs.Actor> = fieldNpcs?.actors
-        ?: session?.takeIf { it.area==0 && it.map in 0..12 }?.let { save ->
+        ?: session?.takeIf { it.area==0 && it.map in 0..13 }?.let { save ->
             opening.data.get("maps").get(save.map.toString()).get("npcs").map { FieldNpcs.Actor(it) }
         }.orEmpty()
 
@@ -1074,11 +1088,12 @@ class ProtocossGame(
         }
     }
 
-    private fun startScriptVideo(child:FieldScript,request:EventMachine.Stop.Video) {
+    private fun startScriptVideo(child:FieldScript,request:EventMachine.Stop.Video,nested:Boolean=true) {
         check(scriptVideo==null && encounterClip==null)
-        val plan=fieldVideos.plan(request,child.save)
+        val plan=fieldVideos.plan(request,child.save,nested)
         encounterClip=ProloguePlayer(plan.getString("video"),plan.getString("audio"))
-        scriptVideo=request;clipReturnTrack=child.save.variable(4)
+        scriptVideo=request;scriptVideoOwner=child;scriptVideoNested=nested;clipFrameCount=plan.getInt("frames",25)
+        clipReturnTrack=child.save.variable(4)
         clipReturnVolume=openingMusic?.volume ?: 1f;clipMusicVolume=clipReturnVolume
         encounterClip!!.volume=clipMusicVolume
         clipFade=0f;clipStarted=false;clipReturning=false;scene=Scene.CLIP
@@ -1093,8 +1108,14 @@ class ProtocossGame(
         } else if(!clip.finished) {
             clip.update(delta)
             val frame=clip.timeline.stream.frameIndex
-            if(frame>=25) clip.volume=clipMusicVolume*((64-(frame-25)).coerceAtLeast(0)/64f)
+            if(frame>=clipFrameCount) clip.volume=clipMusicVolume*((64-(frame-clipFrameCount)).coerceAtLeast(0)/64f)
         } else {
+            if(checkNotNull(scriptVideo).restore==0) {
+                clip.dispose();encounterClip=null
+                val owner=checkNotNull(scriptVideoOwner);owner.resumeVideo(checkNotNull(scriptVideo));scriptVideo=null;scriptVideoOwner=null
+                openingMusic?.volume=clipReturnVolume
+                scene=Scene.FIELD;continueFieldScript();return
+            }
             if(!clipReturning) {
                 clip.pause();playOpeningMusic(clipReturnTrack,0f);clipReturning=true;clipFade=1f
                 return
@@ -1103,7 +1124,7 @@ class ProtocossGame(
             openingMusic?.volume=clipReturnVolume*(1f-clipFade)
             if(clipFade==0f) {
                 clip.dispose();encounterClip=null
-                checkNotNull(animationChild).resumeVideo(checkNotNull(scriptVideo));scriptVideo=null
+                checkNotNull(scriptVideoOwner).resumeVideo(checkNotNull(scriptVideo));scriptVideo=null;scriptVideoOwner=null
                 scene=Scene.OPENING;continueAnimationEvent()
             }
         }
@@ -1127,7 +1148,7 @@ class ProtocossGame(
             val loaded = saves.load(entry)
             openingMusic?.dispose();openingMusic=null
             enterField(loaded.save)
-            loaded.save.variable(4).takeIf { it in setOf(10,24,25) }?.let { playOpeningMusic(it) }
+            loaded.save.variable(4).takeIf { it in setOf(10,15,24,25) }?.let { playOpeningMusic(it) }
             currentDemoSegmentId = loaded.nextDialogue
         } catch (e: Exception) {
             message = "불러오지 못했습니다. 원본 게임 경로와 파일을 확인해주세요."
@@ -1143,9 +1164,9 @@ class ProtocossGame(
     private fun enterField(save: DosSave,preserveField:Boolean) {
         // 파일·맵·좌표를 모두 확인한 뒤에 현재 세션을 교체한다.
         val original = originalDirectory?.let { OriginalMapData.load(it, save.area, save.map) }
-        require(original != null || (save.area == 0 && save.map in 0..12)) { "이 저장 지점에는 원본 MAP 데이터가 필요합니다." }
+        require(original != null || (save.area == 0 && save.map in 0..13)) { "이 저장 지점에는 원본 MAP 데이터가 필요합니다." }
         val fallbackMap = if (save.map == 2) "new_game_map.json" else "area00_map.json"
-        val map = original?.map ?: if(save.map in setOf(0,3,4,5,6,7,8,9,10,11,12)) {
+        val map = original?.map ?: if(save.map in setOf(0,3,4,5,6,7,8,9,10,11,12,13)) {
             val source=opening.data.get("maps").get(save.map.toString())
             TileMap(source.getInt("width"),source.getInt("height"),8,8)
         } else TileMap.fromJson(Gdx.files.internal("assets/data/maps/$fallbackMap").readString())
@@ -1169,15 +1190,15 @@ class ProtocossGame(
         FieldBounds.constrainCamera(camera, map)
         session = save
         fieldScript=null;fieldScriptNpc=-1;fieldScriptDialogue=null;fieldPanel=null
-        scriptAnimation=null;animationPlan=null;animationChild=null;fieldApproach=null;scriptVideo=null
+        scriptAnimation=null;animationPlan=null;animationChild=null;fieldApproach=null;scriptVideo=null;scriptVideoOwner=null
         scriptShop=null
         indoorConversation=null
         if(!preserveField) fieldRules.reset(save.map)
         fieldDialogue=null
-        if(!preserveField) fieldNpcs=if(save.area==0 && save.map in 4..12) FieldNpcs(opening.data.get("maps").get(save.map.toString()),npcClock) else null
+        if(!preserveField) fieldNpcs=if(save.area==0 && save.map in 4..13) FieldNpcs(opening.data.get("maps").get(save.map.toString()),npcClock) else null
         placeBanner=null
         if(!preserveField) openingRenderer.resetFieldMaps()
-        fieldMovement = if(save.area==0 && save.map in 0..12) FieldMovement(fieldRules,save.map,save.layer.coerceIn(0,2),save.pose).apply {
+        fieldMovement = if(save.area==0 && save.map in 0..13) FieldMovement(fieldRules,save.map,save.layer.coerceIn(0,2),save.pose).apply {
             place(save.worldX,map.totalPixelHeight-save.worldY(map.totalPixelHeight))
             npcs=fieldNpcs
             baseStep=fieldStep

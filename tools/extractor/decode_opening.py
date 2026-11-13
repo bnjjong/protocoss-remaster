@@ -95,6 +95,71 @@ def glyph(char, font, english, tables):
     return image
 
 
+def extract_field_map(directory,number,sub,block,sprite_ids,sprite_blocks,atlas):
+    """공통 필드 그림·겹침·대화 색·인물·타일 정보를 추출한다."""
+    w,h=sub[2]*40,sub[3]*25
+    pal=block[2:770]; cells=list(struct.iter_unpack('<HH',sub[48:48+w*h*4])); frames=[]
+    for i in range(1000):
+        im=Image.frombytes('P',(8,8),decode_tile_pixels(block[770+i*64:834+i*64]));im.putpalette([v*4 for v in pal]);frames.append(im.convert('RGBA'))
+    tiles=Image.new('RGBA',(320,200)); overlays=Image.new('RGBA',(320,200)); fronts=Image.new('RGBA',(320,200))
+    lut=struct.unpack_from('<1000H',block,64770)
+    for i,im in enumerate(frames):
+        tiles.paste(im,(i%40*8,i//40*8))
+        over=frames[lut[i]&4095].copy()
+        # 겹침 타일의 팔레트 255만 투명하다.
+        ids=decode_tile_pixels(block[770+(lut[i]&4095)*64:834+(lut[i]&4095)*64])
+        over.putalpha(Image.frombytes('L',(8,8),bytes(0 if c==255 else 255 for c in ids)))
+        overlays.paste(over,(i%40*8,i//40*8))
+        chosen=(lut[i]&4095) or i
+        ids=decode_tile_pixels(block[770+chosen*64:834+chosen*64])
+        front=frames[chosen].copy();front.putalpha(Image.frombytes('L',(8,8),bytes(0 if c==255 else 255 for c in ids)))
+        fronts.paste(front,(i%40*8,i//40*8))
+    tiles.save(directory/f'tiles-{number}.png');overlays.save(directory/f'overlays-{number}.png');fronts.save(directory/f'fronts-{number}.png')
+    remap=block[68770+4*256:68770+5*256]
+    def remapped(indices,alpha=None,size=(8,8)):
+        image=Image.frombytes('P',size,bytes(remap[c] for c in indices));image.putpalette([v*4 for v in pal])
+        image=image.convert('RGBA')
+        if alpha is not None:image.putalpha(Image.frombytes('L',size,alpha))
+        return image
+    dark_tiles=Image.new('RGBA',(320,200))
+    for tile in range(1000):
+        ids=decode_tile_pixels(block[770+tile*64:834+tile*64])
+        dark_tiles.paste(remapped(ids),(tile%40*8,tile//40*8))
+    dark_tiles.save(directory/f'tiles-dialogue-{number}.png')
+    dark_people=Image.new('RGBA',atlas.size)
+    for row,sprite in enumerate(sprite_ids):
+        for frame,raw in enumerate(sprite_blocks[sprite]):
+            decoded=decode_img_frame(raw)
+            dark_people.paste(remapped(decoded.indices,decoded.alpha,(24,24)),(frame*24,row*24))
+    dark_people.save(directory/f'people-dialogue-{number}.png')
+    for name,use_original in [('overlays',False),('fronts',True)]:
+        image=Image.new('RGBA',(320,200))
+        for tile in range(1000):
+            chosen=(lut[tile]&4095) or (tile if use_original else 0)
+            ids=decode_tile_pixels(block[770+chosen*64:834+chosen*64])
+            image.paste(remapped(ids,bytes(0 if c==255 else 255 for c in ids)),(tile%40*8,tile//40*8))
+        image.save(directory/f'{name}-dialogue-{number}.png')
+
+    dark=Image.new('RGBA',(w*8,h*8))
+    remap=block[68770+4*256:68770+5*256]
+    for i,(tid,_) in enumerate(cells):
+        ids=decode_tile_pixels(block[770+(tid&4095)*64:834+(tid&4095)*64])
+        im=Image.frombytes('P',(8,8),bytes(remap[c] for c in ids)); im.putpalette([v*4 for v in pal])
+        dark.paste(im.convert('RGBA'),(i%w*8,i//w*8))
+    dark.save(directory/f'dialogue-background-{number}.png')
+    tail=48+w*h*4
+    animations=[list(struct.unpack_from('<4H',sub,tail+i*8)) for i in range(sub[33])]
+    tail+=sub[33]*8
+    npcs=[]
+    for i in range(sub[34]):
+        values=struct.unpack_from('<12I6B',sub,tail+i*54)
+        npcs.append(dict(sprite=values[0],x=values[1],y=values[2],tile_x=values[5],tile_y=values[6],
+            bounds=list(values[7:11]),event=values[11],direction=values[12],frame=values[13],
+            kind=values[14],speed=values[15],mode=values[16],mask=values[17]))
+    return dict(width=w,height=h,cells=[list(c) for c in cells],animations=animations,
+                              next_tiles=list(struct.unpack_from('<1000H',block,66770)),npcs=npcs)
+
+
 def extract(game_dir, output_root, executable=None):
     directory = output_root/'assets/opening'; directory.mkdir(parents=True,exist_ok=True)
     executable = executable if executable is not None else unpack_game(game_dir)
@@ -197,66 +262,7 @@ def extract(game_dir, output_root, executable=None):
     maps=read('MAP/AREA00.MAP');soc=read('MAP/AREA00.SOC');map_info={}
     for number in range(13):
         sub=maps[mo[number]:mo[number+1]];w,h=sub[2]*40,sub[3]*25; block=soc[so[sub[32]]:so[sub[32]]+70818]
-        pal=block[2:770]; cells=list(struct.iter_unpack('<HH',sub[48:48+w*h*4])); frames=[]
-        for i in range(1000):
-            im=Image.frombytes('P',(8,8),decode_tile_pixels(block[770+i*64:834+i*64]));im.putpalette([v*4 for v in pal]);frames.append(im.convert('RGBA'))
-        tiles=Image.new('RGBA',(320,200)); overlays=Image.new('RGBA',(320,200)); fronts=Image.new('RGBA',(320,200))
-        lut=struct.unpack_from('<1000H',block,64770)
-        for i,im in enumerate(frames):
-            tiles.paste(im,(i%40*8,i//40*8))
-            over=frames[lut[i]&4095].copy()
-            # 겹침 타일의 팔레트 255만 투명하다.
-            ids=decode_tile_pixels(block[770+(lut[i]&4095)*64:834+(lut[i]&4095)*64])
-            over.putalpha(Image.frombytes('L',(8,8),bytes(0 if c==255 else 255 for c in ids)))
-            overlays.paste(over,(i%40*8,i//40*8))
-            chosen=(lut[i]&4095) or i
-            ids=decode_tile_pixels(block[770+chosen*64:834+chosen*64])
-            front=frames[chosen].copy();front.putalpha(Image.frombytes('L',(8,8),bytes(0 if c==255 else 255 for c in ids)))
-            fronts.paste(front,(i%40*8,i//40*8))
-        tiles.save(directory/f'tiles-{number}.png');overlays.save(directory/f'overlays-{number}.png');fronts.save(directory/f'fronts-{number}.png')
-        remap=block[68770+4*256:68770+5*256]
-        def remapped(indices,alpha=None,size=(8,8)):
-            image=Image.frombytes('P',size,bytes(remap[c] for c in indices));image.putpalette([v*4 for v in pal])
-            image=image.convert('RGBA')
-            if alpha is not None:image.putalpha(Image.frombytes('L',size,alpha))
-            return image
-        dark_tiles=Image.new('RGBA',(320,200))
-        for tile in range(1000):
-            ids=decode_tile_pixels(block[770+tile*64:834+tile*64])
-            dark_tiles.paste(remapped(ids),(tile%40*8,tile//40*8))
-        dark_tiles.save(directory/f'tiles-dialogue-{number}.png')
-        dark_people=Image.new('RGBA',atlas.size)
-        for row,sprite in enumerate(sprite_ids):
-            for frame,raw in enumerate(sprite_blocks[sprite]):
-                decoded=decode_img_frame(raw)
-                dark_people.paste(remapped(decoded.indices,decoded.alpha,(24,24)),(frame*24,row*24))
-        dark_people.save(directory/f'people-dialogue-{number}.png')
-        for name,use_original in [('overlays',False),('fronts',True)]:
-            image=Image.new('RGBA',(320,200))
-            for tile in range(1000):
-                chosen=(lut[tile]&4095) or (tile if use_original else 0)
-                ids=decode_tile_pixels(block[770+chosen*64:834+chosen*64])
-                image.paste(remapped(ids,bytes(0 if c==255 else 255 for c in ids)),(tile%40*8,tile//40*8))
-            image.save(directory/f'{name}-dialogue-{number}.png')
-
-        dark=Image.new('RGBA',(w*8,h*8))
-        remap=block[68770+4*256:68770+5*256]
-        for i,(tid,_) in enumerate(cells):
-            ids=decode_tile_pixels(block[770+(tid&4095)*64:834+(tid&4095)*64])
-            im=Image.frombytes('P',(8,8),bytes(remap[c] for c in ids)); im.putpalette([v*4 for v in pal])
-            dark.paste(im.convert('RGBA'),(i%w*8,i//w*8))
-        dark.save(directory/f'dialogue-background-{number}.png')
-        tail=48+w*h*4
-        animations=[list(struct.unpack_from('<4H',sub,tail+i*8)) for i in range(sub[33])]
-        tail+=sub[33]*8
-        npcs=[]
-        for i in range(sub[34]):
-            values=struct.unpack_from('<12I6B',sub,tail+i*54)
-            npcs.append(dict(sprite=values[0],x=values[1],y=values[2],tile_x=values[5],tile_y=values[6],
-                bounds=list(values[7:11]),event=values[11],direction=values[12],frame=values[13],
-                kind=values[14],speed=values[15],mode=values[16],mask=values[17]))
-        map_info[str(number)]=dict(width=w,height=h,cells=[list(c) for c in cells],animations=animations,
-                                  next_tiles=list(struct.unpack_from('<1000H',block,66770)),npcs=npcs)
+        map_info[str(number)]=extract_field_map(directory,number,sub,block,sprite_ids,sprite_blocks,atlas)
     all_pages=[p for pages in dialogues.values() for p in pages]+[p for variants in npc_dialogues.values() for pages in variants.values() for p in pages]+building_dialogues['locked']+[p for pages in shop.values() for p in pages]
     chars=sorted((set(''.join(p['speaker']+p['text'] for p in all_pages)) | set('엘가임 마을벨슨그의 오두막')) - {'\n'})
     font=read('HANGUL.FNT');english=read('ENGLISH.FNT');tables=code[0x4040:0x4108]

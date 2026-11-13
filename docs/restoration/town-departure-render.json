@@ -1,0 +1,249 @@
+{
+  "compared_pixels": 3904000,
+  "scenes": [
+    {
+      "name": "continuous-rejoin-dialogue-16-0",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-rejoin-animation-8",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-rejoin-animation-40",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-rejoin-animation-80",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-rejoin-animation-120",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-rejoin-animation-160",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-rejoin-animation-200",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-rejoin-animation-240",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-rejoin-dialogue-23-0",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-rejoin-dialogue-23-1",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-rejoin-dialogue-23-2",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-rejoin-dialogue-23-3",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-rejoin-dialogue-23-4",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-rejoin-dialogue-23-5",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-rejoin-dialogue-23-6",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-rejoin-dialogue-23-7",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-rejoin-animation-280",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-rejoin-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-leave-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-leave-before-video",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-leave-place-13",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-leave-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-return-place-12",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-return-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-repeat-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-repeat-place-13",
+      "pixels": 64000
+    },
+    {
+      "name": "continuous-repeat-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "0-0-0-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "0-0-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "1-0-0-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "1-0-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "2-0-0-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "2-0-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "3-0-0-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "3-0-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "4-0-0-dialogue-16-0",
+      "pixels": 64000
+    },
+    {
+      "name": "4-0-0-animation-8",
+      "pixels": 64000
+    },
+    {
+      "name": "4-0-0-animation-40",
+      "pixels": 64000
+    },
+    {
+      "name": "4-0-0-animation-80",
+      "pixels": 64000
+    },
+    {
+      "name": "4-0-0-animation-120",
+      "pixels": 64000
+    },
+    {
+      "name": "4-0-0-animation-160",
+      "pixels": 64000
+    },
+    {
+      "name": "4-0-0-animation-200",
+      "pixels": 64000
+    },
+    {
+      "name": "4-0-0-animation-240",
+      "pixels": 64000
+    },
+    {
+      "name": "4-0-0-dialogue-23-0",
+      "pixels": 64000
+    },
+    {
+      "name": "4-0-0-dialogue-23-1",
+      "pixels": 64000
+    },
+    {
+      "name": "4-0-0-dialogue-23-2",
+      "pixels": 64000
+    },
+    {
+      "name": "4-0-0-dialogue-23-3",
+      "pixels": 64000
+    },
+    {
+      "name": "4-0-0-dialogue-23-4",
+      "pixels": 64000
+    },
+    {
+      "name": "4-0-0-dialogue-23-5",
+      "pixels": 64000
+    },
+    {
+      "name": "4-0-0-dialogue-23-6",
+      "pixels": 64000
+    },
+    {
+      "name": "4-0-0-dialogue-23-7",
+      "pixels": 64000
+    },
+    {
+      "name": "4-0-0-animation-280",
+      "pixels": 64000
+    },
+    {
+      "name": "4-0-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "5-0-0-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "5-0-0-before-video",
+      "pixels": 64000
+    },
+    {
+      "name": "5-0-0-place-13",
+      "pixels": 64000
+    },
+    {
+      "name": "5-0-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "65535-0-0-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "65535-0-0-before-video",
+      "pixels": 64000
+    },
+    {
+      "name": "65535-0-0-place-13",
+      "pixels": 64000
+    },
+    {
+      "name": "65535-0-0-finished",
+      "pixels": 64000
+    }
+  ]
+}

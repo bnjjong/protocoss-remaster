@@ -46,7 +46,7 @@ class StoryServicesReference(StoryReference):
         for p in (0xd80c,0xd810):self.dword(p,struct.unpack_from('<I',source,100+(p-0xd80c))[0])
         c.mem_write(0x3e0000,b'\xc3')
         for p in (0xfd40,0xfd44):self.dword(p,0x3e0000)
-        stack=[];animations=[];roots=[];filedata=b'';heap=0x280000;video=None
+        stack=[];animations=[];roots=[];filedata=b'';heap=0x280000;video=None;video_name=None
         def saved():return base64.b64encode(self.saved()).decode()
         def pc():return struct.unpack('<I',c.mem_read(0x715a4,4))[0]-0x240000
         def snapshot(kind,**extra):
@@ -60,7 +60,7 @@ class StoryServicesReference(StoryReference):
         skips={0x11700:0,0x11694:0,0x1186c:0,0x11468:0,0x23da4:0,0x1dd64:0,0x243f0:0,0x22148:0,
             0x26674:0,0x66025:0,0x66368:0,0x2b838:0,0x1dc54:0,0x235e4:0,0x263a0:0,0x1f108:4,0x2ca5e:8,0x2cb5f:8,0x66f6e:0,0x673c3:0}
         def hook(cpu,address,size,user):
-            nonlocal filedata,heap,video
+            nonlocal filedata,heap,video,video_name
             regs=[cpu.reg_read(r) for r in (UC_X86_REG_EAX,UC_X86_REG_EDX,UC_X86_REG_EBX,UC_X86_REG_ECX)]
             if address==0x25304:
                 f=dict(argument=regs[0],requests=[],steps=0,last=0)
@@ -74,21 +74,22 @@ class StoryServicesReference(StoryReference):
             elif address==0x2572c:
                 f=stack[-1];f['end']=snapshot('finished');f['after']=saved();stack.pop()
             elif address==0x10a54:
-                if regs[0] not in (2,3,4,5,6,7,8):raise ValueError('이번 범위는 AUTOANI.002~008이다.')
+                if regs[0] not in (2,3,4,5,6,7,8,9):raise ValueError('이번 범위는 AUTOANI.002~009이다.')
                 r=snapshot('animation',id=regs[0],mode=regs[1],music=regs[2],calls=[]);stack[-1]['requests'].append(r);animations.append(r)
             elif address==0x1131e:
                 r=animations.pop();r['after']=saved()
                 r['hero']=list(struct.unpack('<ii',cpu.mem_read(0x77701,8)))+[self.byte(0x7713)]
             elif address==0x134b8:
                 name=string(regs[0]);args=regs[1:]
-                if name.lower()!=b'#0.vis' or args!=[3,27,1]:raise ValueError('미지원 영상 실행 조합')
+                if (name.lower(),tuple(args)) not in ((b'#0.vis',(3,27,1)),(b'open.vis',(2,30,0))):raise ValueError('미지원 영상 실행 조합')
+                video_name=name.decode('ascii').upper()
                 video=snapshot('video',raw=base64.b64encode(name).decode(),args=args,before=saved(),loads=[],frames=0)
                 stack[-1]['requests'].append(video);self.byte(0x1660,1)
             elif address==0x13993:
                 video['after']=saved();video=None
             elif video is not None and address in (0x2c544,0x2c5a4):
                 if address==0x2c5a4:
-                    data=(game_dir/'GRP/#0.VIS').read_bytes();self.dword(0xfd88,struct.unpack_from('<H',data,2)[0]<<16)
+                    data=(game_dir/'GRP'/video_name).read_bytes();self.dword(0xfd88,struct.unpack_from('<H',data,2)[0]<<16)
                 cpu.reg_write(UC_X86_REG_EAX,1);self.return_from(cpu)
             elif video is not None and address==0x13725:self.dword(0xfd48,0x10000000)
             elif video is not None and address==0x2c50c:

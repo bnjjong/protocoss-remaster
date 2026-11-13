@@ -94,7 +94,7 @@ class FieldScript(private val archive:EventArchive,source:DosSave,argument:Int,p
                             val map=maps.get(request.map.toString()) ?: error("목적지 맵 자산이 없습니다.")
                             require(request.scrollX*8+request.x-16 in 0..map.getInt("width")*8-24 &&
                                 request.scrollY*8+request.y-16 in 0..map.getInt("height")*8-24) { "목적지 인물 좌표가 맵 밖입니다." }
-                            require(request.music in setOf(10,24,25)) { "목적지 음악을 연결하지 않았습니다." }
+                            require(request.music in setOf(10,15,24,25)) { "목적지 음악을 연결하지 않았습니다." }
                             trial.warp(request)
                         }
                         is EventMachine.Stop.Animation -> {
@@ -119,7 +119,10 @@ class FieldScript(private val archive:EventArchive,source:DosSave,argument:Int,p
                         is EventMachine.Stop.Chest -> { require(warps==0 && canToggleChest()) { "이 위치의 상자 타일 변경을 연결하지 않았습니다." };trial.resumeChest(request) }
                         is EventMachine.Stop.Shop -> { require(canOpenShop(request)) { "이 상점의 가격표·종류를 연결하지 않았습니다." };trial.resumeShop(request,trial.save) }
                         is EventMachine.Stop.Party -> trial.changeParty(request)
-                        is EventMachine.Stop.Video -> error("필드의 영상은 연출 안에서만 연결했습니다.")
+                        is EventMachine.Stop.Video -> {
+                            require(allowWarp && videos!=null) { "이 호출에서는 필드 영상을 연결하지 않았습니다." }
+                            videos.plan(request,trial.save,false);trial.resumeVideo(request)
+                        }
                         is EventMachine.Stop.Reward -> { text(trial.rewardPages(request));trial.receiveReward(request);trial.resumeService() }
                         is EventMachine.Stop.Panel -> { require(rewards!=null) { "보상 안내창을 연결하지 않았습니다." };trial.resumeService() }
                         is EventMachine.Stop.Door -> {
