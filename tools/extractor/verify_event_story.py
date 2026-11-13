@@ -74,7 +74,7 @@ class StoryServicesReference(StoryReference):
             elif address==0x2572c:
                 f=stack[-1];f['end']=snapshot('finished');f['after']=saved();stack.pop()
             elif address==0x10a54:
-                if regs[0] not in (2,3,4,5,6):raise ValueError('이번 범위는 AUTOANI.002~006이다.')
+                if regs[0] not in (2,3,4,5,6,7,8):raise ValueError('이번 범위는 AUTOANI.002~008이다.')
                 r=snapshot('animation',id=regs[0],mode=regs[1],music=regs[2],calls=[]);stack[-1]['requests'].append(r);animations.append(r)
             elif address==0x1131e:
                 r=animations.pop();r['after']=saved()

@@ -9,7 +9,7 @@ class FieldDialogue(val npcIndex:Int, private val pages:JsonValue) {
     var visibleCharacters=0; private set
     var finished=false; private set
     val isMoneyReward get()=page.getString("kind","")=="money"
-    val isReward get()=page.getString("kind","")=="reward" || isMoneyReward
+    val isReward get()=page.getString("kind","") in listOf("reward","empty") || isMoneyReward
     private val nativeReward get()=page.getBoolean("native_reward",false)
     var rewardLeaving=false;private set
     private var exitStep=0

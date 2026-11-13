@@ -244,3 +244,12 @@ tasks.register<JavaExec>("verifyEncounterEvent") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 엘가임 사물 조사·상자·물통/난로 연출을 원작 저장과 대조한다.
+tasks.register<JavaExec>("verifyTownObjects") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.TownObjectsCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}
