@@ -1,0 +1,77 @@
+{
+  "compared_pixels": 960000,
+  "groups": [
+    {
+      "name": "story",
+      "compared_pixels": 320000,
+      "scenes": [
+        {
+          "name": "story-3-316-0",
+          "pixels": 64000
+        },
+        {
+          "name": "story-3-317-0",
+          "pixels": 64000
+        },
+        {
+          "name": "story-24-104-0",
+          "pixels": 64000
+        },
+        {
+          "name": "story-24-105-0",
+          "pixels": 64000
+        },
+        {
+          "name": "story-24-106-0",
+          "pixels": 64000
+        }
+      ]
+    },
+    {
+      "name": "sword",
+      "compared_pixels": 640000,
+      "scenes": [
+        {
+          "name": "deposit-page-0",
+          "pixels": 64000
+        },
+        {
+          "name": "deposit-page-12",
+          "pixels": 64000
+        },
+        {
+          "name": "not-ready-1-page-0",
+          "pixels": 64000
+        },
+        {
+          "name": "scene-316",
+          "pixels": 64000
+        },
+        {
+          "name": "scene-317",
+          "pixels": 64000
+        },
+        {
+          "name": "not-ready-2-page-0",
+          "pixels": 64000
+        },
+        {
+          "name": "scene-106",
+          "pixels": 64000
+        },
+        {
+          "name": "retrieve-page-0",
+          "pixels": 64000
+        },
+        {
+          "name": "reward",
+          "pixels": 64000
+        },
+        {
+          "name": "repeat-page-0",
+          "pixels": 64000
+        }
+      ]
+    }
+  ]
+}

@@ -4,7 +4,7 @@ import com.badlogic.gdx.utils.JsonReader
 import com.badlogic.gdx.utils.JsonValue
 
 /** AUTOANI의 이동·그리기·대화 대기를 순서대로 실행한다. 입력을 받을 때까지 다음 명령을 실행하지 않는다. */
-class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val lastProgram: Int = 1, private val fieldMap:Int?=null) {
+class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val lastProgram: Int = 1, private val fieldMap:Int?=null,private val events:Map<Int,Int>?=null) {
     data class Actor(var sprite: Int, var x: Float, var y: Float, var frame: Int,
                      var direction: Int = 0, var animate: Boolean = false, var speed: Int = 0, var mask: Int = 0)
     val actors = mutableListOf<Actor>()
@@ -17,7 +17,10 @@ class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val la
     var videoId: String? = null; private set
     var dialogueId: Int? = null; private set
     var pageIndex = 0; private set
-    val page: JsonValue? get() = dialogueId?.let { data.get("dialogues").get(it.toString())[pageIndex] }
+    private var externalPages:JsonValue?=null
+    var eventArgument:Int?=null;private set
+    var eventDialogueFinished=false;private set
+    val page: JsonValue? get() = if(events!=null) externalPages?.get(pageIndex) else dialogueId?.let { data.get("dialogues").get(it.toString())[pageIndex] }
     var visibleCharacters = 0; private set
     val pageComplete get() = page?.getString("text")?.length?.let { visibleCharacters >= it } ?: true
     private var cursor = 0
@@ -69,7 +72,10 @@ class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val la
                 }
                 "C" -> {
                     val id=value.asInt()
-                    if(data.get("dialogues").get(id.toString()).size>0) {
+                    if(events!=null) {
+                        dialogueId=id;eventArgument=events[command.getInt("offset")] ?: error("원본 연출 호출 번호가 없습니다.")
+                        pageIndex=0;visibleCharacters=0;textAccumulator=0f;eventDialogueFinished=false
+                    } else if(data.get("dialogues").get(id.toString()).size>0) {
                         dialogueId=id;pageIndex=0;visibleCharacters=0;textAccumulator=0f;check(page!=null)
                     }
                 }
@@ -85,6 +91,7 @@ class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val la
         require(delta.isFinite() && delta >= 0)
         if (finished || videoId!=null) return
         if (dialogueId != null) {
+            if(page==null) return
             textAccumulator += delta * 70f
             val count = textAccumulator.toInt(); textAccumulator -= count
             visibleCharacters = (visibleCharacters + count).coerceAtMost(page!!.getString("text").length)
@@ -121,10 +128,19 @@ class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val la
         videoId=null;accumulator=0f;execute()
     }
 
+    fun provideDialogue(pages:JsonValue) {
+        check(events!=null && eventArgument!=null && pages.size>0)
+        externalPages=pages;pageIndex=0;visibleCharacters=0;textAccumulator=0f;eventDialogueFinished=false
+    }
+    fun resumeEvent() {
+        check(events!=null && eventArgument!=null)
+        externalPages=null;dialogueId=null;eventArgument=null;eventDialogueFinished=false;accumulator=0f;execute()
+    }
+
     fun advance() {
-        if (dialogueId == null) return
+        if (dialogueId == null || page==null) return
         if (!pageComplete) { visibleCharacters = page!!.getString("text").length; return }
-        val pages = data.get("dialogues").get(dialogueId.toString())
+        val pages = externalPages ?: data.get("dialogues").get(dialogueId.toString())
         if (pageIndex + 1 < pages.size) {
             val previous = page!!
             pageIndex++
@@ -133,6 +149,7 @@ class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val la
                 page!!.getString("text").startsWith(retained)) retained.length else 0
             textAccumulator = 0f
         }
+        else if(events!=null) { externalPages=null;eventDialogueFinished=true;accumulator=0f }
         else { dialogueId = null; pageIndex = 0; accumulator = 0f; execute() }
     }
 

@@ -57,13 +57,13 @@ class FieldServicesTest {
                 }
             }
             val end=machine.run()
-            if(end is EventMachine.Stop.Door || end is EventMachine.Stop.Panel) {
-                // 이 기록은 문 해석을 추가하기 전 명령 직전에서 멈춘 자료다.
-                val offset=if(end is EventMachine.Stop.Door) end.offset else (end as EventMachine.Stop.Panel).offset
-                assertEquals(if(end is EventMachine.Stop.Door)0xa else if((end as EventMachine.Stop.Panel).opening)0x19 else 0x18,case.get("end").getInt("opcode"))
-                assertEquals(case.get("end").getInt("offset"),offset)
-                assertEquals(offset+if(end is EventMachine.Stop.Door)3 else 1,machine.offset)
-                assertEquals(case.get("end").getLong("instructions")+1,machine.executedInstructions)
+            if(end is EventMachine.Stop.Door || end is EventMachine.Stop.Panel || end is EventMachine.Stop.Animation) {
+                // 이 기록은 새 외부 명령을 읽기 직전에서 멈춘 자료다.
+                val offset=when(end) { is EventMachine.Stop.Door->end.offset;is EventMachine.Stop.Panel->end.offset;else->(end as EventMachine.Stop.Animation).offset }
+                val opcode=when(end) { is EventMachine.Stop.Door->0xa;is EventMachine.Stop.Panel->if(end.opening)0x19 else 0x18;else->0 }
+                val size=when(end) { is EventMachine.Stop.Door->3;is EventMachine.Stop.Panel->1;else->7 }
+                assertEquals(opcode,case.get("end").getInt("opcode"));assertEquals(case.get("end").getInt("offset"),offset)
+                assertEquals(offset+size,machine.offset);assertEquals(case.get("end").getLong("instructions")+1,machine.executedInstructions)
                 continue
             }
             snapshot(machine,case.get("end"))
