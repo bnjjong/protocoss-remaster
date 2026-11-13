@@ -15,6 +15,10 @@ class FieldScript(private val archive:EventArchive,source:DosSave,argument:Int,p
     fun next(maxInstructions:Int=10000)=machine.run(maxInstructions)
     fun resumeDialogue()=machine.resumeDialogue()
     fun resumeService()=machine.resumeService()
+    fun resumeVideo(request:EventMachine.Stop.Video) {
+        check(machine.pending===request)
+        machine.resumeService()
+    }
     fun child(argument:Int)=FieldScript(archive,save,argument,rewards)
     fun adopt(other:DosSave) {
         state=other
@@ -55,7 +59,7 @@ class FieldScript(private val archive:EventArchive,source:DosSave,argument:Int,p
     companion object {
         /** 사전 검사는 변수와 저장 사본만 사용한다. 미지원 시 게임·음량·인물 상태를 바꾸지 않는다. */
         fun prepare(archive:EventArchive,source:DosSave,argument:Int,maps:JsonValue,characters:Set<Char>,
-                    allowWarp:Boolean,canOpenDoor:(Int)->Boolean = { false },rewards:FieldRewards?=null,story:FieldStory?=null,blocked:(Blocked)->Unit = {}):FieldScript? {
+                    allowWarp:Boolean,canOpenDoor:(Int)->Boolean = { false },rewards:FieldRewards?=null,story:FieldStory?=null,videos:FieldVideos?=null,blocked:(Blocked)->Unit = {}):FieldScript? {
             val trial=FieldScript(archive,source,argument,rewards)
             var warps=0
             var spent=0L
@@ -91,6 +95,10 @@ class FieldScript(private val archive:EventArchive,source:DosSave,argument:Int,p
                                 childRun@while(true) when(val nested=next(child)) {
                                     is EventMachine.Stop.Dialogue -> { text(EventText.pages(nested.bytes()));child.resumeDialogue() }
                                     is EventMachine.Stop.Party -> child.changeParty(nested)
+                                    is EventMachine.Stop.Video -> {
+                                        require(videos!=null) { "연출 안의 영상을 연결하지 않았습니다." }
+                                        videos.plan(nested,child.save);child.resumeVideo(nested)
+                                    }
                                     is EventMachine.Stop.Finished -> break@childRun
                                     else -> error("연출 안의 이 명령은 연결하지 않았습니다.")
                                 }
@@ -99,6 +107,7 @@ class FieldScript(private val archive:EventArchive,source:DosSave,argument:Int,p
                             trial.finishAnimation(request,story,plan)
                         }
                         is EventMachine.Stop.Party -> trial.changeParty(request)
+                        is EventMachine.Stop.Video -> error("필드의 영상은 연출 안에서만 연결했습니다.")
                         is EventMachine.Stop.Reward -> { text(trial.rewardPages(request));trial.receiveReward(request);trial.resumeService() }
                         is EventMachine.Stop.Panel -> { require(rewards!=null) { "보상 안내창을 연결하지 않았습니다." };trial.resumeService() }
                         is EventMachine.Stop.Door -> {

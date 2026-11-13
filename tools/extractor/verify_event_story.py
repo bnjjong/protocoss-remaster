@@ -46,7 +46,7 @@ class StoryServicesReference(StoryReference):
         for p in (0xd80c,0xd810):self.dword(p,struct.unpack_from('<I',source,100+(p-0xd80c))[0])
         c.mem_write(0x3e0000,b'\xc3')
         for p in (0xfd40,0xfd44):self.dword(p,0x3e0000)
-        stack=[];animations=[];roots=[];filedata=b'';heap=0x280000
+        stack=[];animations=[];roots=[];filedata=b'';heap=0x280000;video=None
         def saved():return base64.b64encode(self.saved()).decode()
         def pc():return struct.unpack('<I',c.mem_read(0x715a4,4))[0]-0x240000
         def snapshot(kind,**extra):
@@ -60,7 +60,7 @@ class StoryServicesReference(StoryReference):
         skips={0x11700:0,0x11694:0,0x1186c:0,0x11468:0,0x23da4:0,0x1dd64:0,0x243f0:0,0x22148:0,
             0x26674:0,0x66025:0,0x66368:0,0x2b838:0,0x1dc54:0,0x235e4:0,0x263a0:0,0x1f108:4,0x2ca5e:8,0x2cb5f:8,0x66f6e:0,0x673c3:0}
         def hook(cpu,address,size,user):
-            nonlocal filedata,heap
+            nonlocal filedata,heap,video
             regs=[cpu.reg_read(r) for r in (UC_X86_REG_EAX,UC_X86_REG_EDX,UC_X86_REG_EBX,UC_X86_REG_ECX)]
             if address==0x25304:
                 f=dict(argument=regs[0],requests=[],steps=0,last=0)
@@ -69,16 +69,31 @@ class StoryServicesReference(StoryReference):
                 stack.append(f)
             elif address==0x25361:
                 f=stack[-1];f['last']=pc();op=archive.code[pc()]
-                if op not in set(range(0xf0,0xfb))|{0,2,3,0xd,0x13,0x15,0x17}:raise ValueError(f'미지원 스토리 명령 {op:#x}')
+                if op not in set(range(0xf0,0xfb))|{0,2,3,0xd,0x13,0x15,0x17,0x1a}:raise ValueError(f'미지원 스토리 명령 {op:#x}')
                 f['steps']+=1
             elif address==0x2572c:
                 f=stack[-1];f['end']=snapshot('finished');f['after']=saved();stack.pop()
             elif address==0x10a54:
-                if regs[0] not in (2,3,5,6):raise ValueError('이번 범위는 AUTOANI.002·003·005·006이다.')
+                if regs[0] not in (2,3,4,5,6):raise ValueError('이번 범위는 AUTOANI.002~006이다.')
                 r=snapshot('animation',id=regs[0],mode=regs[1],music=regs[2],calls=[]);stack[-1]['requests'].append(r);animations.append(r)
             elif address==0x1131e:
                 r=animations.pop();r['after']=saved()
                 r['hero']=list(struct.unpack('<ii',cpu.mem_read(0x77701,8)))+[self.byte(0x7713)]
+            elif address==0x134b8:
+                name=string(regs[0]);args=regs[1:]
+                if name.lower()!=b'#0.vis' or args!=[3,27,1]:raise ValueError('미지원 영상 실행 조합')
+                video=snapshot('video',raw=base64.b64encode(name).decode(),args=args,before=saved(),loads=[],frames=0)
+                stack[-1]['requests'].append(video);self.byte(0x1660,1)
+            elif address==0x13993:
+                video['after']=saved();video=None
+            elif video is not None and address in (0x2c544,0x2c5a4):
+                if address==0x2c5a4:
+                    data=(game_dir/'GRP/#0.VIS').read_bytes();self.dword(0xfd88,struct.unpack_from('<H',data,2)[0]<<16)
+                cpu.reg_write(UC_X86_REG_EAX,1);self.return_from(cpu)
+            elif video is not None and address==0x13725:self.dword(0xfd48,0x10000000)
+            elif video is not None and address==0x2c50c:
+                video['frames']+=1;self.return_from(cpu)
+            elif video is not None and address in (0x2cd51,0x2cddd,0x2d34c,0x2ca33,0x2c3ac):self.return_from(cpu)
             elif address==0x1255c or address==0x12f4c:stack[-1]['requests'].append(snapshot('party',joining=address==0x1255c,character=regs[0]))
             elif address in (0x25f2f,0x2605f):stack[-1]['requests'][-1]['after']=saved()
             elif address==0x1f8b0:
@@ -107,7 +122,9 @@ class StoryServicesReference(StoryReference):
                 sp=cpu.reg_read(UC_X86_REG_ESP);dest,fmt,arg=struct.unpack('<3I',cpu.mem_read(sp+4,12));format=string(fmt).decode('cp1361')
                 value=format%(string(arg).decode('cp1361') if '%s' in format else arg);cpu.mem_write(dest,value.encode('cp1361')+b'\0');self.return_from(cpu)
             elif address==0x67b85:cpu.reg_write(UC_X86_REG_EAX,len(string(regs[0])));self.return_from(cpu)
-            elif address==0x2b650:cpu.reg_write(UC_X86_REG_EAX,0);self.return_from(cpu)
+            elif address==0x2b650:
+                if video is not None:video['loads'].append(string(regs[0]).decode('cp1361'))
+                cpu.reg_write(UC_X86_REG_EAX,0);self.return_from(cpu)
             elif address==0x106b0:raise ValueError('원작 파티·파일 조건 오류')
             elif address in skips and not (real_approach and address==0x26674):self.return_from(cpu,skips[address])
         token=c.hook_add(UC_HOOK_CODE,hook)
@@ -149,7 +166,7 @@ def extract(game_dir,output_root,executable=None):
                 program=struct.pack('<IHH',len(code)+2,1,0)+bytes(v^127 for v in code)
                 party.append(dict(name=f'party-{len(party)}',joining=joining,character=character,profile=profile,before=base64.b64encode(before).decode(),raw=base64.b64encode(program).decode(),**ref.run(game_dir,program,before,7)))
     opening=json.loads((output_root/'assets/opening/opening.json').read_text());records=[]
-    for spec in [(2,6,0,25),(3,2,0,25),(5,5,0,24),(6,3,1,27)]:
+    for spec in [(2,6,0,25),(3,2,0,25),(4,4,0,25),(5,5,0,24),(6,3,1,27)]:
         records.append(animation_record(game_dir,exe,*spec))
     assets=output_root/'assets/data/events/story.json';assets.write_text(json.dumps(dict(animations=records),ensure_ascii=False,separators=(',',':'))+'\n')
     report=dict(executable_sources=EXPECTED_HASHES,source_sha256=hashlib.sha256(raw).hexdigest(),cases=cases,party=party,parser=[ref.parser(op,args) for op,args in [(0,[5,0,24]),(0,[65535,32768,65535]),(0xd,[1]),(0xd,[65535]),(0x13,[1]),(0x13,[32768])]],stubs='화면·음악·파일 I/O와 NPC 시계를 생략한다. mode=0의 시작 위치 접근과 카메라 방향 0의 화면 갱신을 생략하고 목표 위치에 직접 둔다. 원작 연출 해석·인물 이동/자세·중첩 이벤트·파티·음악 변수·이동 후 저장 메모리는 실행한다.')

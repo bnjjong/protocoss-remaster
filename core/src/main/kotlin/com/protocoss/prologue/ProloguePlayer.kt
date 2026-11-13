@@ -32,6 +32,9 @@ class ProloguePlayer(
     }
 
     val finished: Boolean get() = timeline.finished
+    var volume:Float
+        get()=music?.volume ?: 0f
+        set(value) { music?.volume=value }
     fun play() { music?.play() }
     fun update(delta: Float) {
         if (paused) return

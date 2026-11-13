@@ -44,6 +44,7 @@ import com.protocoss.field.PlaceBanner
 import com.protocoss.field.FieldPanel
 import com.protocoss.field.FieldRewards
 import com.protocoss.field.FieldStory
+import com.protocoss.field.FieldVideos
 import com.protocoss.field.FieldScript
 import com.protocoss.script.EventArchive
 import com.protocoss.script.EventMachine
@@ -110,6 +111,11 @@ class ProtocossGame(
     private var fieldScriptDialogue:FieldDialogue?=null
     private var fieldPanel:FieldPanel?=null
     private lateinit var fieldStory:FieldStory
+    private lateinit var fieldVideos:FieldVideos
+    private var scriptVideo:EventMachine.Stop.Video?=null
+    private var clipReturnTrack=25
+    private var clipReturnVolume=1f
+    private var clipMusicVolume=1f
     private var scriptAnimation:EventMachine.Stop.Animation?=null
     private var fieldApproach:FieldApproach?=null
     private var animationPlan:FieldStory.Plan?=null
@@ -131,7 +137,6 @@ class ProtocossGame(
     private var fieldDialogue: FieldDialogue? = null
     private val npcClock=FieldNpcs.Clock()
     private var fieldEvent: Int? = null
-    private var eventDestination: DosSave? = null
     private var walkingTime = 0f
     private var fieldFade = 0f
     private var openingMusic: com.badlogic.gdx.audio.Music? = null
@@ -198,6 +203,7 @@ class ProtocossGame(
         }
         eventArchives=(0..5).associateWith { EventArchive(Gdx.files.internal("assets/data/events/area${it.toString().padStart(2,'0')}.gm").readBytes()) }
         fieldStory=FieldStory(com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/data/events/story.json").readString("UTF-8")),opening.data)
+        fieldVideos=FieldVideos(com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/data/events/videos.json").readString("UTF-8")))
         fieldRewards=FieldRewards(equipmentRenderer.model.data,com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/ui/rewards/rewards.json").readString("UTF-8")))
         eventCharacters=(equipmentRenderer.model.data.get("rects").filter { it.name.startsWith("glyph-") }.map { it.name.substring(6).toInt().toChar() }.joinToString("")+
             fieldRewards.data.get("font").getString("characters")+opening.data.get("font").getString("characters")+
@@ -246,19 +252,11 @@ class ProtocossGame(
             if(scriptAnimation!=null && opening.eventDialogueFinished) {
                 checkNotNull(animationChild).resumeDialogue();continueAnimationEvent()
             }
-            if(opening.videoId!=null) {
-                encounterClip=ProloguePlayer("assets/encounter/encounter.pvid","assets/opening/music-27/music.ogg")
-                clipFade=0f;clipStarted=false;clipReturning=false;scene=Scene.CLIP
-            }
             if (opening.finished && scriptAnimation!=null) finishScriptAnimation()
             else if (opening.finished) {
-                val wasEvent=fieldEvent!=null
-                val destination=eventDestination ?: DosSave.afterOpening(Gdx.files.internal("assets/data/original/start.dat").readBytes())
-                fieldEvent=null;eventDestination=null
-                enterField(destination,preserveField=opening.continuesField)
-                val track=destination.variable(4).takeIf { it in setOf(10,24,25) } ?: 25
-                if(!wasEvent || openingMusic==null || activeTrack!=track) playOpeningMusic(track)
-                fieldFade=if(opening.continuesField) 0f else 1f
+                fieldEvent=null
+                enterField(DosSave.afterOpening(Gdx.files.internal("assets/data/original/start.dat").readBytes()),false)
+                playOpeningMusic(25);fieldFade=1f
             }
         } else if (scene == Scene.FIELD) {
             if(fieldFade>0f) {
@@ -670,10 +668,6 @@ class ProtocossGame(
             beginFieldScript(checkNotNull(prepareFieldScript(current,event,true)),-1)
             return true
         }
-        if(current.map==3 && event==2 && current.variable(7)==0) {
-            startFieldEvent(4,current.travel(3,0,0,232,120,8,0,mapOf(1 to 3,7 to 1)))
-            return true
-        }
         val script=prepareFieldScript(current,event,true) ?: return false
         beginFieldScript(script,-1)
         return fieldScript!=null || script.openedDoor
@@ -686,7 +680,7 @@ class ProtocossGame(
                 val m=fieldMovement
                 id==0 && allowWarp && m!=null && m.map==save.map &&
                     fieldRules.canOpenDoor(save.map,m.x,m.y,doorDirection(m),m.layer)
-            },rewards=fieldRewards,story=fieldStory) {
+            },rewards=fieldRewards,story=fieldStory,videos=fieldVideos) {
             Gdx.app.debug("Script","${save.area}/${save.variable(0)}/$event @${it.offset}: ${it.reason}")
         }
     }
@@ -722,6 +716,7 @@ class ProtocossGame(
                     player.setMotion(null,false);return
                 }
                 is EventMachine.Stop.Animation -> { startScriptAnimation(script,request);return }
+                is EventMachine.Stop.Video -> error("연출 밖 영상 요청은 사전 검사에서 거부해야 합니다.")
                 is EventMachine.Stop.Party -> script.changeParty(request)
                 is EventMachine.Stop.Reward -> {
                     script.receiveReward(request);session=script.save
@@ -795,7 +790,7 @@ class ProtocossGame(
         if(opening.continuesField) openingRenderer.continueField(opening)
         else { openingRenderer.dispose();openingRenderer=OpeningRenderer(opening) }
         if(openingMusic==null || activeTrack!=request.music) playOpeningMusic(request.music)
-        fieldEvent=plan.program;eventDestination=null;scene=Scene.OPENING;player.setMotion(null,false)
+        fieldEvent=plan.program;scene=Scene.OPENING;player.setMotion(null,false)
         continueAnimationEvent()
     }
 
@@ -808,6 +803,7 @@ class ProtocossGame(
             when(request) {
                 is EventMachine.Stop.Dialogue -> { opening.provideDialogue(EventText.pages(request.bytes()));return }
                 is EventMachine.Stop.Party -> child.changeParty(request)
+                is EventMachine.Stop.Video -> { startScriptVideo(child,request);return }
                 is EventMachine.Stop.Finished -> { animationChild=null;opening.resumeEvent() }
                 else -> error("사전 확인한 연출 안에서 미지원 요청이 발생했습니다.")
             }
@@ -825,7 +821,7 @@ class ProtocossGame(
             enterField(parent.save,preserveField=true)
             fieldScript=parent;fieldScriptNpc=npc;fieldScriptDialogue=previous
         } else scene=Scene.FIELD
-        scriptAnimation=null;animationPlan=null;animationChild=null;fieldEvent=null;eventDestination=null
+        scriptAnimation=null;animationPlan=null;animationChild=null;fieldEvent=null
         continueFieldScript()
     }
 
@@ -1084,37 +1080,46 @@ class ProtocossGame(
         }
     }
 
+    private fun startScriptVideo(child:FieldScript,request:EventMachine.Stop.Video) {
+        check(scriptVideo==null && encounterClip==null)
+        val plan=fieldVideos.plan(request,child.save)
+        encounterClip=ProloguePlayer(plan.getString("video"),plan.getString("audio"))
+        scriptVideo=request;clipReturnTrack=child.save.variable(4)
+        clipReturnVolume=openingMusic?.volume ?: 1f;clipMusicVolume=clipReturnVolume
+        encounterClip!!.volume=clipMusicVolume
+        clipFade=0f;clipStarted=false;clipReturning=false;scene=Scene.CLIP
+    }
+
     private fun updateEncounterClip(delta: Float) {
         val clip=requireNotNull(encounterClip)
         if(!clipStarted) {
             clipFade=(clipFade+delta*70f/64f).coerceAtMost(1f)
+            openingMusic?.volume=clipReturnVolume*(1f-clipFade)
             if(clipFade==1f) { openingMusic?.pause();clipStarted=true;clip.play() }
-        } else if(!clip.finished) clip.update(delta)
-        else {
-            if(!clipReturning) { clip.pause();playOpeningMusic(25);clipReturning=true;clipFade=1f }
+        } else if(!clip.finished) {
+            clip.update(delta)
+            val frame=clip.timeline.stream.frameIndex
+            if(frame>=25) clip.volume=clipMusicVolume*((64-(frame-25)).coerceAtLeast(0)/64f)
+        } else {
+            if(!clipReturning) {
+                clip.pause();playOpeningMusic(clipReturnTrack,0f);clipReturning=true;clipFade=1f
+                return
+            }
             clipFade=(clipFade-delta*70f/64f).coerceAtLeast(0f)
+            openingMusic?.volume=clipReturnVolume*(1f-clipFade)
             if(clipFade==0f) {
-                clip.dispose();encounterClip=null;opening.resumeVideo();scene=Scene.OPENING
+                clip.dispose();encounterClip=null
+                checkNotNull(animationChild).resumeVideo(checkNotNull(scriptVideo));scriptVideo=null
+                scene=Scene.OPENING;continueAnimationEvent()
             }
         }
-    }
-
-    private fun startFieldEvent(program: Int, destination: DosSave) {
-        val data=opening.data
-        opening=OpeningTimeline(data,program,program,session?.map)
-        if(opening.continuesField) openingRenderer.continueField(opening)
-        else { openingRenderer.dispose();openingRenderer=OpeningRenderer(opening) }
-        val track=when(program) { 3->27;5->24;else->25 }
-        if(openingMusic==null || activeTrack!=track) playOpeningMusic(track)
-        fieldEvent=program;eventDestination=destination;scene=Scene.OPENING
-        player.setMotion(null,false)
     }
 
     private fun finishPrologue() {
         prologue?.dispose()
         prologue = null
         openingRenderer.dispose()
-        fieldEvent=null;eventDestination=null
+        fieldEvent=null
         opening = OpeningTimeline.parse(Gdx.files.internal("assets/opening/opening.json").readString("UTF-8"))
         openingRenderer = OpeningRenderer(opening)
         scene = Scene.OPENING
@@ -1170,7 +1175,7 @@ class ProtocossGame(
         FieldBounds.constrainCamera(camera, map)
         session = save
         fieldScript=null;fieldScriptNpc=-1;fieldScriptDialogue=null;fieldPanel=null
-        scriptAnimation=null;animationPlan=null;animationChild=null;fieldApproach=null
+        scriptAnimation=null;animationPlan=null;animationChild=null;fieldApproach=null;scriptVideo=null
         shopConversation=false;swordReceived=false
         indoorConversation=null
         if(!preserveField) fieldRules.reset(save.map)

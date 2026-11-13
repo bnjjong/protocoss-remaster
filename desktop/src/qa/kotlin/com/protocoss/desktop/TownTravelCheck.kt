@@ -162,7 +162,7 @@ private class TownApplication(private val saves:Path):ApplicationAdapter() {
         route(2);check(session().map==3 && session().variable(7)==0)
         route(0);check(session().map==0 && session().variable(7)==0)
         route(2);check(session().map==3)
-        route(2);check(scene() in setOf("OPENING","CLIP"));finishAnimation(true)
+        route(2);check(scene() in setOf("OPENING","CLIP") || field<com.protocoss.field.FieldApproach?>("fieldApproach")!=null);finishAnimation(true)
         check(session().map==3 && session().variable(7)==1 && session().variable(1)==3)
         check(movieFrames==setOf(0,12,24))
         route(1);check(session().map==4);finishBanner()

@@ -1,0 +1,29 @@
+{
+  "compared_pixels": 384000,
+  "scenes": [
+    {
+      "name": "encounter-0-before-video",
+      "pixels": 64000
+    },
+    {
+      "name": "encounter-0-dialogue",
+      "pixels": 64000
+    },
+    {
+      "name": "encounter-12-before-video",
+      "pixels": 64000
+    },
+    {
+      "name": "encounter-12-dialogue",
+      "pixels": 64000
+    },
+    {
+      "name": "encounter-24-before-video",
+      "pixels": 64000
+    },
+    {
+      "name": "encounter-24-dialogue",
+      "pixels": 64000
+    }
+  ]
+}

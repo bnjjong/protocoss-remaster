@@ -25,6 +25,7 @@ tasks.test {
     inputs.file(rootProject.file("docs/restoration/event-story-native.json"))
     inputs.file(rootProject.file("docs/restoration/animation-approach-native.json"))
     inputs.file(rootProject.file("docs/restoration/cabin-story-native.json"))
+    inputs.file(rootProject.file("docs/restoration/encounter-event-native.json"))
     inputs.dir(rootProject.file("assets/ui/rewards"))
     inputs.file(rootProject.file("docs/field-draw-order-native.json"))
     inputs.file(rootProject.file("docs/npc-native-verification.json"))
