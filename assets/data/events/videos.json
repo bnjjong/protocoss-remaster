@@ -1,1 +1,1 @@
-{"videos":[{"name":"#0.vis","ticks":3,"music":27,"restore":1,"return_music":25,"video":"assets/encounter/encounter.pvid","audio":"assets/opening/music-27/music.ogg"}]}
+{"videos":[{"name":"#0.vis","ticks":3,"music":27,"restore":1,"return_music":25,"video":"assets/encounter/encounter.pvid","audio":"assets/opening/music-27/music.ogg"},{"name":"open.vis","ticks":2,"music":30,"restore":0,"return_music":24,"nested":false,"frames":464,"video":"assets/departure/departure.pvid","audio":"assets/opening/music-30/music.ogg"}]}
