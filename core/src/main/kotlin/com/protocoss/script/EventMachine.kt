@@ -13,6 +13,7 @@ class EventMachine(private val archive:EventArchive, initialVariables:IntArray, 
         class Video internal constructor(val offset:Int,private val encoded:ByteArray,val ticks:Int,val music:Int,val restore:Int,internal val nextOffset:Int):Stop {
             fun bytes()=encoded.copyOf()
         }
+        data class Shop internal constructor(val offset:Int,val priceTable:Int,val kind:Int,internal val nextOffset:Int):Stop
         data class Reward internal constructor(val offset:Int,val item:Int,val count:Int,val category:Int,internal val nextOffset:Int):Stop
         data class Panel internal constructor(val offset:Int,val opening:Boolean,internal val nextOffset:Int):Stop
         data class Door internal constructor(val offset:Int,val id:Int,internal val nextOffset:Int):Stop
@@ -62,6 +63,7 @@ class EventMachine(private val archive:EventArchive, initialVariables:IntArray, 
             is Stop.Animation -> request.nextOffset
             is Stop.Video -> request.nextOffset
             is Stop.Party -> request.nextOffset
+            is Stop.Shop -> request.nextOffset
             is Stop.Reward -> request.nextOffset
             is Stop.Panel -> request.nextOffset
             is Stop.Door -> request.nextOffset
@@ -88,7 +90,7 @@ class EventMachine(private val archive:EventArchive, initialVariables:IntArray, 
             fun target(value:Int):Int = value.also { archive.byte(it) }
             try {
                 when(opcode) {
-                    0,2,0xa,0xd,0x11,0x13,0x15,0x17,0x18,0x19,0x1a -> {
+                    0,2,0xa,0xd,0x10,0x11,0x13,0x15,0x17,0x18,0x19,0x1a -> {
                         if(!fieldServices) { stopped=Stop.Unhandled(start,opcode);return stopped!! }
                         when(opcode) {
                             0 -> { val id=word();val mode=word();val music=word();stopped=Stop.Animation(start,id,mode,music,cursor) }
@@ -103,6 +105,7 @@ class EventMachine(private val archive:EventArchive, initialVariables:IntArray, 
                                 val args=List(8) { word() }
                                 stopped=Stop.Warp(start,args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],cursor)
                             }
+                            0x10 -> { val table=word();val kind=word();stopped=Stop.Shop(start,table,kind,cursor) }
                             0x11 -> { val item=word();val count=word();val category=word();stopped=Stop.Reward(start,item,count,category,cursor) }
                             0x18,0x19 -> stopped=Stop.Panel(start,opcode==0x19,cursor)
                             0xa -> { val id=word();stopped=Stop.Door(start,id,cursor) }

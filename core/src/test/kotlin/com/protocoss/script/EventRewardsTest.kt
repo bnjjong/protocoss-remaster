@@ -66,11 +66,18 @@ class EventRewardsTest {
                     else -> fail("원작 보상 요청 종류가 다릅니다.")
                 }
             }
-            val end=script.next();snapshot(script.machine,row.get("end"));assertContentEquals(bytes(row.getString("after")),script.save.bytes())
+            val end=script.next()
+            if(end is EventMachine.Stop.Shop) {
+                // 이 기록은 상점 인자를 읽기 직전에서 끝난다.
+                assertEquals(0x10,row.get("end").getInt("opcode"));assertEquals(end.offset,row.get("end").getInt("offset"))
+                assertEquals(end.offset+5,script.machine.offset)
+                assertEquals(row.get("end").getLong("instructions")+1,script.machine.executedInstructions)
+            } else snapshot(script.machine,row.get("end"))
+            assertContentEquals(bytes(row.getString("after")),script.save.bytes())
             val blocked=mutableListOf<FieldScript.Blocked>()
             val prepared=FieldScript.prepare(archive,source,row.getInt("argument"),opening.get("maps"),characters,false,rewards=model) { blocked+=it }
             if(row.get("end").getString("kind")=="finished") { assertIs<EventMachine.Stop.Finished>(end);assertNotNull(prepared,"${row.getString("name")}: $blocked");accepted++ }
-            else { assertIs<EventMachine.Stop.Unhandled>(end);assertNull(prepared);assertTrue(blocked.isNotEmpty()) }
+            else { assertTrue(end is EventMachine.Stop.Unhandled || end is EventMachine.Stop.Shop);assertNull(prepared);assertTrue(blocked.isNotEmpty()) }
             assertContentEquals(before,source.bytes())
         }
         assertEquals(570,accepted);assertEquals(369,rewards)

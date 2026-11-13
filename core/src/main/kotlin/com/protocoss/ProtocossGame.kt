@@ -38,13 +38,13 @@ import com.protocoss.field.FieldMovement
 import com.protocoss.field.FieldApproach
 import com.protocoss.field.FieldNpcs
 import com.protocoss.field.IndoorDialogues
-import com.protocoss.field.SwordStory
 import com.protocoss.field.FieldDialogue
 import com.protocoss.field.PlaceBanner
 import com.protocoss.field.FieldPanel
 import com.protocoss.field.FieldRewards
 import com.protocoss.field.FieldStory
 import com.protocoss.field.FieldVideos
+import com.protocoss.field.FieldShops
 import com.protocoss.field.FieldScript
 import com.protocoss.script.EventArchive
 import com.protocoss.script.EventMachine
@@ -124,13 +124,10 @@ class ProtocossGame(
     private lateinit var cabinInteraction:CabinInteraction
     private lateinit var indoorDialogues:IndoorDialogues
     private var indoorConversation:IndoorDialogues.Conversation?=null
-    private lateinit var swordStory:SwordStory
     private lateinit var shopRenderer:ShopRenderer
     private var shopMenu=ShopMenu()
-    private var shopTrading=false
+    private var scriptShop:EventMachine.Stop.Shop?=null
     private var shopBaseVolume=1f
-    private var shopConversation=false
-    private var swordReceived=false
     private lateinit var doorSound: com.badlogic.gdx.audio.Sound
     private var fieldMovement: FieldMovement? = null
     private var fieldNpcs: FieldNpcs? = null
@@ -195,7 +192,6 @@ class ProtocossGame(
         loadExtractedBackgrounds()
         opening = OpeningTimeline.parse(Gdx.files.internal("assets/opening/opening.json").readString("UTF-8"))
         openingRenderer = OpeningRenderer(opening)
-        swordStory=SwordStory(opening.data.get("sword_story"))
         cabinInteraction=CabinInteraction(opening.data)
         indoorDialogues=IndoorDialogues(com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/data/field/indoor-dialogues.json").readString("UTF-8")))
         fieldRules = FieldRules(Gdx.files.internal("assets/data/field/field.json").readString()) {
@@ -546,20 +542,19 @@ class ProtocossGame(
             val index=npcs?.talkTarget(movement.x,movement.y,movement.pose,movement.layer)
             if(index!=null && npcs!=null) {
                 val event=npcs.actors[index].event
-                val shop=swordStory.shopPages(session!!,event)
                 val indoor=indoorDialogues.begin(session!!,event)
                 val town=FieldDialogue.pages(opening.data,event,session!!.variable(8)).takeIf { session!!.area==0 && session!!.map in setOf(4,12) && session!!.variable(0)==3 }
-                val pages=shop ?: indoor?.pages ?: town
-                if(indoor!=null && pages?.size==0) { session=indoor.finish(session!!.calledEvent(event));return }
-                val script=if(pages!=null && pages.size>0) prepareFieldScript(session!!,event,false) else null
+                val pages=indoor?.pages ?: town
+                val script=prepareFieldScript(session!!,event,false)
                 if(script!=null) {
                     beginFieldScript(script,index)
+                } else if(indoor!=null && pages?.size==0) {
+                    session=indoor.finish(session!!.calledEvent(event));return
                 } else if(pages!=null && pages.size>0) {
                     movement.faceForTalk()
                     npcs.beginTalk(index,movement.pose)
                     fieldDialogue=FieldDialogue(index,pages)
                     indoorConversation=indoor
-                    shopConversation=shop!=null;shopTrading=shop!=null && session!!.variable(8)>=4;swordReceived=false
                     session=session!!.calledEvent(event)
                 }
             } else if(session?.let { it.area==0 && it.map in 1..2 && it.variable(0)==0 }==true) {
@@ -585,17 +580,10 @@ class ProtocossGame(
             }
             if(fieldDialogue!!.finished) {
                 if(fieldScript!=null) { finishScriptDialogue();return }
-                if(fieldDialogue!!.npcIndex>=0 && !shopTrading) npcs!!.endTalk()
-                if(shopConversation) session=swordStory.finishShop(session!!)
+                if(fieldDialogue!!.npcIndex>=0) npcs!!.endTalk()
                 indoorConversation?.let { session=it.finish(session!!) }
                 indoorConversation=null
-                shopConversation=false;swordReceived=false
                 fieldDialogue=null
-                if(shopTrading) {
-                    shopMenu=ShopMenu();shopRenderer.begin();scene=Scene.SHOP
-                    shopBaseVolume=openingMusic?.volume ?: 1f;openingMusic?.volume=shopBaseVolume*101/127
-                }
-                shopTrading=false
                 player.setMotion(null,false)
                 return
             }
@@ -604,9 +592,6 @@ class ProtocossGame(
         if(fieldDialogue!=null) {
             if(fieldScript==null && fieldDialogue!!.isMoneyReward) {
                 session=indoorConversation!!.receive(session!!)
-            }
-            if(shopConversation && fieldDialogue!!.isReward && !swordReceived) {
-                session=session!!.receiveRepairedSword();swordReceived=true
             }
             movement!!.update(delta,0,false,tick={ x,y -> npcs?.tick(x,y) }) { false }
             if(fieldDialogueReady()) fieldDialogue!!.update(delta)
@@ -680,7 +665,7 @@ class ProtocossGame(
                 val m=fieldMovement
                 id==0 && allowWarp && m!=null && m.map==save.map &&
                     fieldRules.canOpenDoor(save.map,m.x,m.y,doorDirection(m),m.layer)
-            },rewards=fieldRewards,story=fieldStory,videos=fieldVideos) {
+            },rewards=fieldRewards,story=fieldStory,videos=fieldVideos,canOpenShop={ FieldShops.supported(save,it) }) {
             Gdx.app.debug("Script","${save.area}/${save.variable(0)}/$event @${it.offset}: ${it.reason}")
         }
     }
@@ -690,7 +675,7 @@ class ProtocossGame(
     private fun beginFieldScript(script:FieldScript,npc:Int) {
         check(fieldScript==null)
         fieldScript=script;fieldScriptNpc=npc;fieldScriptDialogue=null
-        shopConversation=false;shopTrading=false;indoorConversation=null;swordReceived=false
+        scriptShop=null;indoorConversation=null
         if(npc>=0) {
             fieldMovement!!.faceForTalk();fieldNpcs!!.beginTalk(npc,fieldMovement!!.pose)
         }
@@ -717,6 +702,12 @@ class ProtocossGame(
                 }
                 is EventMachine.Stop.Animation -> { startScriptAnimation(script,request);return }
                 is EventMachine.Stop.Video -> error("연출 밖 영상 요청은 사전 검사에서 거부해야 합니다.")
+                is EventMachine.Stop.Shop -> {
+                    check(FieldShops.supported(script.save,request));scriptShop=request
+                    shopMenu=ShopMenu();shopRenderer.begin();scene=Scene.SHOP
+                    shopBaseVolume=openingMusic?.volume ?: 1f;openingMusic?.volume=shopBaseVolume*101/127
+                    player.setMotion(null,false);return
+                }
                 is EventMachine.Stop.Party -> script.changeParty(request)
                 is EventMachine.Stop.Reward -> {
                     script.receiveReward(request);session=script.save
@@ -854,7 +845,10 @@ class ProtocossGame(
         }
         if(Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY)) shopMenu.effect?.let { equipmentSounds[it]?.play() }
         if(shopMenu.closed) {
-            fieldNpcs?.endTalk();openingMusic?.volume=shopBaseVolume;scene=Scene.FIELD
+            openingMusic?.volume=shopBaseVolume;scene=Scene.FIELD
+            val request=checkNotNull(scriptShop)
+            checkNotNull(fieldScript).resumeShop(request,checkNotNull(session));scriptShop=null
+            continueFieldScript()
         }
     }
 
@@ -1176,7 +1170,7 @@ class ProtocossGame(
         session = save
         fieldScript=null;fieldScriptNpc=-1;fieldScriptDialogue=null;fieldPanel=null
         scriptAnimation=null;animationPlan=null;animationChild=null;fieldApproach=null;scriptVideo=null
-        shopConversation=false;swordReceived=false
+        scriptShop=null
         indoorConversation=null
         if(!preserveField) fieldRules.reset(save.map)
         fieldDialogue=null

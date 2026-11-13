@@ -27,7 +27,7 @@ class RewardReference(StoryReference):
         finally:c.hook_del(token)
         return dict(input=args,args=captured[0],advanced=struct.unpack('<I',c.mem_read(0x715a4,4))[0]-0x240000)
 
-    def event_reward(self,game_dir,raw,source,argument):
+    def event_reward(self,game_dir,raw,source,argument,shop=None):
         self.load_save(source);c=self.cpu;archive=EventArchive(raw)
         c.mem_write(0x230000,raw[6:6+len(archive.groups)*2]);c.mem_write(0x240000,archive.code)
         self.dword(0x15ac,0x230000);self.dword(0x15a8,0x240000);self.word(0xe50c,len(archive.groups));self.word(0x15b0,0)
@@ -45,7 +45,7 @@ class RewardReference(StoryReference):
             nonlocal last,steps,panel
             if address==0x25361:
                 last=pc();op=archive.code[last]
-                if op not in set(range(0xf0,0xfb))|{3,0x11,0x18,0x19}:
+                if op not in set(range(0xf0,0xfb))|{3,0x11,0x18,0x19}|({0x10} if shop is not None else set()):
                     ending.append(snapshot('unhandled',opcode=op));cpu.emu_stop();return
                 steps+=1
             elif address==0x1f8b0:
@@ -55,6 +55,13 @@ class RewardReference(StoryReference):
             elif address==0x2cf9d:
                 args=[cpu.reg_read(r) for r in (UC_X86_REG_EAX,UC_X86_REG_EDX,UC_X86_REG_EBX,UC_X86_REG_ECX)]
                 panel['frames'].append(args);self.return_from(cpu,4)
+            elif address==0x29a1c and shop is not None:
+                args=[cpu.reg_read(r) for r in (UC_X86_REG_EAX,UC_X86_REG_EDX)]
+                before=self.saved();after=shop(before,*args)
+                requests.append(snapshot('shop',price_table=args[0],type=args[1],before=base64.b64encode(before).decode(),after=base64.b64encode(after).decode()))
+                if len(after)!=len(before):raise ValueError('상점 저장 크기 오류')
+                for offset,length,destination in self.regions[:-1]:cpu.mem_write(destination,after[offset:offset+length])
+                self.return_from(cpu)
             elif address==0x12924:
                 args=[cpu.reg_read(r) for r in (UC_X86_REG_EAX,UC_X86_REG_EDX,UC_X86_REG_EBX)]
                 requests.append(snapshot('reward',item=args[0],count=args[1],category=args[2]))
