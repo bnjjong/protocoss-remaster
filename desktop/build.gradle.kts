@@ -235,3 +235,12 @@ tasks.register<JavaExec>("verifyCabinStory") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 원본 조우 연출의 영상 대기·복귀·중첩 대화와 음악을 실제 앱에서 확인한다.
+tasks.register<JavaExec>("verifyEncounterEvent") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.EncounterEventCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}

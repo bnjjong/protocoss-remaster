@@ -10,6 +10,9 @@ class EventMachine(private val archive:EventArchive, initialVariables:IntArray, 
             val x:Int,val y:Int,val pose:Int,val layer:Int,val music:Int,internal val nextOffset:Int):Stop
         data class Animation internal constructor(val offset:Int,val id:Int,val mode:Int,val music:Int,internal val nextOffset:Int):Stop
         data class Party internal constructor(val offset:Int,val character:Int,val joining:Boolean,internal val nextOffset:Int):Stop
+        class Video internal constructor(val offset:Int,private val encoded:ByteArray,val ticks:Int,val music:Int,val restore:Int,internal val nextOffset:Int):Stop {
+            fun bytes()=encoded.copyOf()
+        }
         data class Reward internal constructor(val offset:Int,val item:Int,val count:Int,val category:Int,internal val nextOffset:Int):Stop
         data class Panel internal constructor(val offset:Int,val opening:Boolean,internal val nextOffset:Int):Stop
         data class Door internal constructor(val offset:Int,val id:Int,internal val nextOffset:Int):Stop
@@ -57,6 +60,7 @@ class EventMachine(private val archive:EventArchive, initialVariables:IntArray, 
         offset=when(val request=stopped) {
             is Stop.Warp -> { values[4]=request.music;request.nextOffset }
             is Stop.Animation -> request.nextOffset
+            is Stop.Video -> request.nextOffset
             is Stop.Party -> request.nextOffset
             is Stop.Reward -> request.nextOffset
             is Stop.Panel -> request.nextOffset
@@ -84,10 +88,16 @@ class EventMachine(private val archive:EventArchive, initialVariables:IntArray, 
             fun target(value:Int):Int = value.also { archive.byte(it) }
             try {
                 when(opcode) {
-                    0,2,0xa,0xd,0x11,0x13,0x15,0x17,0x18,0x19 -> {
+                    0,2,0xa,0xd,0x11,0x13,0x15,0x17,0x18,0x19,0x1a -> {
                         if(!fieldServices) { stopped=Stop.Unhandled(start,opcode);return stopped!! }
                         when(opcode) {
                             0 -> { val id=word();val mode=word();val music=word();stopped=Stop.Animation(start,id,mode,music,cursor) }
+                            0x1a -> {
+                                val name=mutableListOf<Byte>()
+                                while(archive.byte(cursor)!=0) name+=archive.byte(cursor++).toByte()
+                                cursor++;val ticks=word();val music=word();val restore=word()
+                                stopped=Stop.Video(start,name.toByteArray(),ticks,music,restore,cursor)
+                            }
                             0xd,0x13 -> { val character=word();stopped=Stop.Party(start,character,opcode==0xd,cursor) }
                             2 -> {
                                 val args=List(8) { word() }

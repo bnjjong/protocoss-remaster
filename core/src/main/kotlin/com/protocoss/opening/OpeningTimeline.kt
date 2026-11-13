@@ -14,7 +14,6 @@ class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val la
     var scrollX = 0f; private set
     var scrollY = 0f; private set
     var finished = false; private set
-    var videoId: String? = null; private set
     var dialogueId: Int? = null; private set
     var pageIndex = 0; private set
     private var externalPages:JsonValue?=null
@@ -44,7 +43,7 @@ class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val la
     }
 
     private fun execute() {
-        while (!finished && dialogueId == null && videoId == null && remainingTicks == 0 && fadeTicks == 0) {
+        while (!finished && dialogueId == null && remainingTicks == 0 && fadeTicks == 0) {
             val commands = data.get("programs")[program].get("commands")
             check(cursor < commands.size) { "시작 연출 종료 명령 누락" }
             val command = commands[cursor++]
@@ -79,7 +78,6 @@ class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val la
                         dialogueId=id;pageIndex=0;visibleCharacters=0;textAccumulator=0f;check(page!=null)
                     }
                 }
-                "V" -> { videoId=value.asString();accumulator=0f }
                 "F" -> Unit // 원작 효과음 번호는 데이터에 보존한다. 이번 단계는 화면·대화 실행을 연결한다.
                 "E" -> { if(continuesField) finished=true else { fadeTicks=64;fadingOut=true } }
                 else -> error("지원하지 않는 시작 연출 명령")
@@ -89,7 +87,7 @@ class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val la
 
     fun update(delta: Float) {
         require(delta.isFinite() && delta >= 0)
-        if (finished || videoId!=null) return
+        if (finished) return
         if (dialogueId != null) {
             if(page==null) return
             textAccumulator += delta * 70f
@@ -98,7 +96,7 @@ class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val la
             return
         }
         accumulator += delta
-        while (accumulator >= 1f / 70f && !finished && dialogueId == null && videoId == null) {
+        while (accumulator >= 1f / 70f && !finished && dialogueId == null) {
             accumulator -= 1f / 70f
             if(fadeTicks>0) {
                 fadeTicks--
@@ -121,11 +119,6 @@ class OpeningTimeline(val data: JsonValue, firstProgram: Int = 0, private val la
         }
         // 대화 대기 중에 쌓인 시간으로 다음 연출을 건너뛰지 않는다.
         if (dialogueId != null) accumulator = 0f
-    }
-
-    fun resumeVideo() {
-        check(videoId!=null)
-        videoId=null;accumulator=0f;execute()
     }
 
     fun provideDialogue(pages:JsonValue) {

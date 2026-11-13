@@ -23,7 +23,7 @@ def verify(game_dir,output_root,executable=None):
      cases.append(dict(name=f'cabin-{len(cases)}',map=mapnum,event=event,state=state,stage=stage,before=base64.b64encode(source).decode(),approach=walk,**result))
  opening=json.loads((output_root/'assets/opening/opening.json').read_text());opening['programs'][2]['continues_field']=True
  (output_root/'assets/opening/opening.json').write_text(json.dumps(opening,ensure_ascii=False,separators=(',',':'))+'\n')
- metadata=dict(animations=[animation_record(game_dir,exe,*spec) for spec in [(2,6,0,25),(3,2,0,25),(5,5,0,24),(6,3,1,27)]])
+ metadata=dict(animations=[animation_record(game_dir,exe,*spec) for spec in [(2,6,0,25),(3,2,0,25),(4,4,0,25),(5,5,0,24),(6,3,1,27)]])
  (output_root/'assets/data/events/story.json').write_text(json.dumps(metadata,ensure_ascii=False,separators=(',',':'))+'\n')
  report=dict(executable_sources=EXPECTED_HASHES,sources={p:hashlib.sha256((game_dir/p).read_bytes()).hexdigest() for p in ('DATA/AREA00.G&M','DATA/AUTOANI.002','DATA/AUTOANI.003','MAP/AREA00.MAP')},
   cases=cases,stubs='실제 접근·연출 해석·배우 이동/자세·중첩 이벤트·상태 변경을 실행한다. 파일 읽기는 원본 AUTOANI를 메모리로 공급한다. 화면/오디오 I/O·NPC 시계는 생략한다. 접근은 별도 원작 틱 기록과도 대조한다.')
