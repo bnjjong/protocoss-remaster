@@ -35,6 +35,7 @@ import com.protocoss.map.TileMap
 import com.protocoss.map.TileMapRenderer
 import com.protocoss.field.FieldRules
 import com.protocoss.field.FieldMovement
+import com.protocoss.field.FieldApproach
 import com.protocoss.field.FieldNpcs
 import com.protocoss.field.IndoorDialogues
 import com.protocoss.field.SwordStory
@@ -110,6 +111,7 @@ class ProtocossGame(
     private var fieldPanel:FieldPanel?=null
     private lateinit var fieldStory:FieldStory
     private var scriptAnimation:EventMachine.Stop.Animation?=null
+    private var fieldApproach:FieldApproach?=null
     private var animationPlan:FieldStory.Plan?=null
     private var animationChild:FieldScript?=null
     private lateinit var fieldRewards:FieldRewards
@@ -263,6 +265,21 @@ class ProtocossGame(
                 fieldMovement?.update(delta,0,false,tick={ x,y -> fieldNpcs?.tick(x,y) }) { false }
                 fieldFade=(fieldFade-delta*70f/64f).coerceAtLeast(0f)
             }
+            else if(fieldApproach!=null) {
+                val walk=checkNotNull(fieldApproach)
+                if(walk.finished && delta>0f) {
+                    val script=checkNotNull(fieldScript)
+                    script.adopt(script.save.travel(script.save.map,walk.scrollX/8,walk.scrollY/8,
+                        walk.x-walk.scrollX+16,walk.y-walk.scrollY+16,walk.pose,walk.layer,emptyMap()))
+                    fieldMovement!!.place(walk.x.toFloat(),walk.y.toFloat())
+                    fieldMovement!!.layer=walk.layer
+                    fieldApproach=null
+                    beginScriptAnimation(script,checkNotNull(scriptAnimation))
+                } else {
+                    walk.update(delta);openingRenderer.update(delta)
+                    player.setPosition(walk.x+12f,tileMap!!.totalPixelHeight-walk.y-12f)
+                }
+            }
             else if(fieldPanel!=null) {
                 fieldMovement?.update(delta,0,false,tick={ x,y -> fieldNpcs?.tick(x,y) }) { false }
                 fieldPanel!!.update(delta);openingRenderer.update(delta)
@@ -286,7 +303,7 @@ class ProtocossGame(
                 message = "방향키 선택 · Enter 확인 · Esc 계속"
             } else {
                 handleInput(delta)
-                if(fieldDialogue==null) updateFieldView(delta)
+                if(fieldDialogue==null && fieldApproach==null && scene==Scene.FIELD) updateFieldView(delta)
                 dialogueManager.update(delta)
                 dialogueBox.update(delta)
                 openingRenderer.update(delta)
@@ -309,6 +326,14 @@ class ProtocossGame(
 
         // 창 크기·전체화면 전환이 화면 영역을 바꿔도 매 프레임 원래 표시 영역을 복구한다.
         if(!renderingTentField && !renderingShopField) viewport.apply()
+        fieldApproach?.let { walk ->
+            uiCamera.update();batch.projectionMatrix=uiCamera.combined;batch.begin()
+            openingRenderer.renderMap(batch,session!!.map,walk.scrollX.toFloat(),walk.scrollY.toFloat())
+            // 원작 0x24624..0x24654의 주민 작업 화면 범위. 가장자리 밖 인물은 그리지 않는다.
+            openingRenderer.renderFieldActors(batch,session!!.map,walk.scrollX.toFloat(),walk.scrollY.toFloat(),
+                walk.x.toFloat(),walk.y.toFloat(),walk.pose,walk.layer,fieldNpcs?.actors,nativeNpcBounds=true)
+            batch.end();return
+        }
         if (scene != Scene.FIELD && !renderingTentField && !renderingShopField) {
             uiCamera.update()
             batch.projectionMatrix = uiCamera.combined
@@ -744,6 +769,29 @@ class ProtocossGame(
     }
 
     private fun startScriptAnimation(script:FieldScript,request:EventMachine.Stop.Animation) {
+        val plan=fieldStory.plan(request,script.save)
+        if(request.mode==0) {
+            val m=checkNotNull(fieldMovement);check(m.atRest)
+            val map=opening.data.get("maps").get(m.map.toString())
+            val maxX=(map.getInt("width")-40)*8;val maxY=(map.getInt("height")-25)*8
+            val first=plan.source.get("start");val scroll=plan.source.get("scroll")
+            val commands=opening.data.get("programs")[plan.program].get("commands")
+            val step=commands.first { it.getString("op")=="L" }.get("value")[1].asInt()
+            fieldApproach=FieldApproach(m.x.toInt(),m.y.toInt(),m.pose,m.layer,
+                (m.x.toInt()-144).coerceIn(0,maxX),(m.y.toInt()-88).coerceIn(0,maxY),
+                first.getInt("x"),first.getInt("y"),scroll[0].asInt()*8,scroll[1].asInt()*8,maxX,maxY,step,
+                { x,y,d,l -> if(fieldNpcs?.blocksPlayer(x.toFloat(),y.toFloat(),d)==true) FieldRules.Step(0,l)
+                    else fieldRules.step(m.map,x.toFloat(),y.toFloat(),d,l,m.doorOpen) },
+                { x,y -> fieldNpcs?.tick(x.toFloat(),y.toFloat()) })
+            // 연출 음악은 접근 보행 전에 바뀐다. 변수와 파티 진행은 아직 재개하지 않는다.
+            script.machine.setVariable(4,request.music);session=script.save
+            scriptAnimation=request;animationPlan=plan
+            if(openingMusic==null || activeTrack!=request.music) playOpeningMusic(request.music)
+            player.setMotion(null,false)
+        } else beginScriptAnimation(script,request)
+    }
+
+    private fun beginScriptAnimation(script:FieldScript,request:EventMachine.Stop.Animation) {
         val plan=script.beginAnimation(request,fieldStory)
         session=script.save;animationPlan=plan;scriptAnimation=request;animationChild=null
         val data=opening.data
@@ -1126,7 +1174,7 @@ class ProtocossGame(
         FieldBounds.constrainCamera(camera, map)
         session = save
         fieldScript=null;fieldScriptNpc=-1;fieldScriptDialogue=null;fieldPanel=null
-        scriptAnimation=null;animationPlan=null;animationChild=null
+        scriptAnimation=null;animationPlan=null;animationChild=null;fieldApproach=null
         shopConversation=false;swordReceived=false
         indoorConversation=null
         if(!preserveField) fieldRules.reset(save.map)

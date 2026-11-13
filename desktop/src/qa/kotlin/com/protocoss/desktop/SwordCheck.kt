@@ -145,6 +145,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         check(scene() in setOf("FIELD","OPENING","CLIP"));idle()
     }
     private fun capture(name:String,directory:String="sword",record:JsonValue=captures) {
+        val walk=field<com.protocoss.field.FieldApproach?>("fieldApproach")
         val cinematic=scene()=="OPENING";val timeline=field<OpeningTimeline>("opening")
         val map=if(cinematic) timeline.map else session().map
         val source=data().get("maps").get(map.toString());val width=source.getInt("width")*8;val height=source.getInt("height")*8
@@ -155,9 +156,9 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
             val sprites=timeline.data.get("programs")[timeline.program].get("sprites")
             (if(timeline.continuesField) npcRows else emptyList())+
                 timeline.actors.map { listOf(sprites[it.sprite].asInt(),it.x.toInt(),it.y.toInt(),it.frame,it.mask) }
-        } else npcRows+listOf(listOf(0,mover.x.toInt(),mover.y.toInt(),mover.pose,mover.layer))
-        var sx=if(cinematic) timeline.scrollX.toInt() else ((camera.position.x-160)/8).roundToInt()*8
-        var sy=if(cinematic) timeline.scrollY.toInt() else ((height-camera.position.y-100)/8).roundToInt()*8
+        } else npcRows+listOf(if(walk!=null) listOf(0,walk.x,walk.y,walk.pose,walk.layer) else listOf(0,mover.x.toInt(),mover.y.toInt(),mover.pose,mover.layer))
+        var sx=walk?.scrollX ?: if(cinematic) timeline.scrollX.toInt() else ((camera.position.x-160)/8).roundToInt()*8
+        var sy=walk?.scrollY ?: if(cinematic) timeline.scrollY.toInt() else ((height-camera.position.y-100)/8).roundToInt()*8
         sx=sx.coerceIn(0,width-320);sy=sy.coerceIn(0,height-200)
         if(!cinematic) camera.position.set(sx+160f,height-sy-100f,0f)
         delta=0f;tick();delta=1f/70f
@@ -169,6 +170,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         record.addChild(JsonValue(JsonValue.ValueType.`object`).apply {
             addChild("name",JsonValue(name));addChild("map",JsonValue(map.toLong()));addChild("scroll",array(listOf(sx,sy)))
             addChild("cinematic",JsonValue(cinematic))
+            if(walk!=null) addChild("approach",JsonValue(true))
             addChild("actors",JsonValue(JsonValue.ValueType.array).apply { rows.forEach { addChild(array(it)) } });addChild("tiles",array(tiles))
             val talk=field<FieldDialogue?>("fieldDialogue")
             val page=if(cinematic) timeline.page else talk?.page
@@ -193,13 +195,13 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         check(session().bytes()[500]==before.bytes()[500] && session().bytes()[162]==before.bytes()[162])
         check(field<com.badlogic.gdx.audio.Music>("openingMusic").isPlaying)
     }
-    private fun finishScene() {
+    private fun finishScene(captureScenes:Boolean=true) {
         val seen=mutableSetOf<Int>()
-        val continued=field<OpeningTimeline>("opening").continuesField
+        val continued=field<com.protocoss.field.FieldApproach?>("fieldApproach")!=null || field<OpeningTimeline>("opening").continuesField
         val previousNpcs=field<FieldNpcs?>("fieldNpcs")
         val previousRenderer=field<OpeningRenderer>("openingRenderer")
         repeat(15000) {
-            if(scene()=="FIELD") {
+            if(scene()=="FIELD" && field<com.protocoss.field.FieldApproach?>("fieldApproach")==null) {
                 if(continued) {
                     check(field<FieldNpcs?>("fieldNpcs")===previousNpcs)
                     check(field<OpeningRenderer>("openingRenderer")===previousRenderer)
@@ -208,11 +210,11 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
                 idle();return
             }
             val timeline=field<OpeningTimeline>("opening")
-            if(continued) check(timeline.fadeAlpha==0f)
+            if(continued && scene()=="OPENING") check(timeline.fadeAlpha==0f)
             if(scene()=="OPENING" && timeline.page!=null) {
                 idle(80)
                 val id=timeline.dialogueId!!
-                if(id in setOf(316,317,106) && seen.add(id)) capture("scene-$id")
+                if(captureScenes && id in setOf(316,317,106) && seen.add(id)) capture("scene-$id")
                 pressed+=Input.Keys.ENTER
             }
             tick()
@@ -786,6 +788,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         println("실내 대화 실행 검사: 주민 8명·224분기·첫 여비 50→구입 후 35·저장 재개·반복 무지급·대화 중 필드 잠금, ${shots.size} 화면")
     }
     private fun checkStoryServices() {
+        checkAnimationApproach()
         val native=com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.local("docs/restoration/event-story-native.json"))
         val shots=JsonValue(JsonValue.ValueType.array)
         val invoke=ProtocossGame::class.java.getDeclaredMethod("handleFieldEvent",FieldMovement::class.java,Int::class.javaPrimitiveType).apply { isAccessible=true }
@@ -798,15 +801,15 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
             val request=row.get("requests").firstOrNull { it.getString("kind")=="animation" }
             invoke.invoke(game,movement(),row.getInt("argument"))
             if(request!=null) {
-                animations++;check(scene()=="OPENING")
+                animations++;check(scene()=="OPENING" || field<com.protocoss.field.FieldApproach?>("fieldApproach")!=null)
                 check(field<FieldScript>("fieldScript").machine.pending is com.protocoss.script.EventMachine.Stop.Animation)
                 check(field<Int>("activeTrack")==request.getInt("music"))
                 val photographed=mutableSetOf<String>();var ticks=0
-                while(scene()=="OPENING") {
+                while(scene()=="OPENING" || field<com.protocoss.field.FieldApproach?>("fieldApproach")!=null) {
                     check(ticks++<6000) { "스토리 연출 종료 실패: ${row.getString("name")}" }
                     check(session().variable(8)==source.variable(8) && session().bytes()[500]==source.bytes()[500])
                     val timeline=field<OpeningTimeline>("opening")
-                    if(timeline.page!=null) {
+                    if(scene()=="OPENING" && timeline.page!=null) {
                         idle(80)
                         val label="${row.getString("name")}-${timeline.dialogueId}-${timeline.pageIndex}"
                         if(row.getString("name") in setOf("story-3","story-24") && timeline.pageIndex==0 && photographed.add(label)) capture(label,"event-story",shots)
@@ -829,6 +832,52 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         }
         Gdx.files.local("desktop/build/reports/event-story/scenes.json").writeString(shots.toJson(JsonWriter.OutputType.json),false,"UTF-8")
         println("스토리 명령 실행 검사: $states 상태·연출 $animations 회·동료 변경 시점·원본 대화·맵 복귀·저장 재개, ${shots.size} 화면")
+    }
+
+    private fun checkAnimationApproach() {
+        val report=com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.local("docs/restoration/animation-approach-native.json"))
+        val story=com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.local("docs/restoration/event-story-native.json"))
+        val base=DosSave.parse(Base64.getDecoder().decode(story.get("cases").first { it.get("requests").any { r -> r.getString("kind")=="animation" && r.getInt("id")==5 } }.getString("before")))
+        val invoke=ProtocossGame::class.java.getDeclaredMethod("handleFieldEvent",FieldMovement::class.java,Int::class.javaPrimitiveType).apply { isAccessible=true }
+        val shots=JsonValue(JsonValue.ValueType.array);var cases=0;var ticks=0
+        for((index,row) in report.get("cases").withIndex()) {
+            if(!row.getBoolean("ended") || row.getInt("step")!=1 || row.get("target")[0].asInt()!=256 || row.get("target")[1].asInt()!=144) continue
+            val start=row.get("start").asIntArray();val scroll=row.get("scroll").asIntArray()
+            val source=base.travel(4,scroll[0]/8,scroll[1]/8,start[0]-scroll[0]+16,start[1]-scroll[1]+16,start[2],start[3],emptyMap())
+            load(source)
+            // 이벤트 저장 좌표가 오래됐어도 실제 보행 좌표에서 출발해야 한다.
+            ProtocossGame::class.java.getDeclaredField("session").apply { isAccessible=true }.set(game,source.travel(4,14,7,160,104,8,0,emptyMap()))
+            val keep=field<FieldNpcs>("fieldNpcs");val renderer=field<OpeningRenderer>("openingRenderer")
+            invoke.invoke(game,movement(),15)
+            val walk=field<com.protocoss.field.FieldApproach>("fieldApproach")
+            check(listOf(walk.x,walk.y)==start.take(2) && walk.ticks==0)
+            check(field<Int>("activeTrack")==24)
+            if(index in setOf(0,7)) capture("approach-$index-start","animation-approach",shots)
+            for((tick,frame) in row.get("frames").withIndex()) {
+                held+=listOf(Input.Keys.D,Input.Keys.SHIFT_LEFT);pressed+=listOf(Input.Keys.ESCAPE,Input.Keys.ENTER,Input.Keys.SPACE)
+                tick();held.clear();ticks++
+                check(frame.get("hero").asIntArray().toList()==listOf(walk.x,walk.y,walk.pose,walk.layer,walk.direction)) { "접근 상태 불일치: $index/$tick" }
+                check(frame.get("scroll").asIntArray().toList()==listOf(walk.scrollX,walk.scrollY))
+                check(session().variable(8)==1 && session().bytes()[500].toInt()==0)
+                check(field<FieldNpcs>("fieldNpcs")===keep && field<OpeningRenderer>("openingRenderer")===renderer)
+                if(tick<row.get("frames").size-1) {
+                    check(scene()=="FIELD" && field<com.protocoss.field.FieldApproach?>("fieldApproach")===walk)
+                    if(index in setOf(0,7) && walk.scrollX%8==0 && walk.scrollY%8==0) capture("approach-$index-tick-$tick","animation-approach",shots)
+                }
+            }
+            check(walk.finished && field<com.protocoss.field.FieldApproach?>("fieldApproach")===walk)
+            if(index in setOf(0,7)) capture("approach-$index-arrived","animation-approach",shots)
+            tick()
+            check(scene()=="OPENING" && field<com.protocoss.field.FieldApproach?>("fieldApproach")==null)
+            check(movement().x==256f && movement().y==144f)
+            finishScene(false);check(session().variable(8)==2 && session().bytes()[500].toInt()==1)
+            val expected=Base64.getDecoder().decode(report.get("stories").first { it.getInt("case")==index }.getString("after"))
+            check(expected.contentEquals(session().bytes())) { "접근·합류 원작 저장 불일치: $index" }
+            if(index in setOf(0,7)) saveAndReload()
+            cases++
+        }
+        Gdx.files.local("desktop/build/reports/animation-approach/scenes.json").writeString(shots.toJson(JsonWriter.OutputType.json),false,"UTF-8")
+        println("연출 접근 실행 검사: $cases 출발 상태·$ticks 틱·실제 위치·입력 잠금·합류 완료·저장 재개, ${shots.size} 화면")
     }
     private fun checkEventRewards() {
         val report=com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.local("docs/restoration/event-rewards-native.json"))
@@ -972,7 +1021,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         route(1);check(session().map==4);banner()
         shopEntry();shopTalk(0,"deposit");saveAndReload()
         shopTalk(1,"not-ready-1");route(1);check(session().map==4);saveAndReload()
-        held+=Input.Keys.A;tick();held.clear();check(scene()=="OPENING");check(field<FieldScript?>("fieldScript")?.machine?.pending is com.protocoss.script.EventMachine.Stop.Animation);joins++;finishScene()
+        held+=Input.Keys.A;tick();held.clear();check(field<com.protocoss.field.FieldApproach?>("fieldApproach")!=null);check(field<FieldScript?>("fieldScript")?.machine?.pending is com.protocoss.script.EventMachine.Stop.Animation);joins++;finishScene()
         check(session().variable(8)==2 && session().bytes()[500].toInt()==1);saveAndReload()
         shopEntry();shopTalk(2,"not-ready-2");check(session().bytes()[162].toInt()==0);route(1)
         route(1);check(session().map==0);banner()

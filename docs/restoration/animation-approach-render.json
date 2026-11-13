@@ -1,0 +1,45 @@
+{
+  "compared_pixels": 640000,
+  "scenes": [
+    {
+      "name": "approach-0-start",
+      "pixels": 64000
+    },
+    {
+      "name": "approach-0-tick-7",
+      "pixels": 64000
+    },
+    {
+      "name": "approach-0-tick-15",
+      "pixels": 64000
+    },
+    {
+      "name": "approach-0-tick-23",
+      "pixels": 64000
+    },
+    {
+      "name": "approach-0-tick-31",
+      "pixels": 64000
+    },
+    {
+      "name": "approach-0-arrived",
+      "pixels": 64000
+    },
+    {
+      "name": "approach-7-start",
+      "pixels": 64000
+    },
+    {
+      "name": "approach-7-tick-7",
+      "pixels": 64000
+    },
+    {
+      "name": "approach-7-tick-15",
+      "pixels": 64000
+    },
+    {
+      "name": "approach-7-arrived",
+      "pixels": 64000
+    }
+  ]
+}

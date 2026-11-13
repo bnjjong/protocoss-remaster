@@ -43,6 +43,7 @@ def verify(game_dir, output_root, executable=None, folder=None, report_name='npc
         visible=[]
         actors=scene['actors'] if scene.get('cinematic',False) else native_order.actors(scene['actors'],sy)
         for sprite,x,y,frame,mask in actors:
+            if scene.get('approach') and [sprite,x,y,frame,mask]!=scene['actors'][-1] and not (-16<x-sx<312 and -16<y-sy<192):continue
             x-=sx;y-=sy
             if x+24<=0 or y+24<=0 or x>=320 or y>=200:continue
             # 원작 352×232 VGA 작업 화면의 16픽셀 여백 안에서는 잘린 인물도 직접 그린다.
