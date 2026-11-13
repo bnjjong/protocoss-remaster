@@ -6,7 +6,7 @@ import com.protocoss.script.EventMachine
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-/** 원본 AUTOANI와 이미 검증한 연출 자산의 대응. 현재 합류 005·쪽지 006만 연결한다. */
+/** 원본 AUTOANI와 검증한 기상·벽난로·합류·쪽지 연출 자산의 대응. */
 class FieldStory(private val data:JsonValue,private val opening:JsonValue) {
     class Plan internal constructor(val source:JsonValue) {
         val program get()=source.getInt("program")
@@ -17,7 +17,9 @@ class FieldStory(private val data:JsonValue,private val opening:JsonValue) {
         val row=data.get("animations").firstOrNull { it.getInt("id")==request.id } ?: error("이 연출은 연결하지 않았습니다.")
         require(request.mode==row.getInt("mode") && request.music==row.getInt("music")) { "이 연출의 모드·음악 조합은 연결하지 않았습니다." }
         val program=opening.get("programs")[row.getInt("program")]
-        require(request.mode!=0 || save.map==row.getInt("map")) { "현재 맵에서 이어지는 연출이 아닙니다." }
+        val fieldMaps=row.get("field_maps")?.asIntArray()?.toList() ?: listOf(row.getInt("map"))
+        require(request.mode!=0 || save.map in fieldMaps) { "현재 맵에서 이어지는 연출이 아닙니다." }
+        require(program.getBoolean("continues_field",false)==(request.mode==0)) { "연출 표시 모드가 원본 명령과 다릅니다." }
         require(program.get("commands").filter { it.getString("op")=="L" }.all { it.get("value")[0].asInt()==0 }) { "이 연출의 카메라 이동은 연결하지 않았습니다." }
         return Plan(row)
     }

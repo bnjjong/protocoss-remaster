@@ -568,7 +568,7 @@ class ProtocossGame(
                 val current=session!!
                 val event=fieldRules.interaction(current.map,movement.x,movement.y,movement.pose)
                 if(event==15) {
-                    startFieldEvent(6,cabinInteraction.fireDestination(current,event)!!)
+                    beginFieldScript(checkNotNull(prepareFieldScript(current,event,true)),-1)
                     return
                 }
                 val pages=event?.let { cabinInteraction.pages(current,it) }
@@ -668,10 +668,6 @@ class ProtocossGame(
             movement.face(1)
             player.setMotion(Direction.NORTH,false)
             beginFieldScript(checkNotNull(prepareFieldScript(current,event,true)),-1)
-            return true
-        }
-        if(current.map==2 && event==16 && current.variable(6)==0) {
-            startFieldEvent(2,current.travel(1,0,0,72,56,10,0,mapOf(1 to 17,4 to 25,6 to 1)))
             return true
         }
         if(current.map==3 && event==2 && current.variable(7)==0) {

@@ -1,0 +1,189 @@
+{
+  "compared_pixels": 2944000,
+  "scenes": [
+    {
+      "name": "cabin-0-start",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-0-actor-1-13-32",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-0-actor-1-14-32",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-0-actor-0-8-32",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-0-actor-0-8-34",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-0-actor-0-8-36",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-0-actor-0-8-38",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-0-actor-0-8-40",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-0-actor-0-8-42",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-0-actor-0-8-44",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-0-actor-0-8-46",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-0-actor-0-8-48",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-0-dialogue",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-12-start",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-12-approach-7",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-12-approach-15",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-12-approach-23",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-12-actor-0-8-40",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-12-actor-1-10-40",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-12-actor-1-9-40",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-12-actor-1-11-40",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-12-actor-0-10-40",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-12-dialogue",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-24-start",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-24-actor-1-13-32",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-24-actor-1-14-32",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-24-actor-0-8-32",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-24-actor-0-8-34",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-24-actor-0-8-36",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-24-actor-0-8-38",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-24-actor-0-8-40",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-24-actor-0-8-42",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-24-actor-0-8-44",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-24-actor-0-8-46",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-24-actor-0-8-48",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-24-dialogue",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-36-start",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-36-approach-7",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-36-approach-15",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-36-approach-23",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-36-actor-0-8-40",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-36-actor-1-10-40",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-36-actor-1-9-40",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-36-actor-1-11-40",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-36-actor-0-10-40",
+      "pixels": 64000
+    },
+    {
+      "name": "cabin-36-dialogue",
+      "pixels": 64000
+    }
+  ]
+}

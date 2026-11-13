@@ -226,3 +226,12 @@ tasks.register<JavaExec>("verifyEventStory") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 기상·벽난로의 접근·중첩 대화·상태 변경을 원작 저장과 대조한다.
+tasks.register<JavaExec>("verifyCabinStory") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.CabinStoryCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}

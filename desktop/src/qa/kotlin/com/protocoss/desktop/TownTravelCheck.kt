@@ -97,12 +97,14 @@ private class TownApplication(private val saves:Path):ApplicationAdapter() {
         } finally { expected.dispose() }
     }
     private fun finishAnimation(movie:Boolean=false) {
-        val timeline=field<OpeningTimeline>("opening");var sawMovie=false;var frames=0
+        var sawMovie=false;var frames=0
         repeat(12000) {
+            if(field<com.protocoss.field.FieldApproach?>("fieldApproach")!=null) { tick();return@repeat }
             if(scene()=="FIELD") {
                 check(!movie || sawMovie);idle();return
             }
             check(scene() in setOf("OPENING","CLIP"))
+            val timeline=field<OpeningTimeline>("opening")
             if(scene()=="CLIP") {
                 sawMovie=true
                 val clip=field<com.protocoss.prologue.ProloguePlayer>("encounterClip")
