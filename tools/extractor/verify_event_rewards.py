@@ -6,7 +6,7 @@ from unicorn import UC_HOOK_CODE
 from unicorn.x86_const import *
 from sword_story import StoryReference
 from event_archive import EventArchive
-from verify_original_map import unpack_game,EXPECTED_HASHES
+from verify_original_map import unpack_game,read_offsets,EXPECTED_HASHES
 from decode_opening import dialogue,glyph
 from verify_original_title_save import objects
 from verify_opening import OpeningReference
@@ -27,7 +27,7 @@ class RewardReference(StoryReference):
         finally:c.hook_del(token)
         return dict(input=args,args=captured[0],advanced=struct.unpack('<I',c.mem_read(0x715a4,4))[0]-0x240000)
 
-    def event_reward(self,game_dir,raw,source,argument,shop=None):
+    def event_reward(self,game_dir,raw,source,argument,shop=None,chests=False):
         self.load_save(source);c=self.cpu;archive=EventArchive(raw)
         c.mem_write(0x230000,raw[6:6+len(archive.groups)*2]);c.mem_write(0x240000,archive.code)
         self.dword(0x15ac,0x230000);self.dword(0x15a8,0x240000);self.word(0xe50c,len(archive.groups));self.word(0x15b0,0)
@@ -36,16 +36,22 @@ class RewardReference(StoryReference):
         self.dword(0x1598,0x2a0000);self.dword(0x159c,0x2b0000)
         c.mem_write(0x3e0000,b'\xc3')
         for pointer in (0xfd40,0xe054,0xe050):self.dword(pointer,0x3e0000)
-        requests=[];ending=[];steps=0;last=0;panel=None
+        if chests:
+            maps=(game_dir/'MAP/AREA00.MAP').read_bytes();offs=read_offsets(game_dir/'MAP/AREA00.MDA');number=struct.unpack_from('<I',source,96)[0]
+            sub=maps[offs[number]:offs[number+1]];self.load_map(sub)
+            so=read_offsets(game_dir/'MAP/AREA00.SDA');soc=(game_dir/'MAP/AREA00.SOC').read_bytes();start=so[sub[32]]
+            c.mem_write(0x7b880,soc[start+66770:start+68770])
+        requests=[];ending=[];steps=0;last=0;panel=None;chest_before=None
         def pc():return struct.unpack('<I',c.mem_read(0x715a4,4))[0]-0x240000
         def snapshot(kind,**extra):return dict(kind=kind,at=last,offset=pc(),instructions=steps,variables=hashlib.sha256(bytes(c.mem_read(0x7e2a0,600))).hexdigest(),**extra)
         def string(p):return bytes(c.mem_read(p,4096)).split(b'\0')[0]
         skips={0x284b8:0,0x23da4:0,0x1dd64:0,0x2c184:0,0x2ca5e:8}
+        if chests:skips.update({0x2d1e6:0,0x2cb5f:8,0x243f0:0,0x65760:0,0x22148:0})
         def hook(cpu,address,size,user):
-            nonlocal last,steps,panel
+            nonlocal last,steps,panel,chest_before
             if address==0x25361:
                 last=pc();op=archive.code[last]
-                if op not in set(range(0xf0,0xfb))|{3,0x11,0x18,0x19}|({0x10} if shop is not None else set()):
+                if op not in set(range(0xf0,0xfb))|{3,0x11,0x18,0x19}|({0x10} if shop is not None else set())|({0xf} if chests else set()):
                     ending.append(snapshot('unhandled',opcode=op));cpu.emu_stop();return
                 steps+=1
             elif address==0x1f8b0:
@@ -55,6 +61,12 @@ class RewardReference(StoryReference):
             elif address==0x2cf9d:
                 args=[cpu.reg_read(r) for r in (UC_X86_REG_EAX,UC_X86_REG_EDX,UC_X86_REG_EBX,UC_X86_REG_ECX)]
                 panel['frames'].append(args);self.return_from(cpu,4)
+            elif address==0x12720 and chests:
+                chest_before=bytes(cpu.mem_read(0x200000,self.width*self.height*4));requests.append(snapshot('chest'))
+            elif address==0x256ae and chests:
+                after=bytes(cpu.mem_read(0x200000,self.width*self.height*4))
+                requests[-1]['changes']=[dict(index=i,tid=t,attr=a) for i,((t,a),old) in enumerate(zip(struct.iter_unpack('<HH',after),struct.iter_unpack('<HH',chest_before))) if (t,a)!=old]
+                requests[-1]['after']=base64.b64encode(self.saved()).decode()
             elif address==0x29a1c and shop is not None:
                 args=[cpu.reg_read(r) for r in (UC_X86_REG_EAX,UC_X86_REG_EDX)]
                 before=self.saved();after=shop(before,*args)
@@ -106,13 +118,13 @@ def extract(game_dir,output_root,executable=None):
         for i,v in {0:0,1:77,99:123,299:54321}.items():struct.pack_into('<H',source,2342+i*2,v)
         program=synthetic(item,count,category)
         cases.append(dict(name=f'reward-{len(cases)}',argument=7,raw=base64.b64encode(program).decode(),before=base64.b64encode(source).decode(),**ref.event_reward(game_dir,program,source,7)))
-    formats={name:bytes(ref.cpu.mem_read(address,100)).split(b'\0')[0].decode('cp1361') for name,address in [('item',0x702a0),('money',0x702b8)]}
+    formats={name:bytes(ref.cpu.mem_read(address,100)).split(b'\0')[0].decode('cp1361') for name,address in [('item',0x702a0),('money',0x702b8),('empty',0x702d0)]}
     frames=next(v['frames'] for c in cases for v in c['requests'] if v['kind']=='panel' and v['opening'])
     equipment=json.loads((output_root/'assets/ui/equipment/equipment.json').read_text())
     opening=json.loads((output_root/'assets/opening/opening.json').read_text())
     indoorfont=json.loads((output_root/'assets/data/field/indoor-dialogues.json').read_text())['font']
     available=set(opening['font']['characters']+indoorfont['characters'])|{chr(int(k[6:])) for k in equipment['rects'] if k.startswith('glyph-')}
-    text=''.join(r['name'] for key in ('weapons','items') for r in equipment[key])+formats['item'].replace('%s','').replace('%d','')+formats['money'].replace('%d','')+'0123456789'
+    text=''.join(r['name'] for key in ('weapons','items') for r in equipment[key])+formats['item'].replace('%s','').replace('%d','')+formats['money'].replace('%d','')+formats['empty']+'0123456789'
     characters=sorted(set(text)-available);font=(game_dir/'HANGUL.FNT').read_bytes();english=(game_dir/'ENGLISH.FNT').read_bytes();(_,code),(_,data)=objects(exe)
     nativefont=OpeningReference(code,data,font);atlas=Image.new('RGBA',(256,16*max(1,(len(characters)+15)//16)));widths={}
     for i,ch in enumerate(characters):

@@ -79,8 +79,8 @@ def verify(game_dir, output_root, executable=None, folder=None, report_name='npc
                 elif portrait>=0:
                     decoded=decode_img_frame(common[portrait])
                     expected.alpha_composite(renderer.render(struct.pack('<HH',decoded.width,decoded.height)+common[portrait],palette),(14,62))
-                top=144 if page.get('kind')=='money' else 155 if page.get('native_reward') and (leaving or page['category']==0) else 158
-                text_rows=[(page['text'],reward_x,top,(252,252,252))] if page.get('kind') in ('reward','money') else [(page['speaker'],94 if portrait>=0 else 14,118,(252,252,0)),(page['text'][:scene['visible']],14,139,(252,252,252))]
+                top=144 if page.get('kind') in ('money','empty') else 155 if page.get('native_reward') and (leaving or page['category']==0) else 158
+                text_rows=[(page['text'],reward_x,top,(252,252,252))] if page.get('kind') in ('reward','money','empty') else [(page['speaker'],94 if portrait>=0 else 14,118,(252,252,0)),(page['text'][:scene['visible']],14,139,(252,252,252))]
             elif 'banner' in scene:text_rows=[(scene['banner']['text'],scene['banner']['x'],7,(252,252,252))]
             else:text_rows=[]
             for text,x,y,color in text_rows:

@@ -44,12 +44,12 @@ import com.protocoss.field.FieldPanel
 import com.protocoss.field.FieldRewards
 import com.protocoss.field.FieldStory
 import com.protocoss.field.FieldVideos
+import com.protocoss.field.FieldChests
 import com.protocoss.field.FieldShops
 import com.protocoss.field.FieldScript
 import com.protocoss.script.EventArchive
 import com.protocoss.script.EventMachine
 import com.protocoss.script.EventText
-import com.protocoss.field.CabinInteraction
 import com.protocoss.field.CabinDoors
 import com.protocoss.player.Direction
 import com.protocoss.player.Player
@@ -121,7 +121,6 @@ class ProtocossGame(
     private var animationPlan:FieldStory.Plan?=null
     private var animationChild:FieldScript?=null
     private lateinit var fieldRewards:FieldRewards
-    private lateinit var cabinInteraction:CabinInteraction
     private lateinit var indoorDialogues:IndoorDialogues
     private var indoorConversation:IndoorDialogues.Conversation?=null
     private lateinit var shopRenderer:ShopRenderer
@@ -183,7 +182,7 @@ class ProtocossGame(
         equipmentRenderer=EquipmentRenderer()
         tentRenderer=TentRenderer()
         shopRenderer=ShopRenderer()
-        equipmentSounds=listOf(7,8,11,12,13).associateWith { Gdx.audio.newSound(Gdx.files.internal("assets/audio/sfx/e${it.toString().padStart(4,'0')}.wav")) }
+        equipmentSounds=listOf(1,7,8,11,12,13).associateWith { Gdx.audio.newSound(Gdx.files.internal("assets/audio/sfx/e${it.toString().padStart(4,'0')}.wav")) }
         dialogueRepository = DialogueRepository()
         loadDialogueScripts()
         dialogueManager = DialogueManager()
@@ -192,7 +191,6 @@ class ProtocossGame(
         loadExtractedBackgrounds()
         opening = OpeningTimeline.parse(Gdx.files.internal("assets/opening/opening.json").readString("UTF-8"))
         openingRenderer = OpeningRenderer(opening)
-        cabinInteraction=CabinInteraction(opening.data)
         indoorDialogues=IndoorDialogues(com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/data/field/indoor-dialogues.json").readString("UTF-8")))
         fieldRules = FieldRules(Gdx.files.internal("assets/data/field/field.json").readString()) {
             Gdx.files.internal("assets/data/field/$it").readBytes()
@@ -202,6 +200,7 @@ class ProtocossGame(
         fieldVideos=FieldVideos(com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/data/events/videos.json").readString("UTF-8")))
         fieldRewards=FieldRewards(equipmentRenderer.model.data,com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/ui/rewards/rewards.json").readString("UTF-8")))
         eventCharacters=(equipmentRenderer.model.data.get("rects").filter { it.name.startsWith("glyph-") }.map { it.name.substring(6).toInt().toChar() }.joinToString("")+
+            com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/data/field/objects.json").readString("UTF-8")).get("font").getString("characters")+
             fieldRewards.data.get("font").getString("characters")+opening.data.get("font").getString("characters")+
             com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/data/field/indoor-dialogues.json").readString("UTF-8")).get("font").getString("characters")).toSet()
         doorSound=Gdx.audio.newSound(Gdx.files.internal("assets/audio/sfx/e0000.wav"))
@@ -557,19 +556,10 @@ class ProtocossGame(
                     indoorConversation=indoor
                     session=session!!.calledEvent(event)
                 }
-            } else if(session?.let { it.area==0 && it.map in 1..2 && it.variable(0)==0 }==true) {
+            } else if(session?.let { it.area==0 && it.map in 0..12 }==true) {
                 val current=session!!
-                val event=fieldRules.interaction(current.map,movement.x,movement.y,movement.pose)
-                if(event==15) {
-                    beginFieldScript(checkNotNull(prepareFieldScript(current,event,true)),-1)
-                    return
-                }
-                val pages=event?.let { cabinInteraction.pages(current,it) }
-                if(pages!=null && pages.size>0) {
-                    val script=prepareFieldScript(current,event!!,false)
-                    check(script!=null) { "복원한 오두막 조사를 실행하지 못했습니다: $event" }
-                    beginFieldScript(script,-1)
-                }
+                val event=fieldRules.interaction(current.map,movement.x,movement.y,movement.pose,movement.doorOpen)
+                if(event!=null) prepareFieldScript(current,event,true)?.let { beginFieldScript(it,-1) }
             }
         } else if(fieldDialogue!=null && fieldDialogueReady() && talkKey) {
             val wasLeaving=fieldDialogue!!.rewardLeaving
@@ -665,7 +655,10 @@ class ProtocossGame(
                 val m=fieldMovement
                 id==0 && allowWarp && m!=null && m.map==save.map &&
                     fieldRules.canOpenDoor(save.map,m.x,m.y,doorDirection(m),m.layer)
-            },rewards=fieldRewards,story=fieldStory,videos=fieldVideos,canOpenShop={ FieldShops.supported(save,it) }) {
+            },rewards=fieldRewards,story=fieldStory,videos=fieldVideos,canOpenShop={ FieldShops.supported(save,it) },canToggleChest={
+                val m=fieldMovement
+                m!=null && FieldChests.allowed(opening.data.get("maps").get(m.map.toString()),m.x.toInt(),m.y.toInt())
+            }) {
             Gdx.app.debug("Script","${save.area}/${save.variable(0)}/$event @${it.offset}: ${it.reason}")
         }
     }
@@ -702,6 +695,13 @@ class ProtocossGame(
                 }
                 is EventMachine.Stop.Animation -> { startScriptAnimation(script,request);return }
                 is EventMachine.Stop.Video -> error("연출 밖 영상 요청은 사전 검사에서 거부해야 합니다.")
+                is EventMachine.Stop.Chest -> {
+                    val m=checkNotNull(fieldMovement)
+                    val changes=openingRenderer.chestChanges(m.map,m.x.toInt(),m.y.toInt())
+                    openingRenderer.changeCells(m.map,changes);fieldNpcs?.changeCells(changes)
+                    m.finishDoor(1);player.setMotion(Direction.NORTH,false)
+                    equipmentSounds.getValue(1).play();script.resumeChest(request)
+                }
                 is EventMachine.Stop.Shop -> {
                     check(FieldShops.supported(script.save,request));scriptShop=request
                     shopMenu=ShopMenu();shopRenderer.begin();scene=Scene.SHOP

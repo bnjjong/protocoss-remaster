@@ -6,7 +6,7 @@ import com.protocoss.script.EventMachine
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-/** 원본 AUTOANI와 검증한 기상·벽난로·합류·쪽지 연출 자산의 대응. */
+/** 원본 AUTOANI와 검증한 기상·조사·합류·쪽지 연출 자산의 대응. */
 class FieldStory(private val data:JsonValue,private val opening:JsonValue) {
     class Plan internal constructor(val source:JsonValue) {
         val program get()=source.getInt("program")

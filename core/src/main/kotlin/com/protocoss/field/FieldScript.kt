@@ -25,6 +25,10 @@ class FieldScript(private val archive:EventArchive,source:DosSave,argument:Int,p
         require(before.indices.all { it in 119..161 || before[it]==result[it] }) { "거래 중 소지금·잡화 이외의 저장 상태가 바뀌었습니다." }
         adopt(after);machine.resumeService()
     }
+    fun resumeChest(request:EventMachine.Stop.Chest) {
+        check(machine.pending===request)
+        state=save.withFieldState(save.layer,0);machine.resumeService()
+    }
     fun child(argument:Int)=FieldScript(archive,save,argument,rewards)
     fun adopt(other:DosSave) {
         state=other
@@ -65,7 +69,7 @@ class FieldScript(private val archive:EventArchive,source:DosSave,argument:Int,p
     companion object {
         /** 사전 검사는 변수와 저장 사본만 사용한다. 미지원 시 게임·음량·인물 상태를 바꾸지 않는다. */
         fun prepare(archive:EventArchive,source:DosSave,argument:Int,maps:JsonValue,characters:Set<Char>,
-                    allowWarp:Boolean,canOpenDoor:(Int)->Boolean = { false },rewards:FieldRewards?=null,story:FieldStory?=null,videos:FieldVideos?=null,canOpenShop:(EventMachine.Stop.Shop)->Boolean = { false },blocked:(Blocked)->Unit = {}):FieldScript? {
+                    allowWarp:Boolean,canOpenDoor:(Int)->Boolean = { false },rewards:FieldRewards?=null,story:FieldStory?=null,videos:FieldVideos?=null,canOpenShop:(EventMachine.Stop.Shop)->Boolean = { false },canToggleChest:()->Boolean = { false },blocked:(Blocked)->Unit = {}):FieldScript? {
             val trial=FieldScript(archive,source,argument,rewards)
             var warps=0
             var spent=0L
@@ -112,6 +116,7 @@ class FieldScript(private val archive:EventArchive,source:DosSave,argument:Int,p
                             }
                             trial.finishAnimation(request,story,plan)
                         }
+                        is EventMachine.Stop.Chest -> { require(warps==0 && canToggleChest()) { "이 위치의 상자 타일 변경을 연결하지 않았습니다." };trial.resumeChest(request) }
                         is EventMachine.Stop.Shop -> { require(canOpenShop(request)) { "이 상점의 가격표·종류를 연결하지 않았습니다." };trial.resumeShop(request,trial.save) }
                         is EventMachine.Stop.Party -> trial.changeParty(request)
                         is EventMachine.Stop.Video -> error("필드의 영상은 연출 안에서만 연결했습니다.")

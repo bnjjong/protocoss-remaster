@@ -63,7 +63,12 @@ class OpeningRenderer(timeline: OpeningTimeline) : Disposable {
     }
     private val equipmentRegions=equipmentData.get("rects").associate { it.name to TextureRegion(equipmentAtlas,it[0].asInt(),it[1].asInt(),it[2].asInt(),it[3].asInt()) }
     private val equipmentGlyphs=equipmentRegions.filterKeys { it.startsWith("glyph-") }.mapKeys { it.key.substring(6).toInt().toChar() }
-    private val glyphs = equipmentGlyphs+rewardGlyphs+characters.mapIndexed { index, c -> c to TextureRegion(font,index%16*16,index/16*16,
+    private val objectFontData=com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/data/field/objects.json").readString("UTF-8")).get("font")
+    private val objectFont=Texture(Gdx.files.internal("assets/ui/objects/font.png")).also { textures+=it;it.setFilter(Texture.TextureFilter.Nearest,Texture.TextureFilter.Nearest) }
+    private val objectGlyphs=objectFontData.getString("characters").mapIndexed { i,c ->
+        c to TextureRegion(objectFont,i%16*16,i/16*16,objectFontData.get("widths").getInt(c.toString()),16)
+    }.toMap()
+    private val glyphs = objectGlyphs+equipmentGlyphs+rewardGlyphs+characters.mapIndexed { index, c -> c to TextureRegion(font,index%16*16,index/16*16,
         data.get("font").get("widths").getInt(c.toString()),16) }.toMap()+indoorGlyphs
     private val mapTicks = mutableMapOf<Int, Int>()
     private val cells = mapNumbers.associateWith { number ->
@@ -177,7 +182,7 @@ class OpeningRenderer(timeline: OpeningTimeline) : Disposable {
                 val last=minOf(page.getInt("count")-1,kotlin.math.floor((318f-rewardX-16f)/20f).toInt())
                 for(i in first..last) batch.draw(icon,rewardX+16f+i*20f,200f-top-icon.regionHeight,icon.regionWidth.toFloat(),icon.regionHeight.toFloat())
             }
-            val top=if(category==2)144f else if(rewardLeaving || category==0)155f else 158f
+            val top=if(category>=2)144f else if(rewardLeaving || category==0)155f else 158f
             text(batch,page.getString("text"),rewardX,top,Color(252f/255f,252f/255f,252f/255f,1f));return
         }
         if(page.getString("kind","")=="money") {
@@ -202,6 +207,7 @@ class OpeningRenderer(timeline: OpeningTimeline) : Disposable {
     fun openCabinDoor(changes: JsonValue) {
         changeCells(0,changes)
     }
+    fun chestChanges(number:Int,x:Int,y:Int)=com.protocoss.field.FieldChests.changes(map(number),cells.getValue(number),x,y)
     fun changeCells(number:Int,changes:JsonValue) {
         changes.forEach { cells.getValue(number)[it.getInt("index")]=it.getInt("tid") }
     }

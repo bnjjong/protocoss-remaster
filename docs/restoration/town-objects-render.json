@@ -1,0 +1,353 @@
+{
+  "compared_pixels": 5568000,
+  "scenes": [
+    {
+      "name": "0-3-4-0-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "0-3-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "4-21-4-0-page-1",
+      "pixels": 64000
+    },
+    {
+      "name": "4-21-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "5-3-4-0-frame-0-48",
+      "pixels": 64000
+    },
+    {
+      "name": "5-3-4-0-frame-13-48",
+      "pixels": 64000
+    },
+    {
+      "name": "5-3-4-0-frame-12-48",
+      "pixels": 64000
+    },
+    {
+      "name": "5-3-4-0-frame-8-48",
+      "pixels": 64000
+    },
+    {
+      "name": "5-3-4-0-frame-8-50",
+      "pixels": 64000
+    },
+    {
+      "name": "5-3-4-0-frame-8-52",
+      "pixels": 64000
+    },
+    {
+      "name": "5-3-4-0-frame-8-54",
+      "pixels": 64000
+    },
+    {
+      "name": "5-3-4-0-frame-8-56",
+      "pixels": 64000
+    },
+    {
+      "name": "5-3-4-0-frame-8-58",
+      "pixels": 64000
+    },
+    {
+      "name": "5-3-4-0-frame-8-60",
+      "pixels": 64000
+    },
+    {
+      "name": "5-3-4-0-frame-8-62",
+      "pixels": 64000
+    },
+    {
+      "name": "5-3-4-0-frame-8-64",
+      "pixels": 64000
+    },
+    {
+      "name": "5-3-4-0-animation-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "5-3-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "5-5-4-0-page-2",
+      "pixels": 64000
+    },
+    {
+      "name": "5-5-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "6-2-4-0-page-3",
+      "pixels": 64000
+    },
+    {
+      "name": "6-2-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "6-3-4-0-page-4",
+      "pixels": 64000
+    },
+    {
+      "name": "6-3-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "6-4-4-0-page-5",
+      "pixels": 64000
+    },
+    {
+      "name": "6-4-4-0-page-6",
+      "pixels": 64000
+    },
+    {
+      "name": "6-4-4-0-page-7",
+      "pixels": 64000
+    },
+    {
+      "name": "6-4-4-0-page-8",
+      "pixels": 64000
+    },
+    {
+      "name": "6-4-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "6-5-4-0-page-9",
+      "pixels": 64000
+    },
+    {
+      "name": "6-5-4-0-page-10",
+      "pixels": 64000
+    },
+    {
+      "name": "6-5-4-0-page-11",
+      "pixels": 64000
+    },
+    {
+      "name": "6-5-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "7-3-4-0-page-12",
+      "pixels": 64000
+    },
+    {
+      "name": "7-3-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "8-5-4-0-page-13",
+      "pixels": 64000
+    },
+    {
+      "name": "8-5-4-0-page-14",
+      "pixels": 64000
+    },
+    {
+      "name": "8-5-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "8-6-4-0-page-15",
+      "pixels": 64000
+    },
+    {
+      "name": "8-6-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "8-7-4-0-page-16",
+      "pixels": 64000
+    },
+    {
+      "name": "8-7-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "8-8-4-0-page-17",
+      "pixels": 64000
+    },
+    {
+      "name": "8-8-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "8-9-4-0-page-18",
+      "pixels": 64000
+    },
+    {
+      "name": "8-9-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "8-10-4-0-page-19",
+      "pixels": 64000
+    },
+    {
+      "name": "8-10-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "8-11-4-0-page-20",
+      "pixels": 64000
+    },
+    {
+      "name": "8-11-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "9-1-4-0-page-21",
+      "pixels": 64000
+    },
+    {
+      "name": "9-1-4-0-page-22",
+      "pixels": 64000
+    },
+    {
+      "name": "9-1-4-0-page-23",
+      "pixels": 64000
+    },
+    {
+      "name": "9-1-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "9-2-4-0-page-24",
+      "pixels": 64000
+    },
+    {
+      "name": "9-2-4-0-page-25",
+      "pixels": 64000
+    },
+    {
+      "name": "9-2-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "9-3-4-0-page-26",
+      "pixels": 64000
+    },
+    {
+      "name": "9-3-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "10-2-4-0-frame-0-56",
+      "pixels": 64000
+    },
+    {
+      "name": "10-2-4-0-frame-13-56",
+      "pixels": 64000
+    },
+    {
+      "name": "10-2-4-0-frame-12-56",
+      "pixels": 64000
+    },
+    {
+      "name": "10-2-4-0-frame-11-56",
+      "pixels": 64000
+    },
+    {
+      "name": "10-2-4-0-frame-11-58",
+      "pixels": 64000
+    },
+    {
+      "name": "10-2-4-0-frame-11-60",
+      "pixels": 64000
+    },
+    {
+      "name": "10-2-4-0-frame-11-62",
+      "pixels": 64000
+    },
+    {
+      "name": "10-2-4-0-frame-11-64",
+      "pixels": 64000
+    },
+    {
+      "name": "10-2-4-0-frame-11-66",
+      "pixels": 64000
+    },
+    {
+      "name": "10-2-4-0-frame-11-68",
+      "pixels": 64000
+    },
+    {
+      "name": "10-2-4-0-frame-11-70",
+      "pixels": 64000
+    },
+    {
+      "name": "10-2-4-0-frame-10-72",
+      "pixels": 64000
+    },
+    {
+      "name": "10-2-4-0-animation-page-0",
+      "pixels": 64000
+    },
+    {
+      "name": "10-2-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "10-4-4-0-page-27",
+      "pixels": 64000
+    },
+    {
+      "name": "10-4-4-0-page-28",
+      "pixels": 64000
+    },
+    {
+      "name": "10-4-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "10-5-4-0-page-29",
+      "pixels": 64000
+    },
+    {
+      "name": "10-5-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "11-3-4-0-page-30",
+      "pixels": 64000
+    },
+    {
+      "name": "11-3-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "11-2-4-0-page-31",
+      "pixels": 64000
+    },
+    {
+      "name": "11-2-4-0-page-32",
+      "pixels": 64000
+    },
+    {
+      "name": "11-2-4-0-page-33",
+      "pixels": 64000
+    },
+    {
+      "name": "11-2-4-0-page-34",
+      "pixels": 64000
+    },
+    {
+      "name": "11-2-4-0-finished",
+      "pixels": 64000
+    },
+    {
+      "name": "12-21-4-0-page-35",
+      "pixels": 64000
+    },
+    {
+      "name": "12-21-4-0-finished",
+      "pixels": 64000
+    }
+  ]
+}

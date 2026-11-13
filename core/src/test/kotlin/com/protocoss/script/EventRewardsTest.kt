@@ -96,7 +96,7 @@ class EventRewardsTest {
             assertEquals(row.get("args").asIntArray().toList(),listOf(request.item,request.count,request.category))
             assertEquals(row.getInt("advanced")+1,machine.offset-request.offset)
             val source=DosSave.parse(bytes(report.get("cases").first { it.has("raw") }.getString("before")))
-            if(request.category !in 0..2) assertNull(FieldScript.prepare(archive,source,0,opening.get("maps"),characters,false,rewards=model))
+            if(request.category !in 0..2) assertNotNull(FieldScript.prepare(archive,source,0,opening.get("maps"),characters,false,rewards=model))
         }
     }
     @Test fun `reward wait preserves native flag order and cannot credit twice`() {
