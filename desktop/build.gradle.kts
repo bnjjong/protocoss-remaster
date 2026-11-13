@@ -271,3 +271,12 @@ tasks.register<JavaExec>("verifyBattleEntry") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 원작과 대조한 파티 배치·시작 자세·명령 안내를 실제 그래픽 출력으로 검사한다.
+tasks.register<JavaExec>("verifyBattleStart") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.BattleStartCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}
