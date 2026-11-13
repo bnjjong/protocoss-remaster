@@ -10,6 +10,7 @@ import com.badlogic.gdx.utils.JsonValue
 import kotlin.math.floor
 import com.protocoss.field.FieldNpcs
 import com.protocoss.field.FieldDrawOrder
+import com.protocoss.field.FieldApproach
 
 /** 위에서 아래로 기록된 원작 좌표를 320×200 화면에 그린다. 필드와 전투 그림을 구분한다. */
 class OpeningRenderer(timeline: OpeningTimeline) : Disposable {
@@ -150,7 +151,7 @@ class OpeningRenderer(timeline: OpeningTimeline) : Disposable {
 
     /** 인물을 그린 직후에 해당 인물의 높이에 따른 지형 가림을 적용한다. */
     fun renderFieldActors(batch:SpriteBatch,number:Int,sx:Float,sy:Float,
-                          heroX:Float,heroY:Float,pose:Int,layer:Int,npcs:List<FieldNpcs.Actor>?=null) {
+                          heroX:Float,heroY:Float,pose:Int,layer:Int,npcs:List<FieldNpcs.Actor>?=null,nativeNpcBounds:Boolean=false) {
         val actors=npcs ?: staticNpcs.getValue(number)
         val order=FieldDrawOrder.indices(listOf(heroY)+actors.map { it.y.toFloat() })
         for(index in order) {
@@ -159,6 +160,7 @@ class OpeningRenderer(timeline: OpeningTimeline) : Disposable {
                 coverActor(batch,number,heroX,heroY,sx,sy,layer)
             } else {
                 val npc=actors[index-1]
+                if(nativeNpcBounds && !FieldApproach.npcVisible(npc.x,npc.y,sx.toInt(),sy.toInt())) continue
                 renderActor(batch,npc.sprite,npc.frame,npc.x-sx,npc.y-sy)
                 coverActor(batch,number,npc.x.toFloat(),npc.y.toFloat(),sx,sy,npc.mask)
             }

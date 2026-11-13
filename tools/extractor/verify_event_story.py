@@ -21,13 +21,14 @@ class StoryServicesReference(StoryReference):
         finally:c.hook_del(token)
         return dict(opcode=opcode,input=args,args=captured[0],advanced=struct.unpack('<I',c.mem_read(0x715a4,4))[0]-0x240000)
 
-    def run(self,game_dir,raw,source,argument):
+    def run(self,game_dir,raw,source,argument,real_approach=False):
         self.load_save(source);c=self.cpu;archive=EventArchive(raw)
         c.mem_write(0x230000,raw[6:6+len(archive.groups)*2]);c.mem_write(0x240000,archive.code)
         self.dword(0x15ac,0x230000);self.dword(0x15a8,0x240000);self.word(0xe50c,len(archive.groups));self.word(0x15b0,0)
         maps=(game_dir/'MAP/AREA00.MAP').read_bytes();offs=read_offsets(game_dir/'MAP/AREA00.MDA')
         def load_map(number):
             self.load_map(maps[offs[number]:offs[number+1]]);self.word(0xe1e0,0)
+            self.dword(0xd804,self.width-40);self.dword(0xd808,self.height-25)
         load_map(struct.unpack_from('<I',source,96)[0])
         self.word(0xe510,1);self.word(0xe512,0)
         for p in (0xe52c,0xe530,0xe548,0x164c):self.dword(p,0)
@@ -80,7 +81,7 @@ class StoryServicesReference(StoryReference):
             elif address==0x1e21b:
                 number=struct.unpack('<I',cpu.mem_read(0x7d7f8,4))[0];load_map(number);unwind()
             elif address==0x1eb5e:unwind()
-            elif address==0x11b20:
+            elif address==0x11b20 and not real_approach:
                 # 접근 보행은 생략하고 그 함수의 목표 위치에 둔다. 배우 이동·자세는 원작 함수가 실행한다.
                 for p,v in ((0xd7fc,regs[0]),(0xd800,regs[1]),(0xd80c,regs[0]),(0xd810,regs[1]),(0xe1e4,regs[2]),(0xe1e8,regs[3])):self.dword(p,v)
                 self.byte(0xe1f8,0);self.return_from(cpu)
@@ -98,7 +99,7 @@ class StoryServicesReference(StoryReference):
             elif address==0x67b85:cpu.reg_write(UC_X86_REG_EAX,len(string(regs[0])));self.return_from(cpu)
             elif address==0x2b650:cpu.reg_write(UC_X86_REG_EAX,0);self.return_from(cpu)
             elif address==0x106b0:raise ValueError('원작 파티·파일 조건 오류')
-            elif address in skips:self.return_from(cpu,skips[address])
+            elif address in skips and not (real_approach and address==0x26674):self.return_from(cpu,skips[address])
         token=c.hook_add(UC_HOOK_CODE,hook)
         try:
             c.mem_write(0x300000,struct.pack('<I',0x3f0000));c.reg_write(UC_X86_REG_ESP,0x300000);c.reg_write(UC_X86_REG_EAX,argument)
