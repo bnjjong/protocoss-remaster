@@ -13,6 +13,7 @@ import com.protocoss.field.*
 import com.protocoss.opening.OpeningRenderer
 import com.protocoss.opening.OpeningTimeline
 import com.protocoss.player.Player
+import com.protocoss.script.EventMachine
 import com.protocoss.save.DosSave
 import java.nio.file.Files
 import java.nio.file.Path
@@ -262,7 +263,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
     private fun shopTalk(stage:Int,label:String) {
         approachShop();val before=movement().x to movement().y;val inventory=session().bytes()[162]
         press(Input.Keys.E);check(field<FieldDialogue?>("fieldDialogue")!=null)
-        if(stage<4) check(field<FieldScript?>("fieldScript")!=null) { "검 수리 대화가 원본 명령을 사용하지 않습니다." }
+        check(field<FieldScript?>("fieldScript")!=null) { "잡화점 대화가 원본 명령을 사용하지 않습니다." }
         var pages=0
         while(field<FieldDialogue?>("fieldDialogue")!=null) {
             val dialogue=field<FieldDialogue>("fieldDialogue");idle(80)
@@ -651,8 +652,16 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
             approachShop();press(Input.Keys.E)
             while(field<FieldDialogue?>("fieldDialogue")!=null) { idle(80);press(Input.Keys.ENTER) }
             check(scene()=="SHOP" && state().stage==ShopMenu.Stage.HOME)
+            val script=checkNotNull(field<FieldScript?>("fieldScript"))
+            val request=script.machine.pending as EventMachine.Stop.Shop
+            check(request.priceTable==0 && request.kind==0 && field<EventMachine.Stop.Shop?>("scriptShop")===request)
+            check(script.next()===request && field<FieldNpcs>("fieldNpcs").actors.any { it.mode==2 })
         }
-        fun close() { repeat(4) { if(scene()=="SHOP") press(Input.Keys.ESCAPE) };check(scene()=="FIELD") }
+        fun close() {
+            repeat(4) { if(scene()=="SHOP") press(Input.Keys.ESCAPE) }
+            check(scene()=="FIELD" && field<FieldScript?>("fieldScript")==null && field<EventMachine.Stop.Shop?>("scriptShop")==null)
+            check(field<FieldNpcs>("fieldNpcs").actors.none { it.mode==2 })
+        }
         fun fixture(bytes:ByteArray):DosSave {
             base.copyInto(bytes,92,92,119)
             base.copyInto(bytes,2342,2342,2346)

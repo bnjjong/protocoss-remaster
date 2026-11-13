@@ -19,6 +19,12 @@ class FieldScript(private val archive:EventArchive,source:DosSave,argument:Int,p
         check(machine.pending===request)
         machine.resumeService()
     }
+    fun resumeShop(request:EventMachine.Stop.Shop,after:DosSave) {
+        check(machine.pending===request) { "상점 명령 대기 중이 아닙니다." }
+        val before=save.bytes();val result=after.bytes()
+        require(before.indices.all { it in 119..161 || before[it]==result[it] }) { "거래 중 소지금·잡화 이외의 저장 상태가 바뀌었습니다." }
+        adopt(after);machine.resumeService()
+    }
     fun child(argument:Int)=FieldScript(archive,save,argument,rewards)
     fun adopt(other:DosSave) {
         state=other
@@ -59,7 +65,7 @@ class FieldScript(private val archive:EventArchive,source:DosSave,argument:Int,p
     companion object {
         /** 사전 검사는 변수와 저장 사본만 사용한다. 미지원 시 게임·음량·인물 상태를 바꾸지 않는다. */
         fun prepare(archive:EventArchive,source:DosSave,argument:Int,maps:JsonValue,characters:Set<Char>,
-                    allowWarp:Boolean,canOpenDoor:(Int)->Boolean = { false },rewards:FieldRewards?=null,story:FieldStory?=null,videos:FieldVideos?=null,blocked:(Blocked)->Unit = {}):FieldScript? {
+                    allowWarp:Boolean,canOpenDoor:(Int)->Boolean = { false },rewards:FieldRewards?=null,story:FieldStory?=null,videos:FieldVideos?=null,canOpenShop:(EventMachine.Stop.Shop)->Boolean = { false },blocked:(Blocked)->Unit = {}):FieldScript? {
             val trial=FieldScript(archive,source,argument,rewards)
             var warps=0
             var spent=0L
@@ -106,6 +112,7 @@ class FieldScript(private val archive:EventArchive,source:DosSave,argument:Int,p
                             }
                             trial.finishAnimation(request,story,plan)
                         }
+                        is EventMachine.Stop.Shop -> { require(canOpenShop(request)) { "이 상점의 가격표·종류를 연결하지 않았습니다." };trial.resumeShop(request,trial.save) }
                         is EventMachine.Stop.Party -> trial.changeParty(request)
                         is EventMachine.Stop.Video -> error("필드의 영상은 연출 안에서만 연결했습니다.")
                         is EventMachine.Stop.Reward -> { text(trial.rewardPages(request));trial.receiveReward(request);trial.resumeService() }
