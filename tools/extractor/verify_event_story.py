@@ -9,6 +9,15 @@ from event_archive import EventArchive
 from decode_opening import animation,dialogue
 from verify_original_map import unpack_game,read_offsets,EXPECTED_HASHES
 
+def animation_record(game_dir,executable,number,index,mode,music):
+    original=animation((game_dir/f'DATA/AUTOANI.{number:03}').read_bytes())
+    final=StoryReference(executable).animation_checkpoints(original)[-1]['actors'][0]
+    row=dict(id=number,program=index,mode=mode,music=music,map=original['map'],scroll=[v//8 for v in original['scroll']],
+        start=original['commands'][0]['value'][0],hero=[final[k] for k in ('x','y','frame')],
+        events={str(c['offset']):c['value'] for c in original['commands'] if c['op']=='C'},source_sha256=hashlib.sha256((game_dir/f'DATA/AUTOANI.{number:03}').read_bytes()).hexdigest())
+    if number in (2,3):row['field_maps']=[1,2]
+    return row
+
 class StoryServicesReference(StoryReference):
     def parser(self,opcode,args):
         c=self.cpu;c.mem_write(0x240000,struct.pack(f'<{len(args)}H',*args));self.dword(0x15a4,0x240000);captured=[]
@@ -21,13 +30,14 @@ class StoryServicesReference(StoryReference):
         finally:c.hook_del(token)
         return dict(opcode=opcode,input=args,args=captured[0],advanced=struct.unpack('<I',c.mem_read(0x715a4,4))[0]-0x240000)
 
-    def run(self,game_dir,raw,source,argument,real_approach=False):
+    def run(self,game_dir,raw,source,argument,real_approach=False,keep_npcs=False):
         self.load_save(source);c=self.cpu;archive=EventArchive(raw)
         c.mem_write(0x230000,raw[6:6+len(archive.groups)*2]);c.mem_write(0x240000,archive.code)
         self.dword(0x15ac,0x230000);self.dword(0x15a8,0x240000);self.word(0xe50c,len(archive.groups));self.word(0x15b0,0)
         maps=(game_dir/'MAP/AREA00.MAP').read_bytes();offs=read_offsets(game_dir/'MAP/AREA00.MDA')
         def load_map(number):
-            self.load_map(maps[offs[number]:offs[number+1]]);self.word(0xe1e0,0)
+            self.load_map(maps[offs[number]:offs[number+1]])
+            if not keep_npcs:self.word(0xe1e0,0)
             self.dword(0xd804,self.width-40);self.dword(0xd808,self.height-25)
         load_map(struct.unpack_from('<I',source,96)[0])
         self.word(0xe510,1);self.word(0xe512,0)
@@ -64,7 +74,7 @@ class StoryServicesReference(StoryReference):
             elif address==0x2572c:
                 f=stack[-1];f['end']=snapshot('finished');f['after']=saved();stack.pop()
             elif address==0x10a54:
-                if regs[0] not in (5,6):raise ValueError('이번 범위는 AUTOANI.005·006이다.')
+                if regs[0] not in (2,3,5,6):raise ValueError('이번 범위는 AUTOANI.002·003·005·006이다.')
                 r=snapshot('animation',id=regs[0],mode=regs[1],music=regs[2],calls=[]);stack[-1]['requests'].append(r);animations.append(r)
             elif address==0x1131e:
                 r=animations.pop();r['after']=saved()
@@ -139,11 +149,8 @@ def extract(game_dir,output_root,executable=None):
                 program=struct.pack('<IHH',len(code)+2,1,0)+bytes(v^127 for v in code)
                 party.append(dict(name=f'party-{len(party)}',joining=joining,character=character,profile=profile,before=base64.b64encode(before).decode(),raw=base64.b64encode(program).decode(),**ref.run(game_dir,program,before,7)))
     opening=json.loads((output_root/'assets/opening/opening.json').read_text());records=[]
-    for number,index,mode,music in [(5,5,0,24),(6,3,1,27)]:
-        original=animation((game_dir/f'DATA/AUTOANI.{number:03}').read_bytes());program=opening['programs'][index]
-        observed=next(r for c in cases for r in c['requests'] if r['kind']=='animation' and r['id']==number)
-        records.append(dict(id=number,program=index,mode=mode,music=music,map=original['map'],scroll=[v//8 for v in original['scroll']],
-            start=original['commands'][0]['value'][0],hero=observed['hero'],events={str(c['offset']):c['value'] for c in original['commands'] if c['op']=='C'},source_sha256=hashlib.sha256((game_dir/f'DATA/AUTOANI.{number:03}').read_bytes()).hexdigest()))
+    for spec in [(2,6,0,25),(3,2,0,25),(5,5,0,24),(6,3,1,27)]:
+        records.append(animation_record(game_dir,exe,*spec))
     assets=output_root/'assets/data/events/story.json';assets.write_text(json.dumps(dict(animations=records),ensure_ascii=False,separators=(',',':'))+'\n')
     report=dict(executable_sources=EXPECTED_HASHES,source_sha256=hashlib.sha256(raw).hexdigest(),cases=cases,party=party,parser=[ref.parser(op,args) for op,args in [(0,[5,0,24]),(0,[65535,32768,65535]),(0xd,[1]),(0xd,[65535]),(0x13,[1]),(0x13,[32768])]],stubs='화면·음악·파일 I/O와 NPC 시계를 생략한다. mode=0의 시작 위치 접근과 카메라 방향 0의 화면 갱신을 생략하고 목표 위치에 직접 둔다. 원작 연출 해석·인물 이동/자세·중첩 이벤트·파티·음악 변수·이동 후 저장 메모리는 실행한다.')
     (output_root/'docs/restoration/event-story-native.json').write_text(json.dumps(report,ensure_ascii=False,separators=(',',':'))+'\n')

@@ -1,0 +1,300 @@
+{
+  "compared_pixels": 3776000,
+  "scenes": [
+    {
+      "folder": "animation-approach",
+      "name": "approach-0-start",
+      "pixels": 64000
+    },
+    {
+      "folder": "animation-approach",
+      "name": "approach-0-tick-7",
+      "pixels": 64000
+    },
+    {
+      "folder": "animation-approach",
+      "name": "approach-0-tick-15",
+      "pixels": 64000
+    },
+    {
+      "folder": "animation-approach",
+      "name": "approach-0-tick-23",
+      "pixels": 64000
+    },
+    {
+      "folder": "animation-approach",
+      "name": "approach-0-tick-31",
+      "pixels": 64000
+    },
+    {
+      "folder": "animation-approach",
+      "name": "approach-0-arrived",
+      "pixels": 64000
+    },
+    {
+      "folder": "animation-approach",
+      "name": "approach-7-start",
+      "pixels": 64000
+    },
+    {
+      "folder": "animation-approach",
+      "name": "approach-7-tick-7",
+      "pixels": 64000
+    },
+    {
+      "folder": "animation-approach",
+      "name": "approach-7-tick-15",
+      "pixels": 64000
+    },
+    {
+      "folder": "animation-approach",
+      "name": "approach-7-arrived",
+      "pixels": 64000
+    },
+    {
+      "folder": "event-story",
+      "name": "story-3-316-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "event-story",
+      "name": "story-3-317-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "event-story",
+      "name": "story-24-104-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "event-story",
+      "name": "story-24-105-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "event-story",
+      "name": "story-24-106-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "sword",
+      "name": "deposit-page-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "sword",
+      "name": "deposit-page-12",
+      "pixels": 64000
+    },
+    {
+      "folder": "sword",
+      "name": "not-ready-1-page-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "sword",
+      "name": "scene-316",
+      "pixels": 64000
+    },
+    {
+      "folder": "sword",
+      "name": "scene-317",
+      "pixels": 64000
+    },
+    {
+      "folder": "sword",
+      "name": "not-ready-2-page-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "sword",
+      "name": "scene-106",
+      "pixels": 64000
+    },
+    {
+      "folder": "sword",
+      "name": "retrieve-page-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "sword",
+      "name": "reward",
+      "pixels": 64000
+    },
+    {
+      "folder": "sword",
+      "name": "repeat-page-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-1-object-5-page-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-1-object-6-page-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-1-object-7-page-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-1-object-9-page-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-1-object-10-page-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-1-fire-1-13-32",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-1-fire-1-14-32",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-1-fire-0-8-32",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-1-fire-0-8-34",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-1-fire-0-8-36",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-1-fire-0-8-38",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-1-fire-0-8-40",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-1-fire-0-8-42",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-1-fire-0-8-44",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-1-fire-0-8-46",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-1-fire-0-8-48",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-1-fire-dialogue",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-2-object-5-page-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-2-object-6-page-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-2-object-7-page-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-2-object-9-page-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-2-object-10-page-0",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-2-fire-1-13-32",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-2-fire-1-14-32",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-2-fire-0-8-32",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-2-fire-0-8-34",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-2-fire-0-8-36",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-2-fire-0-8-38",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-2-fire-0-8-40",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-2-fire-0-8-42",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-2-fire-0-8-44",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-2-fire-0-8-46",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-2-fire-0-8-48",
+      "pixels": 64000
+    },
+    {
+      "folder": "cabin-interaction",
+      "name": "map-2-fire-dialogue",
+      "pixels": 64000
+    }
+  ]
+}

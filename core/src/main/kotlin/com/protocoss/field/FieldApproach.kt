@@ -1,6 +1,6 @@
 package com.protocoss.field
 
-/** 원작 0x11B20의 연출 접근. 현재 연결한 합류 맵의 수평·수직 보행을 처리한다. */
+/** 원작 0x11B20의 연출 접근. 현재 연결한 오두막·합류 맵의 수평·수직 보행을 처리한다. */
 class FieldApproach(
     var x:Int, var y:Int, initialPose:Int, initialLayer:Int,
     var scrollX:Int, var scrollY:Int,

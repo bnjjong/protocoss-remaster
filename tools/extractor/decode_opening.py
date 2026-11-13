@@ -107,6 +107,7 @@ def extract(game_dir, output_root, executable=None):
         raw = (game_dir/name).read_bytes(); sources[name]=hashlib.sha256(raw).hexdigest(); return raw
     programs = [animation(read(f'DATA/AUTOANI.{i:03}')) for i in (0,1,3,6,4,5,2)]
     # 0x10A54의 mode=0은 현재 맵·주민을 유지하고 화면 전환 없이 실행한다.
+    programs[2]['continues_field']=True
     programs[5]['continues_field']=True
     programs[6]['continues_field']=True
     for command in programs[3]['commands']:
