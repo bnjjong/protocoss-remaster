@@ -262,3 +262,12 @@ tasks.register<JavaExec>("verifyTownDeparture") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 원본으로 검증한 북마겔 배경·적 편성 네 장을 실제 GPU 출력과 대조한다.
+tasks.register<JavaExec>("verifyBattleEntry") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.BattleEntryCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}
