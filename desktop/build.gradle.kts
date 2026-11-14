@@ -280,3 +280,12 @@ tasks.register<JavaExec>("verifyBattleStart") {
     workingDir = rootDir
     jvmArgs("-XstartOnFirstThread")
 }
+
+// 기본 공격의 준비·효과·피격·숫자 레이어를 원작 기록과 비교한다.
+tasks.register<JavaExec>("verifyBattleAttack") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.BattleAttackCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}
