@@ -14,6 +14,12 @@
 
 NPC가 겹칠 때의 앞뒤 표시는 [원작 정렬 규칙과 겹침 화면 비교](docs/field-draw-order.md)를 따른다.
 
+## macOS 데모 앱
+
+macOS에서 JDK 21로 `./gradlew :desktop:packageMacDemo`를 실행한 뒤 `desktop/build/macDemo/output/Protocoss Demo.app`을 Finder에서 연다. 앱에 Java 실행 환경과 데모 자산이 들어 있어 실행하는 Mac에는 Gradle이나 원본 DOS 게임 폴더가 필요 없다. 빌드한 Mac과 같은 CPU 계열에서 실행할 수 있다.
+
+데모는 북마겔 산맥 첫 맵까지 지원한다. F11로 창과 전체화면을 전환하고, 필드에서 Esc를 눌러 저장한다. 저장은 `~/Library/Application Support/Protocoss/Saves`에 기록되며 타이틀의 `CONTINUE`에서 이어 할 수 있다. 빌드 결과물은 로컬 테스트용 앱이다.
+
 ## 1. 프로젝트 구조
 
 ```
