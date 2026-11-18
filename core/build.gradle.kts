@@ -19,6 +19,7 @@ tasks.test {
     inputs.dir(rootProject.file("assets/battle"))
     inputs.file(rootProject.file("docs/restoration/first-battle-native.json"))
     inputs.file(rootProject.file("docs/restoration/battle-start-native.json"))
+    inputs.file(rootProject.file("docs/restoration/battle-attack-native.json"))
     inputs.dir(rootProject.file("assets/data/events"))
     inputs.file(rootProject.file("docs/restoration/event-entry-native.json"))
     inputs.file(rootProject.file("docs/restoration/event-machine-native.json"))
