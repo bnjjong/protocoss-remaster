@@ -28,6 +28,51 @@ tasks.named<JavaExec>("run") {
     )
 }
 
+val macDemoName = "Protocoss Demo"
+val macDemoInput = layout.buildDirectory.dir("macDemo/input")
+val macDemoOutput = layout.buildDirectory.dir("macDemo/output")
+val desktopJar = tasks.named<Jar>("jar")
+val macDemoJdk = javaToolchains.launcherFor {
+    languageVersion.set(JavaLanguageVersion.of(21))
+}
+
+val stageMacDemo = tasks.register<Sync>("stageMacDemo") {
+    from(desktopJar)
+    from(configurations.runtimeClasspath)
+    into("assets") {
+        from(rootProject.layout.projectDirectory.dir("assets"))
+        exclude("**/.DS_Store")
+    }
+    into(macDemoInput)
+}
+
+tasks.register<Exec>("packageMacDemo") {
+    group = "distribution"
+    description = "Java 실행 환경을 내장한 macOS 데모 앱을 만듭니다."
+    dependsOn(stageMacDemo)
+    inputs.dir(macDemoInput)
+    inputs.property("jdk", macDemoJdk.map { it.metadata.installationPath.asFile.absolutePath })
+    outputs.dir(macDemoOutput)
+
+    doFirst {
+        check(System.getProperty("os.name").startsWith("Mac")) { "macOS에서 데모 앱을 빌드하세요." }
+        val output = macDemoOutput.get().asFile
+        project.delete(output.resolve("$macDemoName.app"))
+        commandLine(
+            macDemoJdk.get().metadata.installationPath.file("bin/jpackage").asFile,
+            "--type", "app-image",
+            "--name", macDemoName,
+            "--dest", output,
+            "--input", macDemoInput.get().asFile,
+            "--main-jar", desktopJar.get().archiveFileName.get(),
+            "--main-class", application.mainClass.get(),
+            "--java-options", "-XstartOnFirstThread",
+            "--mac-package-identifier", "com.protocoss.desktop.demo",
+            "--mac-app-category", "games"
+        )
+    }
+}
+
 // 일반 단위 검사와 분리해 실제 그래픽 실행 환경에서만 실행한다.
 val qa by sourceSets.creating {
     compileClasspath += sourceSets["main"].runtimeClasspath

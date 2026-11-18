@@ -1,9 +1,12 @@
 package com.protocoss.desktop
 
+import com.badlogic.gdx.Files
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
+import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Files
 import com.protocoss.Constants
 import com.protocoss.ProtocossGame
+import java.nio.file.Files.isDirectory
 import java.nio.file.Path
 
 /**
@@ -34,9 +37,25 @@ object DesktopLauncher {
             }
             argument.substringBefore('=') to argument.substringAfter('=')
         }
-        val original = options["--game-dir"]?.let { Path.of(it) } ?: ProtocossGame.defaultOriginalDirectory()
+        val codeLocation = DesktopLauncher::class.java.protectionDomain.codeSource.location.toURI()
+        val appDirectory = Path.of(codeLocation).parent.takeIf { isDirectory(it.resolve("assets")) }
+        val original = options["--game-dir"]?.let { Path.of(it) }
+            ?: if (appDirectory == null) ProtocossGame.defaultOriginalDirectory() else null
         val saves = options["--save-dir"]?.let { Path.of(it) }
             ?: Path.of(System.getProperty("user.home"), "Library/Application Support/Protocoss/Saves")
-        Lwjgl3Application(ProtocossGame(original, saves), config)
+        object : Lwjgl3Application(ProtocossGame(original, saves), config) {
+            override fun createFiles(): Files {
+                val files = Lwjgl3Files()
+                if (appDirectory == null) return files
+
+                // 앱 번들에서 실행할 때는 실행 위치와 관계없이 JAR 옆의 게임 자산을 읽는다.
+                return object : Files by files {
+                    override fun internal(path: String) = files.absolute(appDirectory.resolve(path).toString())
+
+                    override fun getFileHandle(path: String, type: Files.FileType) =
+                        if (type == Files.FileType.Internal) internal(path) else files.getFileHandle(path, type)
+                }
+            }
+        }
     }
 }
