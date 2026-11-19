@@ -6,10 +6,12 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.PixmapIO
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.utils.JsonValue
 import com.badlogic.gdx.utils.JsonWriter
 import com.protocoss.ProtocossGame
 import com.protocoss.field.*
+import com.protocoss.map.TileMap
 import com.protocoss.opening.OpeningRenderer
 import com.protocoss.opening.OpeningTimeline
 import com.protocoss.player.Player
@@ -208,9 +210,17 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         val continued=field<com.protocoss.field.FieldApproach?>("fieldApproach")!=null || field<OpeningTimeline>("opening").continuesField
         val previousNpcs=field<FieldNpcs?>("fieldNpcs")
         val previousRenderer=field<OpeningRenderer>("openingRenderer")
+        val previousMap = field<TileMap>("tileMap")
+        val previousTileset = field<Texture>("tilesetTexture")
         repeat(15000) {
             if(scene()=="FIELD" && field<com.protocoss.field.FieldApproach?>("fieldApproach")==null) {
                 if(continued) {
+                    check(field<TileMap>("tileMap") === previousMap) {
+                        "같은 맵으로 복귀하면서 맵 데이터를 다시 읽었습니다."
+                    }
+                    check(field<Texture>("tilesetTexture") === previousTileset) {
+                        "같은 맵으로 복귀하면서 타일 텍스처를 다시 만들었습니다."
+                    }
                     check(field<FieldNpcs?>("fieldNpcs")===previousNpcs)
                     check(field<OpeningRenderer>("openingRenderer")===previousRenderer)
                     check(field<Float>("fieldFade")==0f)
