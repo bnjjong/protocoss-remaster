@@ -30,8 +30,15 @@ class FieldMovement(private val rules: FieldRules, val map: Int, var layer: Int,
         face(direction);this.direction=0
     }
 
-    /** 이벤트가 맵을 교체하면 true를 반환하여 남은 프레임의 보행을 중단한다. */
-    fun update(delta: Float, input: Int, dash: Boolean, tick: ((Float,Float)->Unit)? = null, event: (Int) -> Boolean): Boolean {
+    /** 이벤트가 조작을 넘겨받으면 true를 반환한다. stopAfterStep은 한 걸음 단위로 보행을 멈춘다. */
+    fun update(
+        delta: Float,
+        input: Int,
+        dash: Boolean,
+        tick: ((Float, Float) -> Unit)? = null,
+        stopAfterStep: (() -> Boolean)? = null,
+        event: (Int) -> Boolean
+    ): Boolean {
         require(delta.isFinite() && delta >= 0)
         accumulator += delta
         while (accumulator >= 1f/70f) {
@@ -55,6 +62,11 @@ class FieldMovement(private val rules: FieldRules, val map: Int, var layer: Int,
             val amount = minOf(remaining, maxOf(baseStep,if(dash) 2 else 1))
             x += FieldRules.dx(vector)*amount; y += FieldRules.dy(vector)*amount
             remaining -= amount;moving=true
+            if (remaining == 0 && stopAfterStep?.invoke() == true) {
+                accumulator = 0f
+                moving = false
+                return false
+            }
         }
         return false
     }

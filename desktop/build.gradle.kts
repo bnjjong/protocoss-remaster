@@ -89,6 +89,14 @@ tasks.register<JavaExec>("runBattlePractice") {
     jvmArgs("-XstartOnFirstThread")
 }
 
+tasks.register<JavaExec>("verifyBattlePracticeAuto") {
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.BattlePracticeAutoCheck")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}
+
 tasks.register<JavaExec>("verifyActorDepth") {
     dependsOn(qa.classesTaskName)
     classpath = qa.runtimeClasspath
