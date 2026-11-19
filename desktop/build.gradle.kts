@@ -79,6 +79,16 @@ val qa by sourceSets.creating {
     runtimeClasspath += output + compileClasspath
 }
 
+tasks.register<JavaExec>("runBattlePractice") {
+    group = "application"
+    description = "별도 창에서 공격과 방어를 테스트하는 연습 전투를 실행합니다."
+    dependsOn(qa.classesTaskName)
+    classpath = qa.runtimeClasspath
+    mainClass.set("com.protocoss.desktop.BattlePracticeLauncher")
+    workingDir = rootDir
+    jvmArgs("-XstartOnFirstThread")
+}
+
 tasks.register<JavaExec>("verifyActorDepth") {
     dependsOn(qa.classesTaskName)
     classpath = qa.runtimeClasspath
