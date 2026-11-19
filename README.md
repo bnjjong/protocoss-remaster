@@ -26,6 +26,8 @@ macOS에서 JDK 21로 `./gradlew :desktop:packageMacDemo`를 실행한 뒤 `desk
 
 `./gradlew :desktop:runBattlePractice`를 실행하면 공격·방어·승패를 확인하는 별도 창이 열린다. A로 공격하고 G로 방어한다. 상대의 다음 공격 피해는 화면에 표시된다. R은 다시 시작, Esc는 종료다. 승패와 체력은 이 창을 실행하는 동안만 기록된다.
 
+필드에서 이어서 시험하려면 `./gradlew :desktop:run --args="--battle-practice"`로 실행한다. 자유 이동 중 멈춰서 F8을 누르면 연습 전투가 열린다. Esc로 같은 위치의 필드에 돌아온다. 연습 전투의 체력과 결과는 연습 화면 안에서만 사용한다.
+
 ## 1. 프로젝트 구조
 
 ```

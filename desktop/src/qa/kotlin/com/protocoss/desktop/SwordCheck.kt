@@ -10,6 +10,8 @@ import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.utils.JsonValue
 import com.badlogic.gdx.utils.JsonWriter
 import com.protocoss.ProtocossGame
+import com.protocoss.battle.BattlePracticeScreen
+import com.protocoss.battle.PracticeBattle
 import com.protocoss.field.*
 import com.protocoss.map.TileMap
 import com.protocoss.opening.OpeningRenderer
@@ -60,7 +62,7 @@ object IndoorCheck { @JvmStatic fun main(args:Array<String>) {
 } }
 object CabinInteractionCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(false,cabin=true) }
 private class SwordApplication(private val saves:Path,private val equipment:Boolean,private val partyEquipment:Boolean,private val automaticEquipment:Boolean,private val fieldItems:Boolean,private val tentEnabled:Boolean,private val shopEnabled:Boolean,private val indoorEnabled:Boolean,private val cabinEnabled:Boolean,private val rewardsEnabled:Boolean,private val storyEnabled:Boolean,private val cabinStoryEnabled:Boolean,private val encounterEnabled:Boolean,private val objectsEnabled:Boolean,private val departureEnabled:Boolean):ApplicationAdapter() {
-    private val game=ProtocossGame(null,saves)
+    private val game=ProtocossGame(null,saves,battlePracticeEnabled=departureEnabled)
     private val held=mutableSetOf<Int>();private val pressed=mutableSetOf<Int>()
     private lateinit var input:Input;private lateinit var graphics:Graphics;private lateinit var rules:FieldRules
     private var delta=1f/70f;private var steps=0;private var effects=0;private var joins=0;private var letters=0
@@ -1245,6 +1247,44 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         load(base)
         println("엘가임 사물 실행: 25 위치·225 상태·${animations}회 연출·세 조작 키·보상/빈 상자·방향/거리 거부·입력 잠금·저장 재개, ${shots.size} 화면")
     }
+    private fun checkBattlePracticeReturn() {
+        val before = session().bytes()
+        val mover = movement()
+        val position = mover.x to mover.y
+        val npcs = field<FieldNpcs>("fieldNpcs")
+        val actors = npcs.actors.map { listOf(it.x, it.y, it.frame) }
+        val music = field<com.badlogic.gdx.audio.Music>("openingMusic")
+        val volume = music.volume
+        check(music.isPlaying && mover.atRest)
+
+        press(Input.Keys.ESCAPE)
+        press(Input.Keys.F8)
+        check(scene() == "PAUSE" && field<BattlePracticeScreen?>("battlePractice") == null)
+        press(Input.Keys.ESCAPE)
+        press(Input.Keys.F8)
+        val practice = checkNotNull(field<BattlePracticeScreen?>("battlePractice"))
+        val battle = BattlePracticeScreen::class.java.getDeclaredField("battle").apply { isAccessible = true }
+            .get(practice) as PracticeBattle
+        check(!music.isPlaying)
+        game.pause()
+        game.resume()
+        check(!music.isPlaying)
+        game.resize(graphics.width, graphics.height)
+        held += Input.Keys.D
+        press(Input.Keys.A)
+        press(Input.Keys.F8)
+        held.clear()
+        check(battle.enemyHealth == 17 && field<BattlePracticeScreen?>("battlePractice") === practice)
+        check(actors == npcs.actors.map { listOf(it.x, it.y, it.frame) })
+        press(Input.Keys.ESCAPE)
+
+        check(scene() == "FIELD" && field<BattlePracticeScreen?>("battlePractice") == null)
+        check(before.contentEquals(session().bytes()) && movement() === mover && position == (mover.x to mover.y))
+        check(field<FieldNpcs>("fieldNpcs") === npcs && field<com.badlogic.gdx.audio.Music>("openingMusic") === music)
+        check(music.isPlaying && music.volume == volume)
+        println("필드 연습 전투 실행 검사 통과. 입력 차단·공격·복귀 위치·진행 상태·음악을 확인했습니다.")
+    }
+
     private fun checkTownDeparture() {
         val base=session();val report=com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.local("docs/restoration/town-departure-native.json"))
         val manifest=com.badlogic.gdx.utils.JsonReader().parse(Gdx.files.internal("assets/departure/manifest.json"))
@@ -1322,6 +1362,7 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         check(session().map==12 && session().variable(8)==5 && session().bytes()[500].toInt()==1);saveAndReload()
         musicMethod.invoke(game,24,.6f);route(22);drive("continuous-leave",true)
         check(session().map==13 && session().variable(0)==11 && session().variable(10)==1 && field<Int>("activeTrack")==15)
+        checkBattlePracticeReturn()
         saveAndReload();val beforeClips=clips
         route(0);drive("continuous-return",true);check(session().map==12)
         musicMethod.invoke(game,24,.6f);route(22);drive("continuous-repeat",true)
@@ -1347,6 +1388,10 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
     }
     override fun render() {
         if(completed) return
+        if (departureEnabled) {
+            press(Input.Keys.F8)
+            check(scene() == "TITLE" && field<BattlePracticeScreen?>("battlePractice") == null)
+        }
         press(Input.Keys.ENTER);press(Input.Keys.SPACE);finishScene()
         held+=Input.Keys.A;tick();held.clear();finishScene();check(session().variable(6)==1)
         route(1);check(session().map==0)

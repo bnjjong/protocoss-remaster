@@ -32,8 +32,8 @@ object DesktopLauncher {
         }
 
         val options = args.associate { argument ->
-            require(argument.startsWith("--game-dir=") || argument.startsWith("--save-dir=")) {
-                "사용법: --game-dir=원본게임폴더 --save-dir=저장폴더"
+            require(argument == "--battle-practice" || argument.startsWith("--game-dir=") || argument.startsWith("--save-dir=")) {
+                "실행 옵션은 --game-dir=원본게임폴더, --save-dir=저장폴더, --battle-practice입니다."
             }
             argument.substringBefore('=') to argument.substringAfter('=')
         }
@@ -43,7 +43,8 @@ object DesktopLauncher {
             ?: if (appDirectory == null) ProtocossGame.defaultOriginalDirectory() else null
         val saves = options["--save-dir"]?.let { Path.of(it) }
             ?: Path.of(System.getProperty("user.home"), "Library/Application Support/Protocoss/Saves")
-        object : Lwjgl3Application(ProtocossGame(original, saves), config) {
+        val game = ProtocossGame(original, saves, battlePracticeEnabled = options.containsKey("--battle-practice"))
+        object : Lwjgl3Application(game, config) {
             override fun createFiles(): Files {
                 val files = Lwjgl3Files()
                 if (appDirectory == null) return files

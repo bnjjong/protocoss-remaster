@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.badlogic.gdx.utils.viewport.Viewport
+import com.protocoss.battle.BattlePracticeScreen
 import com.protocoss.dialogue.DialogueBox
 import com.protocoss.dialogue.DialogueManager
 import com.protocoss.dialogue.DialogueRepository
@@ -67,7 +68,8 @@ import java.nio.file.Path
  */
 class ProtocossGame(
     private val originalDirectory: Path? = defaultOriginalDirectory(),
-    saveDirectory: Path = Path.of(System.getProperty("user.home"), "Library/Application Support/Protocoss/Saves")
+    saveDirectory: Path = Path.of(System.getProperty("user.home"), "Library/Application Support/Protocoss/Saves"),
+    private val battlePracticeEnabled: Boolean = false
 ) : ApplicationAdapter() {
     private enum class Scene { TITLE, PROLOGUE, OPENING, CLIP, FIELD, PAUSE, LOAD, SAVE, CONFIRM_SAVE, CONFIRM_TITLE, WEAPON, INVENTORY, REST, SHOP }
     private var scene = Scene.TITLE
@@ -140,6 +142,8 @@ class ProtocossGame(
     private var fieldFade = 0f
     private var openingMusic: com.badlogic.gdx.audio.Music? = null
     private var resumeOpeningMusic = false
+    private var battlePractice: BattlePracticeScreen? = null
+    private var practicePausedMusic: com.badlogic.gdx.audio.Music? = null
 
     private lateinit var batch: SpriteBatch
     private lateinit var camera: OrthographicCamera
@@ -226,9 +230,16 @@ class ProtocossGame(
     }
 
     override fun render() {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F11)) toggleFullscreen()
+        if (battlePracticeEnabled && Gdx.input.isKeyJustPressed(Input.Keys.F8) && canOpenBattlePractice()) {
+            openBattlePractice()
+        }
+        battlePractice?.let {
+            it.render()
+            return
+        }
         val delta = Gdx.graphics.deltaTime
         val wasField = scene == Scene.FIELD
-        if (Gdx.input.isKeyJustPressed(Input.Keys.F11)) toggleFullscreen()
         if(scene==Scene.REST) updateTentRest(delta)
         else if (scene == Scene.PROLOGUE) {
             val movie = requireNotNull(prologue)
@@ -435,6 +446,7 @@ class ProtocossGame(
         viewport.update(width, height)
         updateFieldView(0f)
         camera.update()
+        battlePractice?.resize(width, height)
     }
 
     override fun pause() {
@@ -456,6 +468,7 @@ class ProtocossGame(
     }
 
     override fun dispose() {
+        battlePractice?.dispose()
         prologue?.dispose()
         encounterClip?.dispose()
         openingRenderer.dispose()
@@ -828,6 +841,25 @@ class ProtocossGame(
         } else scene=Scene.FIELD
         scriptAnimation=null;animationPlan=null;animationChild=null;fieldEvent=null
         continueFieldScript()
+    }
+
+    private fun canOpenBattlePractice(): Boolean =
+        battlePractice == null && scene == Scene.FIELD && fieldFade == 0f && fieldScript == null &&
+            fieldApproach == null && fieldPanel == null && placeBanner == null && fieldDialogue == null &&
+            !dialogueManager.isActive && fieldMovement?.atRest == true
+
+    private fun openBattlePractice() {
+        val screen = BattlePracticeScreen("필드 복귀") {
+            battlePractice?.dispose()
+            battlePractice = null
+            practicePausedMusic?.play()
+            practicePausedMusic = null
+        }
+        screen.create()
+        screen.resize(Gdx.graphics.width, Gdx.graphics.height)
+        battlePractice = screen
+        practicePausedMusic = openingMusic?.takeIf { it.isPlaying }
+        practicePausedMusic?.pause()
     }
 
     private fun toggleFullscreen() {
