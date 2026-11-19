@@ -69,8 +69,10 @@ import java.nio.file.Path
 class ProtocossGame(
     private val originalDirectory: Path? = defaultOriginalDirectory(),
     saveDirectory: Path = Path.of(System.getProperty("user.home"), "Library/Application Support/Protocoss/Saves"),
-    private val battlePracticeEnabled: Boolean = false
+    private val battlePracticeMode: BattlePracticeMode = BattlePracticeMode.OFF
 ) : ApplicationAdapter() {
+    enum class BattlePracticeMode { OFF, MANUAL, AUTO }
+
     private enum class Scene { TITLE, PROLOGUE, OPENING, CLIP, FIELD, PAUSE, LOAD, SAVE, CONFIRM_SAVE, CONFIRM_TITLE, WEAPON, INVENTORY, REST, SHOP }
     private var scene = Scene.TITLE
     private var selected = 0
@@ -144,6 +146,7 @@ class ProtocossGame(
     private var resumeOpeningMusic = false
     private var battlePractice: BattlePracticeScreen? = null
     private var practicePausedMusic: com.badlogic.gdx.audio.Music? = null
+    private var practiceStepsRemaining = if (battlePracticeMode == BattlePracticeMode.AUTO) 8 else 0
 
     private lateinit var batch: SpriteBatch
     private lateinit var camera: OrthographicCamera
@@ -231,11 +234,12 @@ class ProtocossGame(
 
     override fun render() {
         if (Gdx.input.isKeyJustPressed(Input.Keys.F11)) toggleFullscreen()
-        if (battlePracticeEnabled && Gdx.input.isKeyJustPressed(Input.Keys.F8) && canOpenBattlePractice()) {
-            openBattlePractice()
-        }
         battlePractice?.let {
             it.render()
+            return
+        }
+        if (battlePracticeMode != BattlePracticeMode.OFF && Gdx.input.isKeyJustPressed(Input.Keys.F8) && canOpenBattlePractice()) {
+            openBattlePractice()
             return
         }
         val delta = Gdx.graphics.deltaTime
@@ -311,6 +315,7 @@ class ProtocossGame(
                 message = "방향키 선택 · Enter 확인 · Esc 계속"
             } else {
                 handleInput(delta)
+                if (battlePractice != null) return
                 if(fieldDialogue==null && fieldApproach==null && scene==Scene.FIELD) updateFieldView(delta)
                 dialogueManager.update(delta)
                 dialogueBox.update(delta)
@@ -642,11 +647,19 @@ class ProtocossGame(
             if(kotlin.math.abs(px-movement.x)>.01f || kotlin.math.abs(py-movement.y)>.01f) movement.place(px,py)
             val input=(if(up && !down) 1 else if(down && !up) 4 else 0) or
                 (if(right && !left) 2 else if(left && !right) 8 else 0)
-            val travelled=movement.update(delta,input,isDash,tick={ x,y -> npcs?.tick(x,y) }) { event -> handleFieldEvent(movement,event) }
+            val trackPracticeSteps = practiceStepsRemaining > 0 && scene == Scene.FIELD && fieldScript == null && fieldApproach == null
+            val travelled = movement.update(
+                delta, input, isDash, tick = { x, y -> npcs?.tick(x, y) },
+                stopAfterStep = if (trackPracticeSteps) ::countPracticeStep else null
+            ) { event -> handleFieldEvent(movement, event) }
             if(travelled) return
             player.setPosition(movement.x+12f,height-movement.y-12f)
             player.setMotion(Direction.fromInput(FieldRules.dy(movement.direction)<0,FieldRules.dy(movement.direction)>0,
                 FieldRules.dx(movement.direction)<0,FieldRules.dx(movement.direction)>0),movement.moving)
+            if (trackPracticeSteps && practiceStepsRemaining == 0) {
+                openBattlePractice()
+                return
+            }
         }
 
         // M 키: 필드 타일맵 모드 ↔ 정적 배경 갤러리 모드 전환
@@ -843,8 +856,13 @@ class ProtocossGame(
         continueFieldScript()
     }
 
+    private fun countPracticeStep(): Boolean {
+        practiceStepsRemaining--
+        return practiceStepsRemaining == 0
+    }
+
     private fun canOpenBattlePractice(): Boolean =
-        battlePractice == null && scene == Scene.FIELD && fieldFade == 0f && fieldScript == null &&
+        scene == Scene.FIELD && fieldFade == 0f && fieldScript == null &&
             fieldApproach == null && fieldPanel == null && placeBanner == null && fieldDialogue == null &&
             !dialogueManager.isActive && fieldMovement?.atRest == true
 

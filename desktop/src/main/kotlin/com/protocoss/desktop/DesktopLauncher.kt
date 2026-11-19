@@ -6,6 +6,7 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Files
 import com.protocoss.Constants
 import com.protocoss.ProtocossGame
+import com.protocoss.ProtocossGame.BattlePracticeMode
 import java.nio.file.Files.isDirectory
 import java.nio.file.Path
 
@@ -32,8 +33,9 @@ object DesktopLauncher {
         }
 
         val options = args.associate { argument ->
-            require(argument == "--battle-practice" || argument.startsWith("--game-dir=") || argument.startsWith("--save-dir=")) {
-                "실행 옵션은 --game-dir=원본게임폴더, --save-dir=저장폴더, --battle-practice입니다."
+            require(argument == "--battle-practice" || argument == "--battle-practice-auto" ||
+                argument.startsWith("--game-dir=") || argument.startsWith("--save-dir=")) {
+                "실행 옵션은 --game-dir=원본게임폴더, --save-dir=저장폴더, --battle-practice, --battle-practice-auto입니다."
             }
             argument.substringBefore('=') to argument.substringAfter('=')
         }
@@ -43,7 +45,12 @@ object DesktopLauncher {
             ?: if (appDirectory == null) ProtocossGame.defaultOriginalDirectory() else null
         val saves = options["--save-dir"]?.let { Path.of(it) }
             ?: Path.of(System.getProperty("user.home"), "Library/Application Support/Protocoss/Saves")
-        val game = ProtocossGame(original, saves, battlePracticeEnabled = options.containsKey("--battle-practice"))
+        val practiceMode = when {
+            "--battle-practice-auto" in options -> BattlePracticeMode.AUTO
+            "--battle-practice" in options -> BattlePracticeMode.MANUAL
+            else -> BattlePracticeMode.OFF
+        }
+        val game = ProtocossGame(original, saves, battlePracticeMode = practiceMode)
         object : Lwjgl3Application(game, config) {
             override fun createFiles(): Files {
                 val files = Lwjgl3Files()

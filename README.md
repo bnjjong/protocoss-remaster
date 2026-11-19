@@ -28,6 +28,8 @@ macOS에서 JDK 21로 `./gradlew :desktop:packageMacDemo`를 실행한 뒤 `desk
 
 필드에서 이어서 시험하려면 `./gradlew :desktop:run --args="--battle-practice"`로 실행한다. 자유 이동 중 멈춰서 F8을 누르면 연습 전투가 열린다. Esc로 같은 위치의 필드에 돌아온다. 연습 전투의 체력과 결과는 연습 화면 안에서만 사용한다.
 
+자동 진입을 시험하려면 `./gradlew :desktop:run --args="--battle-practice-auto"`로 실행한다. 자유 이동에서 여덟 걸음을 마치면 실행당 한 번 연습 전투가 열린다. 방향키나 WASD로 걸을 수 있으며, F8로 수동 진입하거나 Esc로 돌아갈 수도 있다.
+
 ## 1. 프로젝트 구조
 
 ```

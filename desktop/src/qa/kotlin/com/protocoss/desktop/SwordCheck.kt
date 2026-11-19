@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.utils.JsonValue
 import com.badlogic.gdx.utils.JsonWriter
 import com.protocoss.ProtocossGame
+import com.protocoss.ProtocossGame.BattlePracticeMode
 import com.protocoss.battle.BattlePracticeScreen
 import com.protocoss.battle.PracticeBattle
 import com.protocoss.field.*
@@ -34,10 +35,10 @@ import java.util.Base64
 /** 새 게임부터 검 회수까지 실제 입력으로 진행한다. 원본 폴더와 사용자 저장은 쓰지 않는다. */
 object SwordCheck {
     @JvmStatic fun main(args:Array<String>)=run(false)
-    fun run(equipment:Boolean,party:Boolean=false,automatic:Boolean=false,items:Boolean=false,tent:Boolean=false,shop:Boolean=false,indoor:Boolean=false,cabin:Boolean=false,rewards:Boolean=false,story:Boolean=false,cabinStory:Boolean=false,encounter:Boolean=false,objects:Boolean=false,departure:Boolean=false) {
+    fun run(equipment:Boolean,party:Boolean=false,automatic:Boolean=false,items:Boolean=false,tent:Boolean=false,shop:Boolean=false,indoor:Boolean=false,cabin:Boolean=false,rewards:Boolean=false,story:Boolean=false,cabinStory:Boolean=false,encounter:Boolean=false,objects:Boolean=false,departure:Boolean=false,autoPractice:Boolean=false) {
         val saves=Files.createTempDirectory("protocoss-sword-qa-")
         try {
-            val app=SwordApplication(saves,equipment,party,automatic,items,tent,shop,indoor,cabin,rewards,story,cabinStory,encounter,objects,departure)
+            val app=SwordApplication(saves,equipment,party,automatic,items,tent,shop,indoor,cabin,rewards,story,cabinStory,encounter,objects,departure,autoPractice)
             Lwjgl3Application(app,Lwjgl3ApplicationConfiguration().apply {
                 setTitle("검 수리 스토리 자동 검사");setWindowPosition(0,0);setWindowedMode(640,400);setInitialVisible(false);useVsync(false);setForegroundFPS(0)
             })
@@ -52,6 +53,7 @@ object FieldItemsCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(
 object TentCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true,true,true,true) }
 object ShopCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(true,true,true,true,true,true) }
 object TownDepartureCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(false,departure=true) }
+object BattlePracticeAutoCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(false,autoPractice=true) }
 object TownObjectsCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(false,objects=true) }
 object EncounterEventCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(false,encounter=true) }
 object CabinStoryCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(false,cabinStory=true) }
@@ -61,8 +63,12 @@ object IndoorCheck { @JvmStatic fun main(args:Array<String>) {
     if("--only-indoor" in args) SwordCheck.run(false,indoor=true) else SwordCheck.run(true,true,true,true,true,true,true)
 } }
 object CabinInteractionCheck { @JvmStatic fun main(args:Array<String>)=SwordCheck.run(false,cabin=true) }
-private class SwordApplication(private val saves:Path,private val equipment:Boolean,private val partyEquipment:Boolean,private val automaticEquipment:Boolean,private val fieldItems:Boolean,private val tentEnabled:Boolean,private val shopEnabled:Boolean,private val indoorEnabled:Boolean,private val cabinEnabled:Boolean,private val rewardsEnabled:Boolean,private val storyEnabled:Boolean,private val cabinStoryEnabled:Boolean,private val encounterEnabled:Boolean,private val objectsEnabled:Boolean,private val departureEnabled:Boolean):ApplicationAdapter() {
-    private val game=ProtocossGame(null,saves,battlePracticeEnabled=departureEnabled)
+private class SwordApplication(private val saves:Path,private val equipment:Boolean,private val partyEquipment:Boolean,private val automaticEquipment:Boolean,private val fieldItems:Boolean,private val tentEnabled:Boolean,private val shopEnabled:Boolean,private val indoorEnabled:Boolean,private val cabinEnabled:Boolean,private val rewardsEnabled:Boolean,private val storyEnabled:Boolean,private val cabinStoryEnabled:Boolean,private val encounterEnabled:Boolean,private val objectsEnabled:Boolean,private val departureEnabled:Boolean,private val autoPracticeEnabled:Boolean):ApplicationAdapter() {
+    private val game = ProtocossGame(null, saves, battlePracticeMode = when {
+        autoPracticeEnabled -> BattlePracticeMode.AUTO
+        departureEnabled -> BattlePracticeMode.MANUAL
+        else -> BattlePracticeMode.OFF
+    })
     private val held=mutableSetOf<Int>();private val pressed=mutableSetOf<Int>()
     private lateinit var input:Input;private lateinit var graphics:Graphics;private lateinit var rules:FieldRules
     private var delta=1f/70f;private var steps=0;private var effects=0;private var joins=0;private var letters=0
@@ -1247,6 +1253,52 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
         load(base)
         println("엘가임 사물 실행: 25 위치·225 상태·${animations}회 연출·세 조작 키·보상/빈 상자·방향/거리 거부·입력 잠금·저장 재개, ${shots.size} 화면")
     }
+    private fun checkAutomaticBattlePractice() {
+        load(DosSave.afterOpening(Gdx.files.internal("assets/data/original/start.dat").readBytes()))
+        val before = session().bytes()
+        val mover = movement()
+        val (x, y) = mover.x to mover.y
+        val layer = mover.layer
+        val stepTicks = 8
+        fun walk(key: Int, ticks: Int = stepTicks) {
+            held += key
+            repeat(ticks) { tick() }
+            held.clear()
+        }
+
+        idle(16)
+        walk(Input.Keys.UP, 16)
+        check(mover.x == x && mover.y == y)
+        repeat(7) { index ->
+            walk(if (index % 2 == 0) Input.Keys.RIGHT else Input.Keys.LEFT)
+            check(mover.atRest && field<BattlePracticeScreen?>("battlePractice") == null)
+        }
+
+        check(mover.x == x + 8 && mover.y == y)
+        delta = 32f / 70f
+        held += Input.Keys.A
+        pressed += Input.Keys.A
+        tick()
+        held.clear()
+        delta = 1f / 70f
+
+        val practice = checkNotNull(field<BattlePracticeScreen?>("battlePractice"))
+        val battle = BattlePracticeScreen::class.java.getDeclaredField("battle").apply { isAccessible = true }
+            .get(practice) as PracticeBattle
+        check(battle.enemyHealth == PracticeBattle.ENEMY_MAX_HEALTH)
+        check(mover.atRest && !mover.moving && mover.x == x && mover.y == y && mover.layer == layer)
+        press(Input.Keys.ESCAPE)
+        check(scene() == "FIELD" && field<BattlePracticeScreen?>("battlePractice") == null)
+        check(before.contentEquals(session().bytes()) && movement() === mover && mover.x == x && mover.y == y)
+
+        repeat(8) { index -> walk(if (index % 2 == 0) Input.Keys.RIGHT else Input.Keys.LEFT) }
+        check(field<BattlePracticeScreen?>("battlePractice") == null && mover.x == x && mover.y == y)
+        press(Input.Keys.F8)
+        checkNotNull(field<BattlePracticeScreen?>("battlePractice"))
+        press(Input.Keys.ESCAPE)
+        println("자동 연습 전투 실행 검사 통과. 벽 앞 입력·여덟 번째 걸음·공격 입력 차단·같은 위치 복귀·일회 실행을 확인했습니다.")
+    }
+
     private fun checkBattlePracticeReturn() {
         val before = session().bytes()
         val mover = movement()
@@ -1388,6 +1440,12 @@ private class SwordApplication(private val saves:Path,private val equipment:Bool
     }
     override fun render() {
         if(completed) return
+        if (autoPracticeEnabled) {
+            checkAutomaticBattlePractice()
+            completed = true
+            Gdx.app.exit()
+            return
+        }
         if (departureEnabled) {
             press(Input.Keys.F8)
             check(scene() == "TITLE" && field<BattlePracticeScreen?>("battlePractice") == null)
