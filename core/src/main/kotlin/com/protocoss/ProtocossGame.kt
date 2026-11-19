@@ -1163,25 +1163,33 @@ class ProtocossGame(
 
     private fun enterField(save: DosSave,preserveField:Boolean) {
         // 파일·맵·좌표를 모두 확인한 뒤에 현재 세션을 교체한다.
-        val original = originalDirectory?.let { OriginalMapData.load(it, save.area, save.map) }
-        require(original != null || (save.area == 0 && save.map in 0..13)) { "이 저장 지점에는 원본 MAP 데이터가 필요합니다." }
-        val fallbackMap = if (save.map == 2) "new_game_map.json" else "area00_map.json"
-        val map = original?.map ?: if(save.map in setOf(0,3,4,5,6,7,8,9,10,11,12,13)) {
-            val source=opening.data.get("maps").get(save.map.toString())
-            TileMap(source.getInt("width"),source.getInt("height"),8,8)
-        } else TileMap.fromJson(Gdx.files.internal("assets/data/maps/$fallbackMap").readString())
+        val original = if (preserveField) null else originalDirectory?.let { OriginalMapData.load(it, save.area, save.map) }
+        val map = if (preserveField) {
+            val current = checkNotNull(session)
+            check(current.area == save.area && current.map == save.map) { "같은 맵의 복귀 위치가 필요합니다." }
+            checkNotNull(tileMap)
+        } else {
+            require(original != null || (save.area == 0 && save.map in 0..13)) { "이 저장 지점에는 원본 MAP 데이터가 필요합니다." }
+            val fallbackMap = if (save.map == 2) "new_game_map.json" else "area00_map.json"
+            original?.map ?: if (save.map in setOf(0,3,4,5,6,7,8,9,10,11,12,13)) {
+                val source = opening.data.get("maps").get(save.map.toString())
+                TileMap(source.getInt("width"), source.getInt("height"), 8, 8)
+            } else TileMap.fromJson(Gdx.files.internal("assets/data/maps/$fallbackMap").readString())
+        }
         val x = save.worldX + 12f
         val y = save.worldY(map.totalPixelHeight) - 12f
         require(x in 0f..map.totalPixelWidth && y in 0f..map.totalPixelHeight) { "저장 위치가 맵 밖에 있습니다." }
-        val texture = if (original != null) {
-            val pixmap = Pixmap(original.atlasWidth, original.atlasHeight, Pixmap.Format.RGBA8888)
-            try { pixmap.pixels.put(original.rgba).flip(); Texture(pixmap) } finally { pixmap.dispose() }
-        } else Texture(Gdx.files.internal("assets/sprites/maps/area00_tileset.png"))
-        texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest)
-        tilesetTexture?.dispose()
-        tilesetTexture = texture
-        tileMap = map
-        tileMapRenderer = TileMapRenderer(map, texture)
+        if (!preserveField) {
+            val texture = if (original != null) {
+                val pixmap = Pixmap(original.atlasWidth, original.atlasHeight, Pixmap.Format.RGBA8888)
+                try { pixmap.pixels.put(original.rgba).flip(); Texture(pixmap) } finally { pixmap.dispose() }
+            } else Texture(Gdx.files.internal("assets/sprites/maps/area00_tileset.png"))
+            texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest)
+            tilesetTexture?.dispose()
+            tilesetTexture = texture
+            tileMap = map
+            tileMapRenderer = TileMapRenderer(map, texture)
+        }
         isTileMapMode = true
         dialogueManager.closeDialogue()
         player.setPosition(x, y)
