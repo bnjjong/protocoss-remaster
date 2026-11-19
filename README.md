@@ -22,6 +22,10 @@ macOS에서 JDK 21로 `./gradlew :desktop:packageMacDemo`를 실행한 뒤 `desk
 
 데모는 북마겔 산맥 첫 맵까지 지원한다. F11로 창과 전체화면을 전환하고, 필드에서 Esc를 눌러 저장한다. 저장은 `~/Library/Application Support/Protocoss/Saves`에 기록되며 타이틀의 `CONTINUE`에서 이어 할 수 있다. 빌드 결과물은 로컬 테스트용 앱이다.
 
+### 연습 전투
+
+`./gradlew :desktop:runBattlePractice`를 실행하면 공격·방어·승패를 확인하는 별도 창이 열린다. A로 공격하고 G로 방어한다. 상대의 다음 공격 피해는 화면에 표시된다. R은 다시 시작, Esc는 종료다. 승패와 체력은 이 창을 실행하는 동안만 기록된다.
+
 ## 1. 프로젝트 구조
 
 ```
